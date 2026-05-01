@@ -4,9 +4,9 @@
 
 1. `README.md`
 2. `INSTALL.md`
-3. `HOW_TO_USE.md`
-4. `MANUAL_PASSO_A_PASSO.md`
-5. `PROMPT_REPO_EXISTENTE.md`
+3. `docs/how-to-use.md`
+4. `docs/manual-passo-a-passo.md`
+5. `docs/prompt-repo-existente.md`
 6. `templates/`
 
 ## Escopo deste repositório
@@ -34,4 +34,4 @@
 
 - `README.md` da raiz é documento de produto, não template
 - templates de projetos gerados vivem em `templates/`
-- `PROMPT_REPO_EXISTENTE.md` é artefato operacional do kit, não template de repo
+- `docs/prompt-repo-existente.md` é artefato operacional do kit, não template de repo

@@ -2,11 +2,11 @@
 
 Arquivos complementares do kit:
 
-- `INSTALL.md`: instalação e update do comando `newproj`
-- `MANUAL_PASSO_A_PASSO.md`: fluxo operacional completo do zero ao primeiro commit
-- `PROMPT_REPO_EXISTENTE.md`: prompt genérico para recuperar repositórios já em funcionamento
-- `VERSION`: versão atual do kit
-- `run_regression_suite.py`: regressão automatizada do scaffolder
+- `../INSTALL.md`: instalação e update do comando `newproj`
+- `manual-passo-a-passo.md`: fluxo operacional completo do zero ao primeiro commit
+- `prompt-repo-existente.md`: prompt genérico para recuperar repositórios já em funcionamento
+- `../VERSION`: versão atual do kit
+- `../run_regression_suite.py`: regressão automatizada do scaffolder
 
 ## Fluxo recomendado
 
@@ -18,7 +18,7 @@ Arquivos complementares do kit:
    push relevante.
 
 Para repositórios antigos que já existem e não nasceram com o scaffolder, use
-`PROMPT_REPO_EXISTENTE.md` em vez de gerar um projeto novo.
+`prompt-repo-existente.md` em vez de gerar um projeto novo.
 
 ## Layout recomendado
 

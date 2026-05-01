@@ -29,7 +29,7 @@
 
 - [x] revisar titularidade do copyright
 - [x] decidir ano inicial de publicação
-- [x] incluir `LICENSE.md` na forma inicial do repo público
+- [x] incluir `LICENSE` na forma inicial do repo público
 - [ ] decidir se haverá `CONTRIBUTING.md`
 - [ ] decidir se haverá `CODE_OF_CONDUCT.md`
 
@@ -37,7 +37,7 @@
 
 - [x] `newproj` instalável
 - [x] `scaffold_project.py` documentado
-- [x] `PROMPT_REPO_EXISTENTE.md` revisado para uso público
+- [x] `docs/prompt-repo-existente.md` revisado para uso público
 - [x] `INSTALL.md` coerente com a forma final de distribuição
 - [ ] exemplos reais por preset principal
 

@@ -10,6 +10,6 @@
 
 ### Added
 - `ROADMAP.md`
-- `LICENSE.md`
-- `POSICIONAMENTO.md`
-- `CHECKLIST_PUBLICACAO_V1.md`
+- `LICENSE`
+- `docs/posicionamento.md`
+- `docs/release-checklist.md`

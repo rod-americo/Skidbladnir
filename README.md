@@ -38,7 +38,7 @@ Na prática, ele oferece:
   `ARCHITECTURE`, `CONTRACTS`, `OPERATIONS` e `DECISIONS`
 - `check_project_gate.py` para justificar a existência do repositório
 - `project_doctor.py` para validar coerência documental e estrutural
-- `PROMPT_REPO_EXISTENTE.md` para recuperar repositórios legados
+- `docs/prompt-repo-existente.md` para recuperar repositórios legados
 
 ## Para quem ele existe
 
@@ -83,7 +83,7 @@ python3 scripts/project_doctor.py
 
 Para repositórios existentes:
 
-- use o prompt em `PROMPT_REPO_EXISTENTE.md`
+- use o prompt em `docs/prompt-repo-existente.md`
 - adapte a baseline sem fingir maturidade que o código ainda não sustenta
 
 ## Componentes principais
@@ -120,11 +120,14 @@ Skidbladnir/
 ├── README.md
 ├── AGENTS.md
 ├── INSTALL.md
-├── HOW_TO_USE.md
-├── MANUAL_PASSO_A_PASSO.md
-├── PROMPT_REPO_EXISTENTE.md
 ├── ROADMAP.md
-├── LICENSE.md
+├── LICENSE
+├── docs/
+│   ├── how-to-use.md
+│   ├── manual-passo-a-passo.md
+│   ├── prompt-repo-existente.md
+│   ├── posicionamento.md
+│   └── release-checklist.md
 ├── templates/
 ├── bin/
 ├── tests/
@@ -142,10 +145,18 @@ Skidbladnir/
 
 Consulte [INSTALL.md](INSTALL.md).
 
+## Documentação adicional
+
+- [How To Use](docs/how-to-use.md)
+- [Manual Passo a Passo](docs/manual-passo-a-passo.md)
+- [Prompt para Repositório Existente](docs/prompt-repo-existente.md)
+- [Posicionamento](docs/posicionamento.md)
+- [Checklist de Publicação](docs/release-checklist.md)
+
 ## Roadmap
 
 Consulte [ROADMAP.md](ROADMAP.md).
 
 ## Licença
 
-MIT. Consulte [LICENSE.md](LICENSE.md).
+MIT. Consulte [LICENSE](LICENSE).
