@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+
+def starter_root_from_bin(bin_path: Path) -> Path:
+    return bin_path.parents[1]
+
+
+def read_starter_version(starter_root: Path) -> str:
+    version_file = starter_root / "VERSION"
+    if not version_file.exists():
+        return "0.0.0"
+    return version_file.read_text(encoding="utf-8").strip()
+
+
+def run_project_doctor(args: list[str]) -> int:
+    target = Path.cwd().resolve()
+    forwarded_args = list(args)
+
+    for index, value in enumerate(list(forwarded_args)):
+        if value.startswith("-"):
+            continue
+        target = Path(value).expanduser().resolve()
+        forwarded_args.pop(index)
+        break
+
+    doctor = target / "scripts" / "project_doctor.py"
+
+    if not doctor.exists():
+        raise SystemExit(f"project_doctor.py nao encontrado em {doctor}")
+
+    command = [sys.executable or "python3", str(doctor), *forwarded_args]
+    os.execvpe(command[0], command, os.environ)
+    return 0
+
+
+def main() -> int:
+    bin_path = Path(__file__).resolve()
+    starter_root = starter_root_from_bin(bin_path)
+    scaffold = starter_root / "scaffold_project.py"
+
+    if not scaffold.exists():
+        raise SystemExit(f"scaffolder nao encontrado em {scaffold}")
+
+    if len(sys.argv) == 2 and sys.argv[1] in {"--version", "version"}:
+        print(f"newproj {read_starter_version(starter_root)}")
+        return 0
+
+    if len(sys.argv) == 1:
+        print("Uso: newproj <destino> [opcoes]")
+        print("Exemplo: newproj ~/ApiNova --preset fastapi-service --include-checklist")
+        print("Doctor: newproj doctor .")
+        print("Doctor strict: newproj doctor --strict .")
+        print("Doctor audit: newproj doctor --audit-config .")
+        print("Versao: newproj --version")
+        print("Dica: newproj --list-presets")
+        return 2
+
+    if sys.argv[1] == "doctor":
+        return run_project_doctor(sys.argv[2:])
+
+    command = [sys.executable or "python3", str(scaffold), *sys.argv[1:]]
+    os.execvpe(command[0], command, os.environ)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
