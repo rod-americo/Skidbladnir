@@ -79,35 +79,35 @@ Presets genéricos ainda existem e continuam úteis:
 Comandos iniciais esperados:
 
 - `fastapi` / `fastapi-service`
-  - setup: `python -m pip install -e .[dev]`
+  - setup: `python -m pip install -r requirements.txt`
   - run: `python -m <slug>.main`
   - alternativa: `uvicorn <slug>.interfaces.http.app:create_app --factory --reload`
   - smoke test: `python -m pytest -q`
 - `cli`
-  - setup: `python -m pip install -e .[dev]`
+  - setup: `python -m pip install -r requirements.txt`
   - run: `python -m <slug> doctor`
   - smoke test: `python -m <slug> doctor`
 - `textual-cli`
-  - setup: `python -m pip install -e .[dev]`
+  - setup: `python -m pip install -r requirements.txt`
   - run: `python -m <slug> tui`
   - smoke test: `python -m <slug> doctor`
 - `worker`
-  - setup: `python -m pip install -e .[dev]`
+  - setup: `python -m pip install -r requirements.txt`
   - run: `python -m <slug>.main --once`
   - modo residente: `python -m <slug>.main --interval 30`
   - smoke test: `python -m <slug>.main --once`
 - `playwright-worker`
-  - setup: `python -m pip install -e .[dev]`
+  - setup: `python -m pip install -r requirements.txt`
   - bootstrap browser: `python -m playwright install chromium`
   - run inicial: `python -m <slug>.main --once --dry-run`
   - refresh real: `python -m <slug>.main --refresh-session`
   - smoke test: `python -m <slug>.main --once --dry-run`
 - `pipeline`
-  - setup: `python -m pip install -e .[dev]`
+  - setup: `python -m pip install -r requirements.txt`
   - run: `python -m <slug>.main --item-id demo-001`
   - smoke test: `python -m <slug>.main --item-id demo-001`
 - `dicom-pipeline`
-  - setup: `python -m pip install -e .[dev]`
+  - setup: `python -m pip install -r requirements.txt`
   - run inicial: `python -m <slug>.main --sample`
   - run real: `python -m <slug>.main --inbox runtime/inbox --outbox runtime/outbox`
   - smoke test: `python -m <slug>.main --sample`

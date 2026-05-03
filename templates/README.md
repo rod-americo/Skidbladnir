@@ -38,7 +38,7 @@ Padrão recomendado para projetos novos:
 ├── AGENTS.md
 ├── PROJECT_GATE.md
 ├── CHANGELOG.md
-├── pyproject.toml / package.json
+├── requirements.txt / package.json
 ├── config/
 │   ├── doctor.json
 │   ├── settings.example.json

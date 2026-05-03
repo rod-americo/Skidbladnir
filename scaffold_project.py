@@ -252,7 +252,7 @@ def runtime_defaults(
                     python3 -m venv .venv
                     source .venv/bin/activate
                     python -m pip install --upgrade pip
-                    python -m pip install -e .[dev]
+                    python -m pip install -r requirements.txt
                     """
                 ).strip(),
                 "OPTIONAL_ENV_SETUP": "export APP_ENV=dev",
@@ -266,7 +266,7 @@ def runtime_defaults(
                     f"""
                     python3 -m venv .venv
                     source .venv/bin/activate
-                    python -m pip install -e .[dev]
+                    python -m pip install -r requirements.txt
                     cp config/settings.example.json config/settings.local.json
                     """
                 ).strip(),
@@ -420,7 +420,7 @@ def runtime_defaults(
                     f"""
                     python3 -m venv .venv
                     source .venv/bin/activate
-                    python -m pip install -e .[dev]
+                    python -m pip install -r requirements.txt
                     python -m playwright install chromium
                     cp config/settings.example.json config/settings.local.json
                     """
@@ -1433,7 +1433,6 @@ def python_generated_files(
     preset: str,
     gate_enforced: bool,
 ) -> dict[str, str]:
-    dist_name = project_slug.replace("_", "-")
     package_dir = project_slug
     dependencies: list[str] = []
     dev_dependencies = [
@@ -1466,38 +1465,10 @@ def python_generated_files(
     elif preset == "dicom_pipeline":
         dependencies.append("pydicom>=2.4,<3")
 
+    requirements_lines = dependencies + dev_dependencies
+
     files = {
-        "pyproject.toml": textwrap.dedent(
-            f"""
-            [build-system]
-            requires = ["setuptools>=68"]
-            build-backend = "setuptools.build_meta"
-
-            [project]
-            name = "{dist_name}"
-            version = "0.1.0"
-            description = "TODO: preencher descricao curta"
-            readme = "README.md"
-            requires-python = ">=3.9"
-            dependencies = {json.dumps(dependencies)}
-
-            [project.optional-dependencies]
-            dev = {json.dumps(dev_dependencies)}
-
-            [project.scripts]
-            {project_slug} = "{project_slug}.main:main"
-
-            [tool.setuptools.packages.find]
-            include = ["{project_slug}*"]
-
-            [tool.pytest.ini_options]
-            testpaths = ["tests"]
-
-            [tool.ruff]
-            line-length = 100
-            target-version = "py39"
-            """
-        ),
+        "requirements.txt": "\n".join(requirements_lines) + "\n",
         f"{package_dir}/__init__.py": textwrap.dedent(
             f'''
             """Pacote principal de {project_name}."""

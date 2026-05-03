@@ -84,7 +84,7 @@ cd {project_name}
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e .[dev]
+python -m pip install -r requirements.txt
 ```
 
 ### 3. Configurar
@@ -433,7 +433,7 @@ Executar, diagnosticar, reiniciar e recuperar o worker sem contexto implicito.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .[dev]
+python -m pip install -r requirements.txt
 cp config/settings.example.json config/settings.local.json
 ```
 
@@ -570,6 +570,8 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / "scripts" / "project_doctor.py").exists())
             self.assertTrue((repo / ".githooks" / "pre-commit").exists())
             self.assertTrue((repo / "flowrepo" / "main.py").exists())
+            self.assertTrue((repo / "requirements.txt").exists())
+            self.assertFalse((repo / "pyproject.toml").exists())
             self.assertFalse((repo / "src").exists())
 
             logging_config = json.loads((repo / "config" / "logging.example.json").read_text(encoding="utf-8"))
