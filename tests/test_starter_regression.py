@@ -572,6 +572,10 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / "flowrepo" / "main.py").exists())
             self.assertFalse((repo / "src").exists())
 
+            logging_config = json.loads((repo / "config" / "logging.example.json").read_text(encoding="utf-8"))
+            required_fields = logging_config["formatters"]["json"]["required_fields"]
+            self.assertEqual(required_fields, ["ts", "lvl", "svc", "mod", "evt", "msg"])
+
             write_valid_docs(repo, "FlowRepo", "flowrepo")
 
             run_cmd([sys.executable, str(repo / "scripts" / "check_project_gate.py")], cwd=repo)
@@ -601,6 +605,11 @@ class StarterRegressionTests(unittest.TestCase):
             )
 
             run_cmd([sys.executable, str(repo / "scripts" / "project_doctor.py"), "--strict"], cwd=repo)
+
+            worker_run = run_cmd([sys.executable, "-m", "flowrepo.main", "--once"], cwd=repo, expected=1)
+            log_payload = json.loads(worker_run.stdout.strip().splitlines()[-1])
+            self.assertIn("ts", log_payload)
+            self.assertEqual(log_payload["evt"], "worker_cycle")
 
             audit_ok = run_cmd(
                 [sys.executable, str(repo / "scripts" / "project_doctor.py"), "--audit-config"],

@@ -568,12 +568,13 @@ def common_generated_files(
                 "formatters": {
                     "json": {
                         "type": "json",
-                        "required_fields": ["lvl", "svc", "mod", "evt", "msg"],
+                        "required_fields": ["ts", "lvl", "svc", "mod", "evt", "msg"],
                     }
                 },
                 "policy": {
                     "rule": "logs devem ser estruturados e parseaveis",
                     "example": {
+                        "ts": "2026-01-01T00:00:00+00:00",
                         "lvl": "INFO",
                         "svc": "service-name",
                         "mod": "module-name",
@@ -1594,6 +1595,7 @@ def python_generated_files(
             """
             from __future__ import annotations
 
+            from datetime import datetime, timezone
             import json
             import logging
             import sys
@@ -1606,6 +1608,7 @@ def python_generated_files(
 
                 def format(self, record: logging.LogRecord) -> str:
                     payload = {
+                        "ts": datetime.now(timezone.utc).isoformat(),
                         "lvl": record.levelname,
                         "svc": self.service_name,
                         "mod": record.name,
@@ -2742,6 +2745,7 @@ def node_generated_files(project_name: str, project_slug: str, preset: str) -> d
             """
             export function logEvent(payload = {}) {
               const event = {
+                ts: payload.ts ?? new Date().toISOString(),
                 lvl: payload.lvl ?? "INFO",
                 svc: payload.svc ?? "service-name",
                 mod: payload.mod ?? "main",

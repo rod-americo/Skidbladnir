@@ -81,6 +81,7 @@ Logging:
 
 - logs operacionais devem ser estruturados e parseáveis
 - prefira JSON em uma linha ou formato estrito equivalente
+- campos mínimos recomendados: `ts`, `lvl`, `svc`, `mod`, `evt`, `msg`
 - não use `print()` como mecanismo principal de log operacional
 - sempre que possível, use um logger central
 
