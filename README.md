@@ -36,6 +36,7 @@ Na prática, ele oferece:
 - `bin/newproj` como wrapper de uso diário
 - templates em `templates/` para `README`, `AGENTS`, `PROJECT_GATE`,
   `ARCHITECTURE`, `CONTRACTS`, `OPERATIONS` e `DECISIONS`
+- baseline de `GitHub Actions` para o próprio kit e para projetos gerados
 - `check_project_gate.py` para justificar a existência do repositório
 - `project_doctor.py` para validar coerência documental e estrutural
 - `docs/prompt-repo-existente.md` para recuperar repositórios legados

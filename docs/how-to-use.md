@@ -140,6 +140,16 @@ Use a regressão sempre que mudar:
 - `install_newproj.sh`
 - templates base de docs
 
+Projetos Python e Node gerados pelo kit agora também saem com um baseline de
+CI em `.github/workflows/ci.yml`.
+
+O objetivo desse workflow é simples:
+
+- instalar dependências
+- rodar checagem sintática quando fizer sentido
+- executar a suíte de testes do projeto
+- validar `PROJECT_GATE.md` quando o projeto nascer com `--enforce-gate`
+
 ## Gate Enforced
 
 Se você usar `--enforce-gate`, o projeto sai com:

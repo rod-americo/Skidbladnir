@@ -27,6 +27,10 @@ TEMPLATE_FILES = {
 OPTIONAL_TEMPLATE_FILES = {
     "START_CHECKLIST.md": TEMPLATE_DIR / "START_CHECKLIST.md",
 }
+WORKFLOW_TEMPLATE_FILES = {
+    "python": TEMPLATE_DIR / ".github" / "workflows" / "ci-python.yml",
+    "node": TEMPLATE_DIR / ".github" / "workflows" / "ci-node.yml",
+}
 PLACEHOLDER_RE = re.compile(r"\{\{([^}]+)\}\}")
 PRESET_CHOICES = (
     "base",
@@ -213,6 +217,11 @@ def runtime_defaults(
         "runtime_path": "runtime/",
         "logs_path": "runtime/logs/",
         "SMOKE_TEST_COMMAND": "preencher smoke test",
+        "CI_GATE_STEP": "",
+        "CI_STATIC_CHECK_COMMAND": "preencher checagem sintatica",
+        "CI_VALIDATE_COMMAND": "preencher validacao de CI",
+        "PYTHON_VERSION": "3.11",
+        "NODE_VERSION": "20",
         "logger": "preencher logger principal",
         "json / key-value / outro": "json",
         "arquivo_ou_journal": "preencher local dos logs",
@@ -273,6 +282,8 @@ def runtime_defaults(
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug}.main",
                 "config_local": "config/settings.local.json",
                 "SMOKE_TEST_COMMAND": "python -m pytest -q",
+                "CI_STATIC_CHECK_COMMAND": f"python -m compileall -q {project_slug} scripts tests",
+                "CI_VALIDATE_COMMAND": "python -m pytest -q",
                 "logger": f"{project_slug}.infrastructure.logging",
                 "storage": "filesystem local ou banco definido pelo projeto",
             }
@@ -298,6 +309,7 @@ def runtime_defaults(
                 "PRIMARY_RUN_COMMAND": "npm start",
                 "config_local": "config/settings.local.json",
                 "SMOKE_TEST_COMMAND": "npm test",
+                "CI_VALIDATE_COMMAND": "npm test",
                 "logger": f"{project_slug}/infrastructure/logger.mjs",
                 "storage": "filesystem local ou banco definido pelo projeto",
             }
@@ -313,6 +325,8 @@ def runtime_defaults(
                 "PRIMARY_RUN_COMMAND": "preencher comando principal",
                 "config_local": "config/settings.local.json",
                 "SMOKE_TEST_COMMAND": "preencher smoke test",
+                "CI_STATIC_CHECK_COMMAND": "preencher checagem sintatica",
+                "CI_VALIDATE_COMMAND": "preencher validacao de CI",
                 "logger": "preencher logger principal",
                 "storage": "preencher storage principal",
             }
@@ -491,6 +505,11 @@ def runtime_defaults(
         )
 
     common["VALIDACAO_MINIMA"] = prepend_gate_check(common["VALIDACAO_MINIMA"], gate_enforced)
+    if gate_enforced:
+        common["CI_GATE_STEP"] = (
+            "      - name: Check project gate\n"
+            "        run: python3 scripts/check_project_gate.py"
+        )
     return common
 
 
@@ -2791,6 +2810,12 @@ def render_and_write_templates(
         source_text = source_path.read_text(encoding="utf-8")
         rendered_text = render_template(source_text, values, runtime)
         write_text(destination / relative_path, rendered_text)
+
+    workflow_template = WORKFLOW_TEMPLATE_FILES.get(runtime)
+    if workflow_template is not None:
+        source_text = workflow_template.read_text(encoding="utf-8")
+        rendered_text = render_template(source_text, values, runtime)
+        write_text(destination / ".github" / "workflows" / "ci.yml", rendered_text)
 
     for relative_path, content in generate_files(runtime, project_name, project_slug, preset, gate_enforced).items():
         write_text(destination / relative_path, content)

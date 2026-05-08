@@ -38,6 +38,9 @@ Padrão recomendado para projetos novos:
 ├── AGENTS.md
 ├── PROJECT_GATE.md
 ├── CHANGELOG.md
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # baseline de CI para push e pull_request
 ├── requirements.txt / package.json
 ├── config/
 │   ├── doctor.json
@@ -152,6 +155,7 @@ Checklist mínimo antes de commitar:
 - `scripts/project_doctor.py`: valida coerência mínima entre gate, README, arquitetura, contratos e operação
 - `scripts/project_doctor.py --strict`: transforma warnings semânticos em erro bloqueante
 - `scripts/project_doctor.py --audit-config`: audita overrides e aliases de `config/doctor.json`
+- `.github/workflows/ci.yml`: baseline de CI alinhada ao runtime e ao preset gerados pelo kit
 - `config/doctor.json`: política versionada do doctor para aliases de vocabulário e exceções justificadas
 - `docs/ARCHITECTURE.md`: desenho do sistema e fronteiras
 - `docs/CONTRACTS.md`: entradas, saídas, invariantes e integrações

@@ -569,10 +569,15 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / "config" / "doctor.json").exists())
             self.assertTrue((repo / "scripts" / "project_doctor.py").exists())
             self.assertTrue((repo / ".githooks" / "pre-commit").exists())
+            self.assertTrue((repo / ".github" / "workflows" / "ci.yml").exists())
             self.assertTrue((repo / "flowrepo" / "main.py").exists())
             self.assertTrue((repo / "requirements.txt").exists())
             self.assertFalse((repo / "pyproject.toml").exists())
             self.assertFalse((repo / "src").exists())
+
+            ci_workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+            self.assertIn("python -m pytest -q", ci_workflow)
+            self.assertIn("python3 scripts/check_project_gate.py", ci_workflow)
 
             logging_config = json.loads((repo / "config" / "logging.example.json").read_text(encoding="utf-8"))
             required_fields = logging_config["formatters"]["json"]["required_fields"]
@@ -650,6 +655,28 @@ class StarterRegressionTests(unittest.TestCase):
                 expected=1,
             )
             self.assertIn("Ignored warnings sem efeito atual:", wrapper_audit_failure.stderr)
+
+    def test_node_project_includes_ci_baseline(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-node-") as tmp:
+            repo = Path(tmp) / "NodeRepo"
+            run_cmd(
+                [
+                    sys.executable,
+                    str(SCAFFOLDER),
+                    str(repo),
+                    "--runtime",
+                    "node",
+                    "--enforce-gate",
+                ]
+            )
+
+            workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+            package_json = json.loads((repo / "package.json").read_text(encoding="utf-8"))
+
+            self.assertIn("npm install", workflow)
+            self.assertIn("npm test", workflow)
+            self.assertIn("python3 scripts/check_project_gate.py", workflow)
+            self.assertEqual(package_json["scripts"]["test"], "node --test tests/*.test.mjs")
 
 
 if __name__ == "__main__":
