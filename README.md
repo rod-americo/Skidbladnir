@@ -1,5 +1,10 @@
 # Skidbladnir
 
+[![CI](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml/badge.svg)](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/rod-americo/Skidbladnir)](https://github.com/rod-americo/Skidbladnir/releases)
+![License](https://img.shields.io/github/license/rod-americo/Skidbladnir)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+
 Kit pragmático para criar projetos novos e recuperar repositórios existentes com
 fronteira explícita, documentação útil, governança mínima e operação
 intencional.
