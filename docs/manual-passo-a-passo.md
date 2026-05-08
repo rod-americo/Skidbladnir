@@ -209,6 +209,9 @@ Antes de commitar:
 3. validação mínima da stack
 4. revisar `git diff`
 
+Se o projeto nasceu com runtime suportado pelo kit, revise também o baseline de
+CI em `.github/workflows/ci.yml` antes do primeiro push.
+
 Se a mudança afeta operação:
 
 - declare restart
