@@ -65,6 +65,14 @@ Na prática, ele oferece:
 - uma ferramenta de deploy
 - uma garantia de boa arquitetura sem pensamento crítico
 
+## Vícios de origem que o kit tenta impedir
+
+- repositório sem motivo claro para existir
+- escopo infinito
+- operação implícita
+- contratos mal definidos
+- crescimento por improviso
+
 ## Layout recomendado
 
 O padrão principal do kit é:
