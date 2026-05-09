@@ -92,6 +92,8 @@ Workflow padrão para repositório solo:
 - trabalhar diretamente em `main`
 - não criar branches auxiliares sem necessidade explícita
 - manter um commit por mudança lógica
+- preferir commits curtos, intencionais e fáceis de reverter
+- fazer push só depois de revisar diff, validação e impacto operacional
 
 Mensagem de commit:
 

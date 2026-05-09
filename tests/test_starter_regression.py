@@ -175,13 +175,19 @@ python -m {slug}.main --interval 30
 - preservar a separacao `domain / application / infrastructure / interfaces`
 - nao empilhar dashboards, HTTP manual ou ETL generico neste repositorio
 
-## 3. Validacao obrigatoria
+## 3. Politica de commit e push
+
+- manter um commit por mudanca logica
+- preferir commits curtos, intencionais e faceis de reverter
+- revisar diff e validacao antes de push para remoto
+
+## 4. Validacao obrigatoria
 
 - revisar `git diff`
 - declarar impacto de restart quando houver
 - atualizar docs estruturais quando o comportamento mudar
 
-## 4. Doctor e gate
+## 5. Doctor e gate
 
 - gate check local: `python3 scripts/check_project_gate.py`
 - doctor estrutural: `python3 scripts/project_doctor.py`
@@ -190,7 +196,7 @@ python -m {slug}.main --interval 30
 - policy do doctor: `config/doctor.json`
 - comando de validacao minima: `python -m {slug}.main --once`
 
-## 5. Extensoes especificas do repositorio
+## 6. Extensoes especificas do repositorio
 
 - dominio critico: `consolidacao de manifestos, retry e reprocessamento`
 - dependencia externa critica: `portal autenticado do parceiro`
