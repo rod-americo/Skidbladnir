@@ -26,6 +26,12 @@ cumprir sua função. Essa é a síntese conceitual do projeto: um artefato
 compacto, reutilizável e portável, pronto para ser desdobrado em contexto real
 sem perder coerência estrutural.
 
+## Por que este projeto existe
+
+- evitar que projetos novos nasçam sem fronteira, operação e documentação úteis
+- dar baseline pragmática para repositórios que precisam existir por mérito próprio
+- recuperar repositórios vivos sem reescrita cosmética e sem fingir maturidade
+
 ## O que este projeto faz
 
 `Skidbladnir` combina três capacidades complementares:
@@ -145,6 +151,25 @@ Skidbladnir/
 - baseline madura para docs, gate e doctor
 - suporte a retrofit de repositórios existentes
 - espaço claro para evoluir presets, publicação e ergonomia
+
+## Evolução do projeto
+
+### Consolidado
+
+- [x] scaffolder para projetos novos com baseline estrutural e documental
+- [x] guardrails de gate e doctor para coerência mínima do repositório
+- [x] baseline de CI para o kit e para projetos gerados
+
+### Em andamento
+
+- [ ] endurecer a linguagem pública dos templates sem transformá-los em texto burocrático
+- [ ] expandir presets e ergonomia sem perder a fronteira explícita do kit
+
+### Planejado
+
+- [ ] evoluir a baseline editorial dos READMEs gerados com mais identidade e trajetória
+- [ ] ampliar cobertura de regressão para novos caminhos de scaffold e documentação
+- [ ] refinar publicação e distribuição do kit sem reintroduzir dependências implícitas locais
 
 ## Instalação
 

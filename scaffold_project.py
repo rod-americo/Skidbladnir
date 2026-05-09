@@ -106,6 +106,34 @@ def prepend_gate_check(command: str, gate_enforced: bool) -> str:
     return f"{gate_cmd} && {command}"
 
 
+def github_repo_slug(repo_url: str) -> str | None:
+    cleaned = repo_url.strip()
+    ssh_match = re.match(r"git@github\.com:(?P<slug>[^/]+/[^/]+?)(?:\.git)?$", cleaned)
+    if ssh_match:
+        return ssh_match.group("slug")
+
+    https_match = re.match(r"https://github\.com/(?P<slug>[^/]+/[^/]+?)(?:\.git)?/?$", cleaned)
+    if https_match:
+        return https_match.group("slug")
+
+    return None
+
+
+def default_readme_badges(runtime: str, repo_url: str) -> str:
+    badges: list[str] = []
+    repo_slug = github_repo_slug(repo_url)
+    if repo_slug:
+        workflow_url = f"https://github.com/{repo_slug}/actions/workflows/ci.yml"
+        badges.append(f"[![CI]({workflow_url}/badge.svg)]({workflow_url})")
+
+    if runtime == "python":
+        badges.append("![Python](https://img.shields.io/badge/python-3.11%2B-blue)")
+    elif runtime == "node":
+        badges.append("![Node](https://img.shields.io/badge/node-20%2B-5fa04e)")
+
+    return "\n".join(badges)
+
+
 def runtime_defaults(
     runtime: str,
     preset: str,
@@ -122,6 +150,7 @@ def runtime_defaults(
         "PROJECT_SLUG": project_slug,
         "PROJECT_PHASE": "prototipo",
         "REPO_URL": repo_url,
+        "README_BADGES": default_readme_badges(runtime, repo_url),
         "DOMINIO_CRITICO": "preencher dominio critico do projeto",
         "DEPENDENCIA_EXTERNA": "preencher dependencia externa principal",
         "HOST_PRINCIPAL": "preencher host principal ou ambiente de referencia",
@@ -137,6 +166,9 @@ def runtime_defaults(
         "uma biblioteca, servico, pipeline, automacao, produto interno, etc.": "produto interno",
         "a capacidade principal": "preencher capacidade principal",
         "o contexto operacional ou de negocio": "preencher contexto operacional",
+        "motivacao_1": "preencher por que este repositorio precisa existir agora",
+        "motivacao_2": "preencher por que a fronteira dele merece ser explicita",
+        "motivacao_3": "preencher que tipo de desgaste ou improviso este projeto evita",
         "escopo que voce quer proibir desde o inicio": "preencher",
         "escopo que parece proximo, mas pertence a outro sistema": "preencher fronteira fora do escopo",
         "atalhos que voce quer proibir desde o inicio": "pular contrato, logica de dominio solta na raiz e crescimento sem runtime claro",
@@ -149,6 +181,11 @@ def runtime_defaults(
         "risco_tecnico_principal": "preencher risco tecnico principal",
         "dependencia_mais_fragil": "preencher dependencia mais fragil",
         "divida_tecnica_principal": "preencher divida tecnica principal",
+        "consolidado_1": "baseline documental e estrutural gerada pelo scaffold",
+        "consolidado_2": "entrypoint principal e validacao minima materializados no repositório",
+        "consolidado_3": "baseline de CI e guardrails locais preparados para evolucao segura",
+        "em_andamento_1": "preencher frente que esta sendo endurecida agora",
+        "em_andamento_2": "preencher area ainda parcial ou dependente de validacao real",
         "passo_1": "preencher",
         "passo_2": "preencher",
         "passo_3": "preencher",
@@ -346,6 +383,9 @@ def runtime_defaults(
             {
                 "a capacidade principal": "expor uma API HTTP pequena, coerente e integravel",
                 "o contexto operacional ou de negocio": "servico HTTP interno orientado a integracoes e operacao",
+                "motivacao_1": "nascer com contrato HTTP claro, sem improvisar estrutura de servico depois",
+                "motivacao_2": "isolar a fronteira da API, os contratos e a operacao desde o primeiro dia",
+                "motivacao_3": "evitar que endpoint, regra de negocio e infraestrutura crescam misturados",
                 "entrypoint_1": f"python -m {project_slug}.main",
                 "entrypoint_2": f"uvicorn {project_slug}.interfaces.http.app:create_app --factory --reload",
                 "API / host / banco / fila / worker / PACS / browser / etc": "FastAPI, uvicorn e dependencias HTTP do servico",
@@ -373,6 +413,9 @@ def runtime_defaults(
             {
                 "a capacidade principal": "oferecer uma interface textual operacional, local e auditavel",
                 "o contexto operacional ou de negocio": "cockpit local para triagem, monitoramento e acoes humanas",
+                "motivacao_1": "dar ao operador um cockpit local antes que a rotina vire script solto e opaco",
+                "motivacao_2": "separar interface, estado operacional e comandos de diagnostico com intencao clara",
+                "motivacao_3": "evitar acoplamento entre regra de negocio e rendering da interface textual",
                 "entrypoint_1": f"python -m {project_slug} tui",
                 "entrypoint_2": f"python -m {project_slug} doctor",
                 "API / host / banco / fila / worker / PACS / browser / etc": "terminal do operador, textual, rich e fontes locais de estado",
@@ -393,6 +436,9 @@ def runtime_defaults(
             {
                 "a capacidade principal": "oferecer uma CLI clara, estavel e auditavel",
                 "o contexto operacional ou de negocio": "automacao local ou operacional orientada a comando explicito",
+                "motivacao_1": "registrar desde cedo um contrato de linha de comando defensavel e versionavel",
+                "motivacao_2": "dar forma de produto a uma automacao que poderia nascer como script descartavel",
+                "motivacao_3": "evitar proliferacao de comandos ad hoc sem dono, documentacao ou smoke claro",
                 "entrypoint_1": f"python -m {project_slug}",
                 "entrypoint_2": project_slug,
                 "API / host / banco / fila / worker / PACS / browser / etc": "shell do operador, filesystem e dependencias do host",
@@ -413,6 +459,9 @@ def runtime_defaults(
             {
                 "a capacidade principal": "automatizar sessao de browser e ciclo recorrente de integracao web",
                 "o contexto operacional ou de negocio": "worker orientado a browser automation, sessao persistida e integracao hostil",
+                "motivacao_1": "isolar sessao, browser e loop recorrente antes que a integracao fique irreparavelmente frágil",
+                "motivacao_2": "tratar browser automation como fronteira operacional propria, nao como detalhe incidental",
+                "motivacao_3": "evitar scripts de login e scraping sem contrato de artefato, retry ou observabilidade",
                 "entrypoint_1": f"python -m {project_slug}.main --once --dry-run",
                 "entrypoint_2": f"python -m {project_slug}.main --refresh-session",
                 "API / host / banco / fila / worker / PACS / browser / etc": "playwright, chromium e sistema web autenticado",
@@ -448,6 +497,9 @@ def runtime_defaults(
             {
                 "a capacidade principal": "executar trabalho recorrente ou residente com regras explicitas de loop e retry",
                 "o contexto operacional ou de negocio": "worker ou daemon leve orientado a fila, polling ou timer",
+                "motivacao_1": "tirar a rotina recorrente do campo do improviso e colocá-la sob operacao explicita",
+                "motivacao_2": "delimitar loop, retry, idempotencia e restart como responsabilidades centrais do repo",
+                "motivacao_3": "evitar cron solto ou script residente sem contrato de falha e observabilidade minima",
                 "entrypoint_1": f"python -m {project_slug}.main --once",
                 "entrypoint_2": f"python -m {project_slug}.main --interval 30",
                 "API / host / banco / fila / worker / PACS / browser / etc": "runtime local, scheduler e dependencias operacionais do worker",
@@ -468,6 +520,9 @@ def runtime_defaults(
             {
                 "a capacidade principal": "materializar metadados DICOM e agrupar estudos em manifestos reprodutiveis",
                 "o contexto operacional ou de negocio": "pipeline local de ingestao DICOM com staging controlado",
+                "motivacao_1": "materializar um fluxo DICOM reproduzivel antes que staging e identidade clinica se confundam",
+                "motivacao_2": "isolar contratos de estudo, staging e materializacao em uma fronteira rastreavel",
+                "motivacao_3": "evitar mistura entre ingestao bruta, enriquecimento e regras de reprocessamento",
                 "entrypoint_1": f"python -m {project_slug}.main --sample",
                 "entrypoint_2": f"python -m {project_slug}.main --inbox runtime/inbox --outbox runtime/outbox",
                 "API / host / banco / fila / worker / PACS / browser / etc": "filesystem de staging, pydicom e contrato de estudo",
@@ -488,6 +543,9 @@ def runtime_defaults(
             {
                 "a capacidade principal": "orquestrar um fluxo em etapas com contratos explicitos de entrada e saida",
                 "o contexto operacional ou de negocio": "pipeline batch ou incremental com runtime state controlado",
+                "motivacao_1": "dar forma a um pipeline que precisa crescer por etapas sem perder rastreabilidade",
+                "motivacao_2": "explicitar fronteira entre entrada, transformacao, materializacao e runtime state",
+                "motivacao_3": "evitar que o fluxo vire um script longo sem contratos, checkpoints ou saida canonica",
                 "entrypoint_1": f"python -m {project_slug}.main --once",
                 "entrypoint_2": f"python -m {project_slug}.main --item-id demo-001",
                 "API / host / banco / fila / worker / PACS / browser / etc": "fonte de entrada, staging local e destino final do pipeline",

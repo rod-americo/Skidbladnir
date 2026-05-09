@@ -1,10 +1,18 @@
 # {{PROJECT_NAME}}
 
+{{README_BADGES}}
+
 Breve descrição em 1-2 linhas:
 
 - qual problema este repositório resolve
 - para quem ele existe
 - qual o limite do seu escopo
+
+## Por Que Este Projeto Existe
+
+- {{motivacao_1}}
+- {{motivacao_2}}
+- {{motivacao_3}}
 
 ## O Que Este Repositório É
 
@@ -179,8 +187,21 @@ Checklist mínimo antes de commitar:
 - dependência mais frágil: `{{dependencia_mais_fragil}}`
 - maior dívida técnica conhecida: `{{divida_tecnica_principal}}`
 
-## Próximos Passos
+## Evolução do Projeto
 
-1. {{passo_1}}
-2. {{passo_2}}
-3. {{passo_3}}
+### Consolidado
+
+- [x] {{consolidado_1}}
+- [x] {{consolidado_2}}
+- [x] {{consolidado_3}}
+
+### Em andamento
+
+- [ ] {{em_andamento_1}}
+- [ ] {{em_andamento_2}}
+
+### Planejado
+
+- [ ] {{passo_1}}
+- [ ] {{passo_2}}
+- [ ] {{passo_3}}

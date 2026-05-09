@@ -576,8 +576,11 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertFalse((repo / "src").exists())
 
             ci_workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+            readme_text = (repo / "README.md").read_text(encoding="utf-8")
             self.assertIn("python -m pytest -q", ci_workflow)
             self.assertIn("python3 scripts/check_project_gate.py", ci_workflow)
+            self.assertIn("[![CI](", readme_text)
+            self.assertIn("![Python]", readme_text)
 
             logging_config = json.loads((repo / "config" / "logging.example.json").read_text(encoding="utf-8"))
             required_fields = logging_config["formatters"]["json"]["required_fields"]
@@ -672,11 +675,14 @@ class StarterRegressionTests(unittest.TestCase):
 
             workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
             package_json = json.loads((repo / "package.json").read_text(encoding="utf-8"))
+            readme_text = (repo / "README.md").read_text(encoding="utf-8")
 
             self.assertIn("npm install", workflow)
             self.assertIn("npm test", workflow)
             self.assertIn("python3 scripts/check_project_gate.py", workflow)
             self.assertEqual(package_json["scripts"]["test"], "node --test tests/*.test.mjs")
+            self.assertIn("[![CI](", readme_text)
+            self.assertIn("![Node]", readme_text)
 
 
 if __name__ == "__main__":
