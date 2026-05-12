@@ -2,8 +2,7 @@
 
 ## 1. Objetivo
 
-Descreva o problema técnico que este sistema resolve e a função dele dentro do
-ecossistema.
+Descreva o problema técnico que este sistema resolve e a função dele dentro do ecossistema.
 
 ## 2. Escopo
 
@@ -79,8 +78,7 @@ Descreva o fluxo end-to-end em passos numerados:
   - {{invariante_1}}
   - {{invariante_2}}
 
-Se houver contratos externos pouco confiáveis, documente o que é garantido e o
-que ainda depende de validação real.
+Se houver contratos externos pouco confiáveis, documente o que é garantido e o que ainda depende de validação real.
 
 ## 7. Persistência
 

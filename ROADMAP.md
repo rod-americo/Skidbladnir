@@ -2,15 +2,13 @@
 
 ## Princípio
 
-O roadmap de `Skidbladnir` deve privilegiar clareza de produto, utilidade
-operacional e estabilidade do kit antes de adicionar volume de features.
+O roadmap de `Skidbladnir` deve privilegiar clareza de produto, utilidade operacional e estabilidade do kit antes de adicionar volume de features.
 
 ## v1.0.x
 
 Objetivo:
 
-fechar a publicação inicial com tese clara, instalação simples e baseline
-confiável.
+fechar a publicação inicial com tese clara, instalação simples e baseline confiável.
 
 Frentes:
 
@@ -64,8 +62,7 @@ Frentes:
 
 Objetivo:
 
-extrair uma camada comum realmente reutilizável sem destruir o caráter leve do
-kit.
+extrair uma camada comum realmente reutilizável sem destruir o caráter leve do kit.
 
 Frentes:
 

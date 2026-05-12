@@ -6,9 +6,7 @@
 
 ## Tese
 
-`Skidbladnir` é um kit para criar projetos novos e recuperar repositórios já em
-funcionamento com uma baseline mínima de arquitetura, documentação,
-governança e operação.
+`Skidbladnir` é um kit para criar projetos novos e recuperar repositórios já em funcionamento com uma baseline mínima de arquitetura, documentação, governança e operação.
 
 Ele existe para reduzir o padrão recorrente de repositórios que:
 
@@ -36,8 +34,7 @@ Ele existe para reduzir o padrão recorrente de repositórios que:
 - engenheiros aplicados
 - autores de sistemas operacionais internos
 - mantenedores de automações, workers, pipelines e integrações
-- pessoas que precisam criar ou recuperar repositórios sem cair em caos
-  documental e estrutural
+- pessoas que precisam criar ou recuperar repositórios sem cair em caos documental e estrutural
 
 ## Proposta de valor
 
@@ -52,6 +49,4 @@ O valor do projeto não está apenas no scaffolder. Ele está no conjunto:
 
 ## Diferencial
 
-`Skidbladnir` não tenta transformar todo projeto em framework. Ele trabalha com
-uma ideia mais pragmática: tornar explícitas as decisões mínimas que evitam
-retrabalho, ambiguidade e degradação operacional conforme o repositório cresce.
+`Skidbladnir` não tenta transformar todo projeto em framework. Ele trabalha com uma ideia mais pragmática: tornar explícitas as decisões mínimas que evitam retrabalho, ambiguidade e degradação operacional conforme o repositório cresce.

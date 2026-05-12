@@ -19,9 +19,9 @@
 
 - documentação humana em `pt-BR`
 - identificadores técnicos em `en-US`
+- parágrafos em Markdown ficam em linha única; não aplicar hard-wrap manual em 80 colunas
 - mudanças em geração exigem revisão de `templates/`
-- mudanças em `scaffold_project.py`, `bin/newproj` ou `install_newproj.sh`
-  exigem regressão
+- mudanças em `scaffold_project.py`, `bin/newproj` ou `install_newproj.sh` exigem regressão
 - não reintroduzir caminhos locais implícitos como requisito estrutural do kit
 
 ## Validação mínima

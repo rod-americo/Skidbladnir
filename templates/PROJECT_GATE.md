@@ -2,8 +2,7 @@
 
 Preencha este arquivo antes de consolidar um novo repositório.
 
-Respostas vagas como `a definir`, `não sei`, `talvez`, `N/A` ou frases curtas
-demais fazem o gate falhar quando o repositório nasce com enforcement ativo.
+Respostas vagas como `a definir`, `não sei`, `talvez`, `N/A` ou frases curtas demais fazem o gate falhar quando o repositório nasce com enforcement ativo.
 
 ## 1. Por que este projeto existe?
 
@@ -25,8 +24,7 @@ demais fazem o gate falhar quando o repositório nasce com enforcement ativo.
 - contratos:
 - autenticação ou transporte:
 
-Se a resposta for "quase tudo", provavelmente isso ainda não deveria nascer como
-repositório.
+Se a resposta for "quase tudo", provavelmente isso ainda não deveria nascer como repositório.
 
 ## 4. O que este projeto NÃO pode carregar?
 

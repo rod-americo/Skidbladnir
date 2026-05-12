@@ -21,15 +21,13 @@ Opções comuns:
 - `~/bin`
 - `~/Scripts/bin`
 
-Se você já usa `~/Scripts/bin` no `PATH`, pode manter esse diretório.
-Se quiser um binário curto e isolado no shell, prefira `~/bin`.
+Se você já usa `~/Scripts/bin` no `PATH`, pode manter esse diretório. Se quiser um binário curto e isolado no shell, prefira `~/bin`.
 
 ## 3. Rodar o instalador
 
 Exemplo usando `~/bin`:
 
-```bash
-bash ~/Skidbladnir/install_newproj.sh ~/bin
+```bash bash ~/Skidbladnir/install_newproj.sh ~/bin
 ```
 
 Exemplo mantendo `~/Scripts/bin`:
@@ -47,11 +45,9 @@ O instalador:
 
 ## 4. Garantir o PATH
 
-Se o instalador avisar que o binário não está no `PATH`, adicione no
-`~/.zshrc`:
+Se o instalador avisar que o binário não está no `PATH`, adicione no `~/.zshrc`:
 
-```bash
-export PATH="$HOME/bin:$PATH"
+```bash export PATH="$HOME/bin:$PATH"
 ```
 
 Ou, se preferir `~/Scripts/bin`:
@@ -62,8 +58,7 @@ export PATH="$HOME/Scripts/bin:$PATH"
 
 Depois recarregue o shell:
 
-```bash
-source ~/.zshrc
+```bash source ~/.zshrc
 ```
 
 ## 5. Verificar a instalação
@@ -82,8 +77,7 @@ Resultado esperado:
 
 Antes de confiar no setup, rode:
 
-```bash
-python3 ~/Skidbladnir/run_regression_suite.py
+```bash python3 ~/Skidbladnir/run_regression_suite.py
 ```
 
 Isso valida:

@@ -2,8 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento deve permitir executar, diagnosticar, reiniciar e recuperar o
-sistema sem depender de contexto implícito.
+Este documento deve permitir executar, diagnosticar, reiniciar e recuperar o sistema sem depender de contexto implícito.
 
 ## 2. Ambientes
 
@@ -17,8 +16,7 @@ sistema sem depender de contexto implícito.
 
 ### Boot local
 
-```bash
-{{LOCAL_BOOT_COMMANDS}}
+```bash {{LOCAL_BOOT_COMMANDS}}
 ```
 
 ### Boot principal
@@ -40,8 +38,7 @@ sistema sem depender de contexto implícito.
 
 Depois de subir:
 
-```bash
-{{SMOKE_TEST_COMMAND}}
+```bash {{SMOKE_TEST_COMMAND}}
 ```
 
 Conferir:

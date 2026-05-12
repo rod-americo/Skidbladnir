@@ -1,7 +1,6 @@
 # CHANGELOG
 
-Este arquivo registra mudanças relevantes de comportamento, arquitetura e
-operação.
+Este arquivo registra mudanças relevantes de comportamento, arquitetura e operação.
 
 Formato sugerido:
 

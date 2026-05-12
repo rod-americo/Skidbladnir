@@ -8,21 +8,16 @@ Use este kit quando um projeto novo:
 - precisa nascer com fronteira, contratos e operação explícitos
 - não deve crescer por script solto
 
-Se a resposta correta for "isso é um módulo de outro sistema", não gere repo
-novo.
+Se a resposta correta for "isso é um módulo de outro sistema", não gere repo novo.
 
 ## 1. Preparar o comando global
 
 Instale ou atualize o wrapper:
 
-```bash
-bash ~/Skidbladnir/install_newproj.sh ~/bin
-source ~/.zshrc
-newproj --version
+```bash bash ~/Skidbladnir/install_newproj.sh ~/bin source ~/.zshrc newproj --version
 ```
 
-Se o binário já estiver em `~/Scripts/bin` e esse diretório já estiver no
-`PATH`, a instalação pode ser mantida como está.
+Se o binário já estiver em `~/Scripts/bin` e esse diretório já estiver no `PATH`, a instalação pode ser mantida como está.
 
 ## 2. Escolher o preset certo
 
@@ -36,8 +31,7 @@ Regra prática:
 - `cli`: comando local com interface de shell
 - `pipeline`: fluxo em etapas orientado a item
 
-Se estiver em dúvida entre dois presets, escolha o mais simples e endureça
-depois.
+Se estiver em dúvida entre dois presets, escolha o mais simples e endureça depois.
 
 ## 3. Gerar o projeto
 
@@ -84,8 +78,7 @@ Objetivo do gate:
 
 Valide:
 
-```bash
-python3 scripts/check_project_gate.py
+```bash python3 scripts/check_project_gate.py
 ```
 
 Se falhar:
@@ -127,10 +120,7 @@ Regras:
 
 Quando os docs já estiverem reais:
 
-```bash
-python3 scripts/project_doctor.py
-python3 scripts/project_doctor.py --strict
-python3 scripts/project_doctor.py --audit-config
+```bash python3 scripts/project_doctor.py python3 scripts/project_doctor.py --strict python3 scripts/project_doctor.py --audit-config
 ```
 
 Interpretação:
@@ -161,8 +151,7 @@ Exemplo:
 
 Depois rode:
 
-```bash
-python3 scripts/project_doctor.py --audit-config
+```bash python3 scripts/project_doctor.py --audit-config
 ```
 
 Se o audit acusar `ignored_warnings` sem efeito atual, remova o lixo.
@@ -179,8 +168,7 @@ python -m pip install -r requirements.txt
 
 Para `playwright-worker`:
 
-```bash
-python -m playwright install chromium
+```bash python -m playwright install chromium
 ```
 
 Para `node`:
@@ -209,8 +197,7 @@ Antes de commitar:
 3. validação mínima da stack
 4. revisar `git diff`
 
-Se o projeto nasceu com runtime suportado pelo kit, revise também o baseline de
-CI em `.github/workflows/ci.yml` antes do primeiro push.
+Se o projeto nasceu com runtime suportado pelo kit, revise também o baseline de CI em `.github/workflows/ci.yml` antes do primeiro push.
 
 Se a mudança afeta operação:
 
@@ -231,9 +218,7 @@ A cada mudança estrutural:
 
 Quando mexer no scaffolder:
 
-```bash
-python3 ~/Skidbladnir/run_regression_suite.py
-newproj --version
+```bash python3 ~/Skidbladnir/run_regression_suite.py newproj --version
 ```
 
 Só considere a alteração pronta se a regressão passar.

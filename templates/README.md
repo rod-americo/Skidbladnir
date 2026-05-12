@@ -40,33 +40,7 @@ Breve descrição em 1-2 linhas:
 
 Padrão recomendado para projetos novos:
 
-```text
-{{PROJECT_NAME}}/
-├── README.md
-├── AGENTS.md
-├── PROJECT_GATE.md
-├── CHANGELOG.md
-├── .github/
-│   └── workflows/
-│       └── ci.yml            # baseline de CI para push e pull_request
-├── requirements.txt / package.json
-├── config/
-│   ├── doctor.json
-│   ├── settings.example.json
-│   └── logging.example.json
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── CONTRACTS.md
-│   ├── OPERATIONS.md
-│   └── DECISIONS.md
-├── {{PROJECT_SLUG}}/
-│   ├── domain/
-│   ├── application/
-│   ├── infrastructure/
-│   ├── interfaces/
-│   └── main.py
-├── tests/
-└── runtime/                  # ignorado no git
+```text {{PROJECT_NAME}}/ ├── README.md ├── AGENTS.md ├── PROJECT_GATE.md ├── CHANGELOG.md ├── .github/ │   └── workflows/ │       └── ci.yml            # baseline de CI para push e pull_request ├── requirements.txt / package.json ├── config/ │   ├── doctor.json │   ├── settings.example.json │   └── logging.example.json ├── docs/ │   ├── ARCHITECTURE.md │   ├── CONTRACTS.md │   ├── OPERATIONS.md │   └── DECISIONS.md {{OPTIONAL_RESEARCH_STRUCTURE}}├── {{PROJECT_SLUG}}/ │   ├── domain/ │   ├── application/ │   ├── infrastructure/ │   ├── interfaces/ │   └── main.py ├── tests/ └── runtime/                  # ignorado no git
 ```
 
 Regras:
@@ -88,8 +62,7 @@ cd {{PROJECT_NAME}}
 
 ### 2. Preparar ambiente
 
-```bash
-{{SETUP_COMMANDS}}
+```bash {{SETUP_COMMANDS}}
 ```
 
 ### 3. Configurar
@@ -101,8 +74,7 @@ cp config/settings.example.json config/settings.local.json
 
 ### 4. Rodar
 
-```bash
-{{RUN_COMMAND}}
+```bash {{RUN_COMMAND}}
 ```
 
 ## Configuração
@@ -158,8 +130,7 @@ Checklist mínimo antes de commitar:
 
 - `AGENTS.md`: regras de colaboração para agentes e autores
 - `PROJECT_GATE.md`: justificativa de existência e fronteira do repositório
-- `scripts/check_project_gate.py`: valida se o gate foi realmente preenchido
-  e se as respostas têm densidade mínima
+- `scripts/check_project_gate.py`: valida se o gate foi realmente preenchido e se as respostas têm densidade mínima
 - `scripts/project_doctor.py`: valida coerência mínima entre gate, README, arquitetura, contratos e operação
 - `scripts/project_doctor.py --strict`: transforma warnings semânticos em erro bloqueante
 - `scripts/project_doctor.py --audit-config`: audita overrides e aliases de `config/doctor.json`
@@ -170,6 +141,7 @@ Checklist mínimo antes de commitar:
 - `docs/OPERATIONS.md`: execução, logs, restart, backup e incidentes
 - `docs/DECISIONS.md`: decisões arquiteturais com contexto e tradeoff
 - `CHANGELOG.md`: histórico mínimo de versão e mudanças relevantes
+{{OPTIONAL_RESEARCH_DOCS}}
 
 ## Regras operacionais
 

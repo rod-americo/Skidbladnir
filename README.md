@@ -1,30 +1,16 @@
 # Skidbladnir
 
-[![CI](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml/badge.svg)](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml)
-![License](https://img.shields.io/github/license/rod-americo/Skidbladnir)
-![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+[![CI](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml/badge.svg)](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml) ![License](https://img.shields.io/github/license/rod-americo/Skidbladnir) ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-Kit pragmático para criar projetos novos e recuperar repositórios existentes com
-fronteira explícita, documentação útil, governança mínima e operação
-intencional.
+Kit pragmático para criar projetos novos e recuperar repositórios existentes com fronteira explícita, documentação útil, governança mínima e operação intencional.
 
 ## Por que Skidbladnir
 
-`Skidbladnir` era o navio forjado pelos anões na mitologia nórdica: um artefato
-de engenharia perfeita, construído com intenção e precisão desde a origem. Essa
-ideia reflete a proposta deste repositório: ajudar projetos a nascerem
-corretamente, com estrutura, fronteiras e operação explícitas desde o primeiro
-dia.
+`Skidbladnir` era o navio forjado pelos anões na mitologia nórdica: um artefato de engenharia perfeita, construído com intenção e precisão desde a origem. Essa ideia reflete a proposta deste repositório: ajudar projetos a nascerem corretamente, com estrutura, fronteiras e operação explícitas desde o primeiro dia.
 
-O nome também carrega a noção de movimento sem atrito. Skidbladnir sempre
-encontrava vento favorável, e aqui isso funciona como metáfora para boas
-decisões iniciais que reduzem improviso, retrabalho e desgaste operacional ao
-longo da vida do repositório.
+O nome também carrega a noção de movimento sem atrito. Skidbladnir sempre encontrava vento favorável, e aqui isso funciona como metáfora para boas decisões iniciais que reduzem improviso, retrabalho e desgaste operacional ao longo da vida do repositório.
 
-Por fim, Skidbladnir podia ser dobrado, transportado e depois expandido para
-cumprir sua função. Essa é a síntese conceitual do projeto: um artefato
-compacto, reutilizável e portável, pronto para ser desdobrado em contexto real
-sem perder coerência estrutural.
+Por fim, Skidbladnir podia ser dobrado, transportado e depois expandido para cumprir sua função. Essa é a síntese conceitual do projeto: um artefato compacto, reutilizável e portável, pronto para ser desdobrado em contexto real sem perder coerência estrutural.
 
 ## Por que este projeto existe
 
@@ -44,8 +30,7 @@ Na prática, ele oferece:
 
 - `scaffold_project.py` para gerar projetos novos
 - `bin/newproj` como wrapper de uso diário
-- templates em `templates/` para `README`, `AGENTS`, `PROJECT_GATE`,
-  `ARCHITECTURE`, `CONTRACTS`, `OPERATIONS` e `DECISIONS`
+- templates em `templates/` para `README`, `AGENTS`, `PROJECT_GATE`, `ARCHITECTURE`, `CONTRACTS`, `OPERATIONS` e `DECISIONS`
 - baseline de `GitHub Actions` para o próprio kit e para projetos gerados
 - `check_project_gate.py` para justificar a existência do repositório
 - `project_doctor.py` para validar coerência documental e estrutural
@@ -85,10 +70,7 @@ O padrão principal do kit é:
 
 Instalação do wrapper:
 
-```bash
-bash ~/Skidbladnir/install_newproj.sh ~/bin
-source ~/.zshrc
-newproj --version
+```bash bash ~/Skidbladnir/install_newproj.sh ~/bin source ~/.zshrc newproj --version
 ```
 
 Gerar um projeto novo:
@@ -129,28 +111,11 @@ Não use `Skidbladnir` quando:
 
 - o projeto é descartável e de curtíssima vida
 - o problema real é que o repositório nem deveria existir
-- a equipe precisa de um framework prescritivo completo, e não de um baseline
-  pragmático
+- a equipe precisa de um framework prescritivo completo, e não de um baseline pragmático
 
 ## Estrutura deste repositório
 
-```text
-Skidbladnir/
-├── README.md
-├── AGENTS.md
-├── INSTALL.md
-├── ROADMAP.md
-├── LICENSE
-├── docs/
-│   ├── how-to-use.md
-│   ├── manual-passo-a-passo.md
-│   ├── prompt-repo-existente.md
-│   ├── posicionamento.md
-│   └── release-checklist.md
-├── templates/
-├── bin/
-├── tests/
-└── scaffold_project.py
+```text Skidbladnir/ ├── README.md ├── AGENTS.md ├── INSTALL.md ├── ROADMAP.md ├── LICENSE ├── docs/ │   ├── how-to-use.md │   ├── manual-passo-a-passo.md │   ├── prompt-repo-existente.md │   ├── posicionamento.md │   └── release-checklist.md ├── templates/ ├── bin/ ├── tests/ └── scaffold_project.py
 ```
 
 ## Estado atual

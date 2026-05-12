@@ -2,8 +2,7 @@
 
 ## 1. Objetivo
 
-Registrar entradas, saídas, identificadores, eventos e assunções do sistema de
-forma explícita e auditável.
+Registrar entradas, saídas, identificadores, eventos e assunções do sistema de forma explícita e auditável.
 
 ## 2. Entradas Canônicas
 
@@ -38,8 +37,7 @@ forma explícita e auditável.
 - {{assuncao_1}}
 - {{assuncao_2}}
 
-Marque explicitamente o que foi observado no ambiente real e o que ainda é
-apenas inferência.
+Marque explicitamente o que foi observado no ambiente real e o que ainda é apenas inferência.
 
 ## 7. Quebras de contrato
 

@@ -12,13 +12,10 @@ Arquivos complementares do kit:
 
 1. Gere o projeto com `newproj` ou `scaffold_project.py`.
 2. Revise `README.md` e `AGENTS.md` antes de escrever código de produção.
-3. Ajuste `docs/ARCHITECTURE.md`, `docs/CONTRACTS.md` e `docs/OPERATIONS.md`
-   antes da primeira integração real.
-4. Se usar `--include-checklist`, rode `START_CHECKLIST.md` antes do primeiro
-   push relevante.
+3. Ajuste `docs/ARCHITECTURE.md`, `docs/CONTRACTS.md` e `docs/OPERATIONS.md` antes da primeira integração real.
+4. Se usar `--include-checklist`, rode `START_CHECKLIST.md` antes do primeiro push relevante.
 
-Para repositórios antigos que já existem e não nasceram com o scaffolder, use
-`prompt-repo-existente.md` em vez de gerar um projeto novo.
+Para repositórios antigos que já existem e não nasceram com o scaffolder, use `prompt-repo-existente.md` em vez de gerar um projeto novo.
 
 ## Layout recomendado
 
@@ -30,18 +27,10 @@ Padrão principal para projetos Python e Node deste kit:
 
 Exemplo:
 
-```text
-MeuProjeto/
-├── README.md
-├── docs/
-├── config/
-├── tests/
-├── runtime/
-└── meuprojeto/
+```text MeuProjeto/ ├── README.md ├── docs/ ├── config/ ├── tests/ ├── runtime/ └── meuprojeto/
 ```
 
-Use `src/<slug>` só quando o repositório tiver uma necessidade explícita de
-isolamento de packaging e isso estiver documentado.
+Use `src/<slug>` só quando o repositório tiver uma necessidade explícita de isolamento de packaging e isso estiver documentado.
 
 Exemplos:
 
@@ -58,9 +47,7 @@ newproj --list-presets
 
 ## Presets Python
 
-Os presets não-base exigem `--runtime python` implicitamente. O scaffold já
-preenche `README.md`, `AGENTS.md` e `docs/OPERATIONS.md` com um comando
-principal coerente por preset.
+Os presets não-base exigem `--runtime python` implicitamente. O scaffold já preenche `README.md`, `AGENTS.md` e `docs/OPERATIONS.md` com um comando principal coerente por preset.
 
 Linha recomendada hoje:
 
@@ -114,23 +101,16 @@ Comandos iniciais esperados:
 
 Fragilidade conhecida:
 
-- `fastapi` não é validado por import puro sem instalar dependências; isso é
-  intencional. O baseline assume bootstrap do ambiente antes do primeiro run.
-- `playwright-worker` sai com bootstrap de sessão e artefato placeholder, não
-  com login real. O primeiro trabalho útil é substituir esse dry-run.
-- `dicom-pipeline` sai com manifesto mínimo e sample DICOM sintético. Isso
-  resolve baseline técnico, não contrato clínico final.
-- `newproj` depende de `~/Scripts/bin` estar no `PATH`; se não estiver, use o
-  caminho absoluto do binário ou rode `scaffold_project.py` diretamente.
+- `fastapi` não é validado por import puro sem instalar dependências; isso é intencional. O baseline assume bootstrap do ambiente antes do primeiro run.
+- `playwright-worker` sai com bootstrap de sessão e artefato placeholder, não com login real. O primeiro trabalho útil é substituir esse dry-run.
+- `dicom-pipeline` sai com manifesto mínimo e sample DICOM sintético. Isso resolve baseline técnico, não contrato clínico final.
+- `newproj` depende de `~/Scripts/bin` estar no `PATH`; se não estiver, use o caminho absoluto do binário ou rode `scaffold_project.py` diretamente.
 
 ## Versão e regressão do kit
 
 Comandos úteis:
 
-```bash
-python3 scaffold_project.py --version
-newproj --version
-python3 run_regression_suite.py
+```bash python3 scaffold_project.py --version newproj --version python3 run_regression_suite.py
 ```
 
 Use a regressão sempre que mudar:
@@ -140,8 +120,7 @@ Use a regressão sempre que mudar:
 - `install_newproj.sh`
 - templates base de docs
 
-Projetos Python e Node gerados pelo kit agora também saem com um baseline de
-CI em `.github/workflows/ci.yml`.
+Projetos Python e Node gerados pelo kit agora também saem com um baseline de CI em `.github/workflows/ci.yml`.
 
 O objetivo desse workflow é simples:
 
@@ -175,8 +154,7 @@ O gate agora falha em 3 casos:
 
 ## Project Doctor
 
-Depois que `README.md`, `docs/ARCHITECTURE.md`, `docs/CONTRACTS.md` e
-`docs/OPERATIONS.md` estiverem realmente preenchidos, rode:
+Depois que `README.md`, `docs/ARCHITECTURE.md`, `docs/CONTRACTS.md` e `docs/OPERATIONS.md` estiverem realmente preenchidos, rode:
 
 ```bash
 python3 scripts/project_doctor.py
@@ -194,12 +172,9 @@ O doctor valida:
 - preenchimento do `PROJECT_GATE.md`
 - warnings com código estável para desalinhamento entre gate, README e arquitetura
 
-Use `--strict` quando quiser tratar esses warnings como erro bloqueante.
-Use `--audit-config` para auditar `config/doctor.json`, listar warnings
-suprimidos, aliases em uso e exceções sem efeito atual.
+Use `--strict` quando quiser tratar esses warnings como erro bloqueante. Use `--audit-config` para auditar `config/doctor.json`, listar warnings suprimidos, aliases em uso e exceções sem efeito atual.
 
-Se aparecer falso positivo semântico, ajuste `config/doctor.json` em vez de
-afrouxar o texto dos docs. O arquivo é versionado e aceita:
+Se aparecer falso positivo semântico, ajuste `config/doctor.json` em vez de afrouxar o texto dos docs. O arquivo é versionado e aceita:
 
 - `ignored_warnings`: exceções conscientes com `code` e `reason`
 - `token_alias_groups`: grupos de termos equivalentes para o repositório
@@ -212,20 +187,7 @@ Regra prática:
 
 Exemplo:
 
-```json
-{
-  "version": 1,
-  "ignored_warnings": [
-    {
-      "code": "scope_architecture_mismatch",
-      "reason": "README descreve a capacidade de negócio e ARCHITECTURE descreve módulos técnicos."
-    }
-  ],
-  "token_alias_groups": [
-    ["worker", "daemon"],
-    ["api", "serviço"]
-  ]
-}
+```json { "version": 1, "ignored_warnings": [ { "code": "scope_architecture_mismatch", "reason": "README descreve a capacidade de negócio e ARCHITECTURE descreve módulos técnicos." } ], "token_alias_groups": [ ["worker", "daemon"], ["api", "serviço"] ] }
 ```
 
 ## O que manter sempre
@@ -253,5 +215,4 @@ Exemplo:
 - deixar `README.md` genérico depois que o projeto ganhar forma
 - criar novo repositório sem responder se isso deveria ser um módulo
 - introduzir integração externa sem registrar contrato e operação
-- editar manualmente dezenas de placeholders quando o scaffolder já consegue
-  preencher o baseline por você
+- editar manualmente dezenas de placeholders quando o scaffolder já consegue preencher o baseline por você

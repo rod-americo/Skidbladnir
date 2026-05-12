@@ -1,7 +1,6 @@
 # DECISIONS
 
-Use este arquivo para registrar decisões arquiteturais de forma leve. O objetivo
-não é burocracia; é evitar que o repositório mude de forma silenciosa.
+Use este arquivo para registrar decisões arquiteturais de forma leve. O objetivo não é burocracia; é evitar que o repositório mude de forma silenciosa.
 
 ## Como registrar
 
