@@ -27,6 +27,9 @@ TEMPLATE_FILES = {
 OPTIONAL_TEMPLATE_FILES = {
     "START_CHECKLIST.md": TEMPLATE_DIR / "START_CHECKLIST.md",
 }
+OPTIONAL_STRUCTURE_TEMPLATE_FILES = {
+    "papers/README.md": TEMPLATE_DIR / "papers" / "README.md",
+}
 WORKFLOW_TEMPLATE_FILES = {
     "python": TEMPLATE_DIR / ".github" / "workflows" / "ci-python.yml",
     "node": TEMPLATE_DIR / ".github" / "workflows" / "ci-node.yml",
@@ -151,6 +154,8 @@ def runtime_defaults(
         "PROJECT_PHASE": "prototipo",
         "REPO_URL": repo_url,
         "README_BADGES": default_readme_badges(runtime, repo_url),
+        "OPTIONAL_RESEARCH_STRUCTURE": "",
+        "OPTIONAL_RESEARCH_DOCS": "",
         "DOMINIO_CRITICO": "preencher dominio critico do projeto",
         "DEPENDENCIA_EXTERNA": "preencher dependencia externa principal",
         "HOST_PRINCIPAL": "preencher host principal ou ambiente de referencia",
@@ -295,7 +300,7 @@ def runtime_defaults(
                 "PRIMARY_RUNTIME": "python3.9+",
                 "SETUP_COMMANDS": textwrap.dedent(
                     """
-                    python3 -m venv .venv
+                    python3 -m venv .venv --prompt $(basename "$PWD")
                     source .venv/bin/activate
                     python -m pip install --upgrade pip
                     python -m pip install -r requirements.txt
@@ -310,7 +315,7 @@ def runtime_defaults(
                 "ENV_2": "APP_ENV",
                 "LOCAL_BOOT_COMMANDS": textwrap.dedent(
                     f"""
-                    python3 -m venv .venv
+                    python3 -m venv .venv --prompt $(basename "$PWD")
                     source .venv/bin/activate
                     python -m pip install -r requirements.txt
                     cp config/settings.example.json config/settings.local.json
@@ -481,7 +486,7 @@ def runtime_defaults(
                 ).strip(),
                 "LOCAL_BOOT_COMMANDS": textwrap.dedent(
                     f"""
-                    python3 -m venv .venv
+                    python3 -m venv .venv --prompt $(basename "$PWD")
                     source .venv/bin/activate
                     python -m pip install -r requirements.txt
                     python -m playwright install chromium
@@ -2857,12 +2862,18 @@ def render_and_write_templates(
     project_slug: str,
     repo_url: str,
     include_checklist: bool,
+    include_papers: bool,
     gate_enforced: bool,
 ) -> None:
     values = runtime_defaults(runtime, preset, project_name, project_slug, repo_url, gate_enforced)
+    if include_papers:
+        values["OPTIONAL_RESEARCH_STRUCTURE"] = "├── papers/\n│   └── README.md              # contexto cientifico, metodo e avaliacao\n"
+        values["OPTIONAL_RESEARCH_DOCS"] = "- `papers/`: hipótese, método, métricas, avaliação e discussão científica associada ao software\n"
     template_files = dict(TEMPLATE_FILES)
     if include_checklist:
         template_files.update(OPTIONAL_TEMPLATE_FILES)
+    if include_papers:
+        template_files.update(OPTIONAL_STRUCTURE_TEMPLATE_FILES)
 
     for relative_path, source_path in template_files.items():
         source_text = source_path.read_text(encoding="utf-8")
@@ -2934,6 +2945,11 @@ def parse_args() -> argparse.Namespace:
         help="inclui START_CHECKLIST.md no projeto gerado",
     )
     parser.add_argument(
+        "--include-papers",
+        action="store_true",
+        help="inclui papers/ para contexto cientifico associado ao software",
+    )
+    parser.add_argument(
         "--enforce-gate",
         action="store_true",
         help="ativa enforcement do PROJECT_GATE.md via hook local e teste de validacao",
@@ -2973,6 +2989,7 @@ def main() -> int:
         project_slug=project_slug,
         repo_url=repo_url,
         include_checklist=args.include_checklist,
+        include_papers=args.include_papers,
         gate_enforced=args.enforce_gate,
     )
 

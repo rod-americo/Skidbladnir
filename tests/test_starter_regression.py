@@ -81,7 +81,7 @@ cd {project_name}
 ### 2. Preparar ambiente
 
 ```bash
-python3 -m venv .venv
+python3 -m venv .venv --prompt $(basename "$PWD")
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
@@ -437,7 +437,7 @@ Executar, diagnosticar, reiniciar e recuperar o worker sem contexto implicito.
 ### Boot local
 
 ```bash
-python3 -m venv .venv
+python3 -m venv .venv --prompt $(basename "$PWD")
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp config/settings.example.json config/settings.local.json
@@ -583,8 +583,11 @@ class StarterRegressionTests(unittest.TestCase):
 
             ci_workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
             readme_text = (repo / "README.md").read_text(encoding="utf-8")
+            operations_text = (repo / "docs" / "OPERATIONS.md").read_text(encoding="utf-8")
             self.assertIn("python -m pytest -q", ci_workflow)
             self.assertIn("python3 scripts/check_project_gate.py", ci_workflow)
+            self.assertIn('python3 -m venv .venv --prompt $(basename "$PWD")', readme_text)
+            self.assertIn('python3 -m venv .venv --prompt $(basename "$PWD")', operations_text)
             self.assertIn("[![CI](", readme_text)
             self.assertIn("![Python]", readme_text)
 
@@ -665,6 +668,27 @@ class StarterRegressionTests(unittest.TestCase):
             )
             self.assertIn("Ignored warnings sem efeito atual:", wrapper_audit_failure.stderr)
 
+    def test_python_requirements_include_runtime_and_test_dependencies(self) -> None:
+        cases = {
+            "base": {"pytest>=8.0", "ruff>=0.6.0"},
+            "fastapi-service": {"fastapi>=0.115,<1", "uvicorn>=0.30,<1", "pytest>=8.0", "ruff>=0.6.0", "httpx>=0.27"},
+            "cli": {"pytest>=8.0", "ruff>=0.6.0"},
+            "textual-cli": {"rich>=13.7,<14", "textual>=0.58,<1", "pytest>=8.0", "ruff>=0.6.0"},
+            "worker": {"pytest>=8.0", "ruff>=0.6.0"},
+            "playwright-worker": {"playwright>=1.58,<2", "requests>=2.31,<3", "pytest>=8.0", "ruff>=0.6.0"},
+            "pipeline": {"pytest>=8.0", "ruff>=0.6.0"},
+            "dicom-pipeline": {"pydicom>=2.4,<3", "pytest>=8.0", "ruff>=0.6.0"},
+        }
+
+        with tempfile.TemporaryDirectory(prefix="starter-requirements-") as tmp:
+            for preset, expected in cases.items():
+                repo = Path(tmp) / preset.replace("-", "_")
+                run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--preset", preset])
+
+                requirements = (repo / "requirements.txt").read_text(encoding="utf-8").splitlines()
+                self.assertEqual(len(requirements), len(set(requirements)))
+                self.assertTrue(expected.issubset(requirements), preset)
+
     def test_node_project_includes_ci_baseline(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-node-") as tmp:
             repo = Path(tmp) / "NodeRepo"
@@ -687,8 +711,34 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertIn("npm test", workflow)
             self.assertIn("python3 scripts/check_project_gate.py", workflow)
             self.assertEqual(package_json["scripts"]["test"], "node --test tests/*.test.mjs")
+            self.assertEqual(package_json["engines"], {"node": ">=20"})
+            self.assertNotIn("dependencies", package_json)
+            self.assertNotIn("devDependencies", package_json)
+            self.assertIn('from "node:test"', (repo / "tests" / "smoke.test.mjs").read_text(encoding="utf-8"))
             self.assertIn("[![CI](", readme_text)
             self.assertIn("![Node]", readme_text)
+
+    def test_optional_papers_structure_is_generated(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-papers-") as tmp:
+            repo = Path(tmp) / "ResearchRepo"
+            run_cmd(
+                [
+                    sys.executable,
+                    str(SCAFFOLDER),
+                    str(repo),
+                    "--preset",
+                    "worker",
+                    "--include-papers",
+                ]
+            )
+
+            readme_text = (repo / "README.md").read_text(encoding="utf-8")
+            papers_readme = (repo / "papers" / "README.md").read_text(encoding="utf-8")
+
+            self.assertTrue((repo / "papers" / "README.md").exists())
+            self.assertIn("├── papers/", readme_text)
+            self.assertIn("- `papers/`:", readme_text)
+            self.assertIn("pensamento científico associado ao", papers_readme)
 
 
 if __name__ == "__main__":

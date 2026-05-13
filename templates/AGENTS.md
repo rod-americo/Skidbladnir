@@ -74,6 +74,7 @@ Regras:
 - não versione segredos, sessões, dumps, bancos locais, caches ou runtime state
 - sempre versione exemplos de configuração
 - centralize defaults e parsing de configuração
+- ambientes Python ficam em `.venv` na raiz do projeto, criados com `python3 -m venv .venv --prompt $(basename "$PWD")`
 - prefira estado host-local fora do worktree; se não for possível, use `runtime/` ignorado no git
 
 Logging:

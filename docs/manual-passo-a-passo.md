@@ -161,7 +161,7 @@ Se o audit acusar `ignored_warnings` sem efeito atual, remova o lixo.
 Exemplos comuns:
 
 ```bash
-python3 -m venv .venv
+python3 -m venv .venv --prompt $(basename "$PWD")
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```

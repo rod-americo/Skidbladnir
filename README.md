@@ -70,7 +70,10 @@ O padrão principal do kit é:
 
 Instalação do wrapper:
 
-```bash bash ~/Skidbladnir/install_newproj.sh ~/bin source ~/.zshrc newproj --version
+```bash
+bash ~/Skidbladnir/install_newproj.sh ~/bin
+source ~/.zshrc
+newproj --version
 ```
 
 Gerar um projeto novo:
@@ -115,7 +118,23 @@ Não use `Skidbladnir` quando:
 
 ## Estrutura deste repositório
 
-```text Skidbladnir/ ├── README.md ├── AGENTS.md ├── INSTALL.md ├── ROADMAP.md ├── LICENSE ├── docs/ │   ├── how-to-use.md │   ├── manual-passo-a-passo.md │   ├── prompt-repo-existente.md │   ├── posicionamento.md │   └── release-checklist.md ├── templates/ ├── bin/ ├── tests/ └── scaffold_project.py
+```text
+Skidbladnir/
+├── README.md
+├── AGENTS.md
+├── INSTALL.md
+├── ROADMAP.md
+├── LICENSE
+├── docs/
+│   ├── how-to-use.md
+│   ├── manual-passo-a-passo.md
+│   ├── prompt-repo-existente.md
+│   ├── posicionamento.md
+│   └── release-checklist.md
+├── templates/
+├── bin/
+├── tests/
+└── scaffold_project.py
 ```
 
 ## Estado atual
