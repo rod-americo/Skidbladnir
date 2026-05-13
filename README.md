@@ -146,22 +146,33 @@ Skidbladnir/
 
 ## Evolução do projeto
 
-### Consolidado
+### Já evoluímos
 
-- [x] scaffolder para projetos novos com baseline estrutural e documental
-- [x] guardrails de gate e doctor para coerência mínima do repositório
-- [x] baseline de CI para o kit e para projetos gerados
+- scaffolder com `templates/` como fonte de verdade dos arquivos gerados
+- wrapper `newproj` para uso diário
+- presets Python e Node com baseline de CI
+- gate de existência do repositório com validação automatizada
+- `project_doctor.py` para coerência entre README, arquitetura, contratos e operação
+- prompt operacional para recuperar repositórios existentes
+- convenções explícitas para `.venv`, dependências mínimas e documentação sem hard-wrap manual
+- suporte opcional a `papers/` para projetos com componente científico
 
-### Em andamento
+### Próximas evoluções
 
-- [ ] endurecer a linguagem pública dos templates sem transformá-los em texto burocrático
-- [ ] expandir presets e ergonomia sem perder a fronteira explícita do kit
+- melhorar ergonomia do `newproj` sem aumentar complexidade estrutural
+- endurecer presets principais com exemplos reais de uso
+- revisar templates para reduzir placeholders e aumentar densidade editorial
+- ampliar testes de regressão para mais combinações de runtime, preset e flags
+- separar melhor dependências de runtime e desenvolvimento quando isso trouxer ganho real
+- melhorar documentação de adoção gradual em repositórios legados
 
-### Planejado
+### Metas
 
-- [ ] evoluir a baseline editorial dos READMEs gerados com mais identidade e trajetória
-- [ ] ampliar cobertura de regressão para novos caminhos de scaffold e documentação
-- [ ] refinar publicação e distribuição do kit sem reintroduzir dependências implícitas locais
+- gerar um projeto novo útil em menos de 2 minutos, com README, operação e validação coerentes
+- manter regressão rápida o suficiente para ser rodada antes de todo commit
+- evitar que projetos gerados nasçam com operação implícita, dependências ausentes ou docs genéricos
+- manter o kit pequeno, auditável e fácil de adaptar
+- tornar o retrofit de repositórios existentes um fluxo repetível, sem reescrita cosmética
 
 ## Instalação
 
