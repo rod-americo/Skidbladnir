@@ -16,7 +16,8 @@ Este documento deve permitir executar, diagnosticar, reiniciar e recuperar o sis
 
 ### Boot local
 
-```bash {{LOCAL_BOOT_COMMANDS}}
+```bash
+{{LOCAL_BOOT_COMMANDS}}
 ```
 
 ### Boot principal
@@ -38,7 +39,8 @@ Este documento deve permitir executar, diagnosticar, reiniciar e recuperar o sis
 
 Depois de subir:
 
-```bash {{SMOKE_TEST_COMMAND}}
+```bash
+{{SMOKE_TEST_COMMAND}}
 ```
 
 Conferir:

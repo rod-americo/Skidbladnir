@@ -23,11 +23,19 @@ Padrão principal para projetos Python e Node deste kit:
 
 - raiz limpa para `README`, `docs`, `config`, `tests`, `scripts` e `runtime`
 - pacote ou app principal direto em `/<slug>/`
-- entrypoints por `python -m <slug>...`, `python -m <slug>.main...` ou `node <slug>/main.mjs`
+- entrypoint Python sempre por `python -m <slug>`; comandos específicos entram como argumentos ou subcomandos, por exemplo `python -m <slug> --help`, `python -m <slug> tui` e `python -m <slug> gui`
+- entrypoint Node por `node <slug>/main.mjs` ou `npm start`
 
 Exemplo:
 
-```text MeuProjeto/ ├── README.md ├── docs/ ├── config/ ├── tests/ ├── runtime/ └── meuprojeto/
+```text
+MeuProjeto/
+├── README.md
+├── docs/
+├── config/
+├── tests/
+├── runtime/
+└── meuprojeto/
 ```
 
 Use `src/<slug>` só quando o repositório tiver uma necessidade explícita de isolamento de packaging e isso estiver documentado.
@@ -67,7 +75,7 @@ Comandos iniciais esperados:
 
 - `fastapi` / `fastapi-service`
   - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug>.main`
+  - run: `python -m <slug>`
   - alternativa: `uvicorn <slug>.interfaces.http.app:create_app --factory --reload`
   - smoke test: `python -m pytest -q`
 - `cli`
@@ -80,24 +88,24 @@ Comandos iniciais esperados:
   - smoke test: `python -m <slug> doctor`
 - `worker`
   - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug>.main --once`
-  - modo residente: `python -m <slug>.main --interval 30`
-  - smoke test: `python -m <slug>.main --once`
+  - run: `python -m <slug> --once`
+  - modo residente: `python -m <slug> --interval 30`
+  - smoke test: `python -m <slug> --once`
 - `playwright-worker`
   - setup: `python -m pip install -r requirements.txt`
   - bootstrap browser: `python -m playwright install chromium`
-  - run inicial: `python -m <slug>.main --once --dry-run`
-  - refresh real: `python -m <slug>.main --refresh-session`
-  - smoke test: `python -m <slug>.main --once --dry-run`
+  - run inicial: `python -m <slug> --once --dry-run`
+  - refresh real: `python -m <slug> --refresh-session`
+  - smoke test: `python -m <slug> --once --dry-run`
 - `pipeline`
   - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug>.main --item-id demo-001`
-  - smoke test: `python -m <slug>.main --item-id demo-001`
+  - run: `python -m <slug> --item-id demo-001`
+  - smoke test: `python -m <slug> --item-id demo-001`
 - `dicom-pipeline`
   - setup: `python -m pip install -r requirements.txt`
-  - run inicial: `python -m <slug>.main --sample`
-  - run real: `python -m <slug>.main --inbox runtime/inbox --outbox runtime/outbox`
-  - smoke test: `python -m <slug>.main --sample`
+  - run inicial: `python -m <slug> --sample`
+  - run real: `python -m <slug> --inbox runtime/inbox --outbox runtime/outbox`
+  - smoke test: `python -m <slug> --sample`
 
 Fragilidade conhecida:
 
@@ -110,7 +118,10 @@ Fragilidade conhecida:
 
 Comandos úteis:
 
-```bash python3 scaffold_project.py --version newproj --version python3 run_regression_suite.py
+```bash
+python3 scaffold_project.py --version
+newproj --version
+python3 run_regression_suite.py
 ```
 
 Use a regressão sempre que mudar:
@@ -187,7 +198,20 @@ Regra prática:
 
 Exemplo:
 
-```json { "version": 1, "ignored_warnings": [ { "code": "scope_architecture_mismatch", "reason": "README descreve a capacidade de negócio e ARCHITECTURE descreve módulos técnicos." } ], "token_alias_groups": [ ["worker", "daemon"], ["api", "serviço"] ] }
+```json
+{
+  "version": 1,
+  "ignored_warnings": [
+    {
+      "code": "scope_architecture_mismatch",
+      "reason": "README descreve a capacidade de negócio e ARCHITECTURE descreve módulos técnicos."
+    }
+  ],
+  "token_alias_groups": [
+    ["worker", "daemon"],
+    ["api", "serviço"]
+  ]
+}
 ```
 
 ## O que manter sempre

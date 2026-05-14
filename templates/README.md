@@ -40,7 +40,33 @@ Breve descrição em 1-2 linhas:
 
 Padrão recomendado para projetos novos:
 
-```text {{PROJECT_NAME}}/ ├── README.md ├── AGENTS.md ├── PROJECT_GATE.md ├── CHANGELOG.md ├── .github/ │   └── workflows/ │       └── ci.yml            # baseline de CI para push e pull_request ├── requirements.txt / package.json ├── config/ │   ├── doctor.json │   ├── settings.example.json │   └── logging.example.json ├── docs/ │   ├── ARCHITECTURE.md │   ├── CONTRACTS.md │   ├── OPERATIONS.md │   └── DECISIONS.md {{OPTIONAL_RESEARCH_STRUCTURE}}├── {{PROJECT_SLUG}}/ │   ├── domain/ │   ├── application/ │   ├── infrastructure/ │   ├── interfaces/ │   └── main.py ├── tests/ └── runtime/                  # ignorado no git
+```text
+{{PROJECT_NAME}}/
+├── README.md
+├── AGENTS.md
+├── PROJECT_GATE.md
+├── CHANGELOG.md
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # baseline de CI para push e pull_request
+├── requirements.txt / package.json
+├── config/
+│   ├── doctor.json
+│   ├── settings.example.json
+│   └── logging.example.json
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── CONTRACTS.md
+│   ├── OPERATIONS.md
+│   └── DECISIONS.md
+{{OPTIONAL_RESEARCH_STRUCTURE}}├── {{PROJECT_SLUG}}/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   ├── interfaces/
+│   └── main.py
+├── tests/
+└── runtime/                  # ignorado no git
 ```
 
 Regras:
@@ -62,7 +88,8 @@ cd {{PROJECT_NAME}}
 
 ### 2. Preparar ambiente
 
-```bash {{SETUP_COMMANDS}}
+```bash
+{{SETUP_COMMANDS}}
 ```
 
 ### 3. Configurar
@@ -74,7 +101,8 @@ cp config/settings.example.json config/settings.local.json
 
 ### 4. Rodar
 
-```bash {{RUN_COMMAND}}
+```bash
+{{RUN_COMMAND}}
 ```
 
 ## Configuração

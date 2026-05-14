@@ -307,7 +307,7 @@ def runtime_defaults(
                     """
                 ).strip(),
                 "OPTIONAL_ENV_SETUP": "export APP_ENV=dev",
-                "RUN_COMMAND": f"python -m {project_slug}.main",
+                "RUN_COMMAND": f"python -m {project_slug}",
                 "VALIDACAO_MINIMA": "python -m pytest -q",
                 "RESTART_POLICY": "mudancas de codigo Python exigem restart do processo; docs isoladas nao exigem restart",
                 "runtime": "python3.9+",
@@ -321,7 +321,7 @@ def runtime_defaults(
                     cp config/settings.example.json config/settings.local.json
                     """
                 ).strip(),
-                "PRIMARY_RUN_COMMAND": f"python -m {project_slug}.main",
+                "PRIMARY_RUN_COMMAND": f"python -m {project_slug}",
                 "config_local": "config/settings.local.json",
                 "SMOKE_TEST_COMMAND": "python -m pytest -q",
                 "CI_STATIC_CHECK_COMMAND": f"python -m compileall -q {project_slug} scripts tests",
@@ -391,7 +391,7 @@ def runtime_defaults(
                 "motivacao_1": "nascer com contrato HTTP claro, sem improvisar estrutura de servico depois",
                 "motivacao_2": "isolar a fronteira da API, os contratos e a operacao desde o primeiro dia",
                 "motivacao_3": "evitar que endpoint, regra de negocio e infraestrutura crescam misturados",
-                "entrypoint_1": f"python -m {project_slug}.main",
+                "entrypoint_1": f"python -m {project_slug}",
                 "entrypoint_2": f"uvicorn {project_slug}.interfaces.http.app:create_app --factory --reload",
                 "API / host / banco / fila / worker / PACS / browser / etc": "FastAPI, uvicorn e dependencias HTTP do servico",
                 "risco_tecnico_principal": "deixar a camada HTTP crescer sem contratos ou sem separar aplicacao de infraestrutura",
@@ -399,7 +399,7 @@ def runtime_defaults(
                 "passo_2": "implementar validacao e tratamento de erro coerentes",
                 "passo_3": "registrar restart policy e smoke test HTTP em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "contratos HTTP, payloads e fronteira da API",
-                "RUN_COMMAND": f"python -m {project_slug}.main",
+                "RUN_COMMAND": f"python -m {project_slug}",
                 "VALIDACAO_MINIMA": "python -m pytest -q",
                 "RESTART_POLICY": "mudancas na API exigem restart do processo HTTP; docs isoladas nao exigem restart",
                 "OPTIONAL_ENV_SETUP": textwrap.dedent(
@@ -409,7 +409,7 @@ def runtime_defaults(
                     export SERVER_PORT=8000
                     """
                 ).strip(),
-                "PRIMARY_RUN_COMMAND": f"python -m {project_slug}.main",
+                "PRIMARY_RUN_COMMAND": f"python -m {project_slug}",
                 "SMOKE_TEST_COMMAND": "python -m pytest -q",
             }
         )
@@ -445,7 +445,7 @@ def runtime_defaults(
                 "motivacao_2": "dar forma de produto a uma automacao que poderia nascer como script descartavel",
                 "motivacao_3": "evitar proliferacao de comandos ad hoc sem dono, documentacao ou smoke claro",
                 "entrypoint_1": f"python -m {project_slug}",
-                "entrypoint_2": project_slug,
+                "entrypoint_2": f"python -m {project_slug} --help",
                 "API / host / banco / fila / worker / PACS / browser / etc": "shell do operador, filesystem e dependencias do host",
                 "risco_tecnico_principal": "quebrar interface de linha de comando sem documentacao ou compatibilidade minima",
                 "passo_1": "definir subcomandos e saida canonicamente",
@@ -467,16 +467,16 @@ def runtime_defaults(
                 "motivacao_1": "isolar sessao, browser e loop recorrente antes que a integracao fique irreparavelmente frágil",
                 "motivacao_2": "tratar browser automation como fronteira operacional propria, nao como detalhe incidental",
                 "motivacao_3": "evitar scripts de login e scraping sem contrato de artefato, retry ou observabilidade",
-                "entrypoint_1": f"python -m {project_slug}.main --once --dry-run",
-                "entrypoint_2": f"python -m {project_slug}.main --refresh-session",
+                "entrypoint_1": f"python -m {project_slug} --once --dry-run",
+                "entrypoint_2": f"python -m {project_slug} --refresh-session",
                 "API / host / banco / fila / worker / PACS / browser / etc": "playwright, chromium e sistema web autenticado",
                 "risco_tecnico_principal": "deixar login, sessao e scraping crescerem sem contrato de artefato nem regra de reautenticacao",
                 "passo_1": "definir storage de sessao, sinais de expiracao e estrategia de relogin",
                 "passo_2": "separar login, fetch e loop operacional",
                 "passo_3": "registrar bootstrap do browser e instalacao do chromium em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "sessao autenticada, cookies e fronteira entre browser e worker",
-                "RUN_COMMAND": f"python -m {project_slug}.main --once --dry-run",
-                "VALIDACAO_MINIMA": f"python -m {project_slug}.main --once --dry-run",
+                "RUN_COMMAND": f"python -m {project_slug} --once --dry-run",
+                "VALIDACAO_MINIMA": f"python -m {project_slug} --once --dry-run",
                 "RESTART_POLICY": "mudancas no worker ou no fluxo de browser exigem restart do processo residente",
                 "OPTIONAL_ENV_SETUP": textwrap.dedent(
                     """
@@ -493,8 +493,8 @@ def runtime_defaults(
                     cp config/settings.example.json config/settings.local.json
                     """
                 ).strip(),
-                "PRIMARY_RUN_COMMAND": f"python -m {project_slug}.main --interval 30 --dry-run",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug}.main --once --dry-run",
+                "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --interval 30 --dry-run",
+                "SMOKE_TEST_COMMAND": f"python -m {project_slug} --once --dry-run",
             }
         )
     elif preset == "worker":
@@ -505,19 +505,19 @@ def runtime_defaults(
                 "motivacao_1": "tirar a rotina recorrente do campo do improviso e colocá-la sob operacao explicita",
                 "motivacao_2": "delimitar loop, retry, idempotencia e restart como responsabilidades centrais do repo",
                 "motivacao_3": "evitar cron solto ou script residente sem contrato de falha e observabilidade minima",
-                "entrypoint_1": f"python -m {project_slug}.main --once",
-                "entrypoint_2": f"python -m {project_slug}.main --interval 30",
+                "entrypoint_1": f"python -m {project_slug} --once",
+                "entrypoint_2": f"python -m {project_slug} --interval 30",
                 "API / host / banco / fila / worker / PACS / browser / etc": "runtime local, scheduler e dependencias operacionais do worker",
                 "risco_tecnico_principal": "loop residente sem observabilidade, retry ou criterio claro de falha",
                 "passo_1": "definir unidade de trabalho e criterio de retry",
                 "passo_2": "documentar execucao once vs residente",
                 "passo_3": "registrar restart e sinais de falha no OPERATIONS.md",
                 "DOMINIO_CRITICO": "unidade de trabalho, idempotencia e retry",
-                "RUN_COMMAND": f"python -m {project_slug}.main --once",
-                "VALIDACAO_MINIMA": f"python -m {project_slug}.main --once",
+                "RUN_COMMAND": f"python -m {project_slug} --once",
+                "VALIDACAO_MINIMA": f"python -m {project_slug} --once",
                 "RESTART_POLICY": "mudancas de codigo do worker exigem restart do processo residente",
-                "PRIMARY_RUN_COMMAND": f"python -m {project_slug}.main --interval 30",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug}.main --once",
+                "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --interval 30",
+                "SMOKE_TEST_COMMAND": f"python -m {project_slug} --once",
             }
         )
     elif preset == "dicom_pipeline":
@@ -528,19 +528,19 @@ def runtime_defaults(
                 "motivacao_1": "materializar um fluxo DICOM reproduzivel antes que staging e identidade clinica se confundam",
                 "motivacao_2": "isolar contratos de estudo, staging e materializacao em uma fronteira rastreavel",
                 "motivacao_3": "evitar mistura entre ingestao bruta, enriquecimento e regras de reprocessamento",
-                "entrypoint_1": f"python -m {project_slug}.main --sample",
-                "entrypoint_2": f"python -m {project_slug}.main --inbox runtime/inbox --outbox runtime/outbox",
+                "entrypoint_1": f"python -m {project_slug} --sample",
+                "entrypoint_2": f"python -m {project_slug} --inbox runtime/inbox --outbox runtime/outbox",
                 "API / host / banco / fila / worker / PACS / browser / etc": "filesystem de staging, pydicom e contrato de estudo",
                 "risco_tecnico_principal": "misturar identidades DICOM, staging e enriquecimento sem manifesto canonico",
                 "passo_1": "definir manifesto minimo por estudo e invariantes de identificacao",
                 "passo_2": "separar ingestao bruta, extração de cabecalho e materializacao",
                 "passo_3": "registrar politicas de staging, limpeza e reprocessamento em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "StudyInstanceUID, identificadores canonicos e staging do pipeline",
-                "RUN_COMMAND": f"python -m {project_slug}.main --sample",
-                "VALIDACAO_MINIMA": f"python -m {project_slug}.main --sample",
+                "RUN_COMMAND": f"python -m {project_slug} --sample",
+                "VALIDACAO_MINIMA": f"python -m {project_slug} --sample",
                 "RESTART_POLICY": "mudancas de etapa exigem nova execucao do pipeline e revisao do staging local",
-                "PRIMARY_RUN_COMMAND": f"python -m {project_slug}.main --inbox runtime/inbox --outbox runtime/outbox",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug}.main --sample",
+                "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --inbox runtime/inbox --outbox runtime/outbox",
+                "SMOKE_TEST_COMMAND": f"python -m {project_slug} --sample",
             }
         )
     elif preset == "pipeline":
@@ -551,19 +551,19 @@ def runtime_defaults(
                 "motivacao_1": "dar forma a um pipeline que precisa crescer por etapas sem perder rastreabilidade",
                 "motivacao_2": "explicitar fronteira entre entrada, transformacao, materializacao e runtime state",
                 "motivacao_3": "evitar que o fluxo vire um script longo sem contratos, checkpoints ou saida canonica",
-                "entrypoint_1": f"python -m {project_slug}.main --once",
-                "entrypoint_2": f"python -m {project_slug}.main --item-id demo-001",
+                "entrypoint_1": f"python -m {project_slug} --once",
+                "entrypoint_2": f"python -m {project_slug} --item-id demo-001",
                 "API / host / banco / fila / worker / PACS / browser / etc": "fonte de entrada, staging local e destino final do pipeline",
                 "risco_tecnico_principal": "crescer por etapas ad hoc sem contrato canonico entre elas",
                 "passo_1": "definir input canonico e output canonico",
                 "passo_2": "separar etapas e materializacoes",
                 "passo_3": "documentar pipeline end-to-end e paths de runtime",
                 "DOMINIO_CRITICO": "contratos de pipeline, staging e materializacao",
-                "RUN_COMMAND": f"python -m {project_slug}.main --item-id demo-001",
-                "VALIDACAO_MINIMA": f"python -m {project_slug}.main --item-id demo-001",
+                "RUN_COMMAND": f"python -m {project_slug} --item-id demo-001",
+                "VALIDACAO_MINIMA": f"python -m {project_slug} --item-id demo-001",
                 "RESTART_POLICY": "mudancas de etapa exigem restart da execucao; dados em runtime nao podem ser sobrescritos sem intencao explicita",
-                "PRIMARY_RUN_COMMAND": f"python -m {project_slug}.main --item-id demo-001",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug}.main --item-id demo-001",
+                "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --item-id demo-001",
+                "SMOKE_TEST_COMMAND": f"python -m {project_slug} --item-id demo-001",
             }
         )
 
@@ -1558,20 +1558,28 @@ def python_generated_files(
         ),
         f"{package_dir}/__main__.py": textwrap.dedent(
             f"""
+            import sys
+
             from {project_slug}.main import main
 
 
             if __name__ == "__main__":
-                raise SystemExit(main())
+                raise SystemExit(main(sys.argv[1:]))
             """
         ),
         f"{package_dir}/main.py": textwrap.dedent(
             f"""
+            from __future__ import annotations
+
+            import argparse
+
             from {project_slug}.infrastructure.config import load_settings
             from {project_slug}.infrastructure.logging import build_logger
 
 
-            def main() -> int:
+            def main(argv: list[str] | None = None) -> int:
+                parser = argparse.ArgumentParser(description="Entrypoint principal do projeto")
+                parser.parse_args([] if argv is None else argv)
                 settings = load_settings()
                 logger = build_logger(settings.app.name, settings.app.log_level)
                 logger.info("servico inicializado", extra={{"evt": "startup"}})
@@ -1726,22 +1734,33 @@ def preset_python_files(project_name: str, project_slug: str, preset: str) -> di
         return {
             f"{package_dir}/main.py": textwrap.dedent(
                 f"""
+                from __future__ import annotations
+
+                import argparse
                 import os
+                import sys
 
-                import uvicorn
 
+                def main(argv: list[str] | None = None) -> int:
+                    parser = argparse.ArgumentParser(description="Executa o servico HTTP")
+                    parser.add_argument("--host", default=os.getenv("SERVER_HOST", "127.0.0.1"))
+                    parser.add_argument("--port", type=int, default=int(os.getenv("SERVER_PORT", "8000")))
+                    args = parser.parse_args([] if argv is None else argv)
 
-                def main() -> int:
-                    host = os.getenv("SERVER_HOST", "127.0.0.1")
-                    port = int(os.getenv("SERVER_PORT", "8000"))
+                    import uvicorn
+
                     uvicorn.run(
                         "{project_slug}.interfaces.http.app:create_app",
                         factory=True,
-                        host=host,
-                        port=port,
+                        host=args.host,
+                        port=args.port,
                         reload=False,
                     )
                     return 0
+
+
+                if __name__ == "__main__":
+                    raise SystemExit(main(sys.argv[1:]))
                 """
             ),
             f"{package_dir}/interfaces/http/__init__.py": '"""Interface HTTP do servico."""\n',
@@ -1835,7 +1854,7 @@ def preset_python_files(project_name: str, project_slug: str, preset: str) -> di
 
                 def main(argv: list[str] | None = None) -> int:
                     parser = build_parser()
-                    args = parser.parse_args(argv)
+                    args = parser.parse_args([] if argv is None else argv)
 
                     if args.command == "doctor":
                         print(doctor())
@@ -1952,18 +1971,18 @@ def preset_python_files(project_name: str, project_slug: str, preset: str) -> di
 
                 from {project_slug}.application.commands import doctor
                 from {project_slug}.interfaces.cli.parser import build_parser
-                from {project_slug}.interfaces.tui.app import build_app
-
 
                 def main(argv: list[str] | None = None) -> int:
                     parser = build_parser()
-                    args = parser.parse_args(argv)
+                    args = parser.parse_args([] if argv is None else argv)
 
                     if args.command == "doctor":
                         print(doctor())
                         return 0
 
                     if args.command == "tui":
+                        from {project_slug}.interfaces.tui.app import build_app
+
                         build_app().run()
                         return 0
 
@@ -2264,7 +2283,7 @@ def preset_python_files(project_name: str, project_slug: str, preset: str) -> di
 
                 def main(argv: list[str] | None = None) -> int:
                     parser = build_parser()
-                    args = parser.parse_args(argv)
+                    args = parser.parse_args([] if argv is None else argv)
                     settings = load_settings()
                     logger = build_logger(settings.app.name, settings.app.log_level)
                     storage_path = _browser_storage_path(settings)
@@ -2370,7 +2389,7 @@ def preset_python_files(project_name: str, project_slug: str, preset: str) -> di
 
                 def main(argv: list[str] | None = None) -> int:
                     parser = build_parser()
-                    args = parser.parse_args(argv)
+                    args = parser.parse_args([] if argv is None else argv)
                     logger = build_logger("{project_name}")
                     return run_loop(logger, args.interval, once=args.once)
 
@@ -2546,7 +2565,7 @@ def preset_python_files(project_name: str, project_slug: str, preset: str) -> di
 
                 def main(argv: list[str] | None = None) -> int:
                     parser = build_parser()
-                    args = parser.parse_args(argv)
+                    args = parser.parse_args([] if argv is None else argv)
                     inbox = Path(args.inbox)
                     outbox = Path(args.outbox)
 
@@ -2670,7 +2689,7 @@ def preset_python_files(project_name: str, project_slug: str, preset: str) -> di
 
                 def main(argv: list[str] | None = None) -> int:
                     parser = build_parser()
-                    args = parser.parse_args(argv)
+                    args = parser.parse_args([] if argv is None else argv)
                     output = run_pipeline(args.item_id, Path("runtime/outbox"))
                     print(output)
                     return 0

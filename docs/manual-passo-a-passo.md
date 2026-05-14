@@ -14,7 +14,10 @@ Se a resposta correta for "isso é um módulo de outro sistema", não gere repo 
 
 Instale ou atualize o wrapper:
 
-```bash bash ~/Skidbladnir/install_newproj.sh ~/bin source ~/.zshrc newproj --version
+```bash
+bash ~/Skidbladnir/install_newproj.sh ~/bin
+source ~/.zshrc
+newproj --version
 ```
 
 Se o binário já estiver em `~/Scripts/bin` e esse diretório já estiver no `PATH`, a instalação pode ser mantida como está.
@@ -78,7 +81,8 @@ Objetivo do gate:
 
 Valide:
 
-```bash python3 scripts/check_project_gate.py
+```bash
+python3 scripts/check_project_gate.py
 ```
 
 Se falhar:
@@ -120,7 +124,10 @@ Regras:
 
 Quando os docs já estiverem reais:
 
-```bash python3 scripts/project_doctor.py python3 scripts/project_doctor.py --strict python3 scripts/project_doctor.py --audit-config
+```bash
+python3 scripts/project_doctor.py
+python3 scripts/project_doctor.py --strict
+python3 scripts/project_doctor.py --audit-config
 ```
 
 Interpretação:
@@ -151,7 +158,8 @@ Exemplo:
 
 Depois rode:
 
-```bash python3 scripts/project_doctor.py --audit-config
+```bash
+python3 scripts/project_doctor.py --audit-config
 ```
 
 Se o audit acusar `ignored_warnings` sem efeito atual, remova o lixo.
@@ -168,7 +176,8 @@ python -m pip install -r requirements.txt
 
 Para `playwright-worker`:
 
-```bash python -m playwright install chromium
+```bash
+python -m playwright install chromium
 ```
 
 Para `node`:
@@ -183,10 +192,10 @@ Use o comando registrado no `AGENTS.md` e no `docs/OPERATIONS.md`.
 
 Exemplos:
 
-- worker: `python -m <slug>.main --once`
+- worker: `python -m <slug> --once`
 - cli: `python -m <slug> doctor`
 - fastapi-service: `python -m pytest -q`
-- dicom-pipeline: `python -m <slug>.main --sample`
+- dicom-pipeline: `python -m <slug> --sample`
 
 ## 12. Fazer o primeiro commit relevante
 
@@ -218,7 +227,9 @@ A cada mudança estrutural:
 
 Quando mexer no scaffolder:
 
-```bash python3 ~/Skidbladnir/run_regression_suite.py newproj --version
+```bash
+python3 ~/Skidbladnir/run_regression_suite.py
+newproj --version
 ```
 
 Só considere a alteração pronta se a regressão passar.

@@ -58,8 +58,8 @@ Existe para a equipe de integracao e para o host local que opera o ciclo.
 - fase: `funcional`
 - runtime principal: `python3.11`
 - entrypoints principais:
-  - `python -m {slug}.main --interval 30`
-  - `python -m {slug}.main --once`
+  - `python -m {slug} --interval 30`
+  - `python -m {slug} --once`
 - dependencia externa critica:
   - `portal autenticado e filesystem local`
 
@@ -97,7 +97,7 @@ export APP_ENV=dev
 ### 4. Rodar
 
 ```bash
-python -m {slug}.main --interval 30
+python -m {slug} --interval 30
 ```
 
 ## Configuracao
@@ -124,7 +124,7 @@ python -m {slug}.main --interval 30
 
 - `python3 scripts/check_project_gate.py`
 - `python3 scripts/project_doctor.py`
-- `python -m {slug}.main --once`
+- `python -m {slug} --once`
 - `python -m pytest -q`
 
 ## Documentacao do repositorio
@@ -194,7 +194,7 @@ python -m {slug}.main --interval 30
 - doctor estrito: `python3 scripts/project_doctor.py --strict`
 - doctor audit: `python3 scripts/project_doctor.py --audit-config`
 - policy do doctor: `config/doctor.json`
-- comando de validacao minima: `python -m {slug}.main --once`
+- comando de validacao minima: `python -m {slug} --once`
 
 ## 6. Extensoes especificas do repositorio
 
@@ -354,7 +354,7 @@ Dependencias criticas:
 - logger central: `sim`
 - formato de logs: `json`
 - metricas minimas: `errors, throughput e latency`
-- healthcheck ou smoke test: `python -m {slug}.main --once`
+- healthcheck ou smoke test: `python -m {slug} --once`
 
 ## 10. Riscos e tradeoffs
 
@@ -446,7 +446,7 @@ cp config/settings.example.json config/settings.local.json
 ### Boot principal
 
 ```bash
-python -m {slug}.main --interval 30
+python -m {slug} --interval 30
 ```
 
 ## 4. Configuracao operacional
@@ -463,7 +463,7 @@ python -m {slug}.main --interval 30
 Depois de subir:
 
 ```bash
-python -m {slug}.main --once
+python -m {slug} --once
 ```
 
 Conferir:
@@ -625,7 +625,10 @@ class StarterRegressionTests(unittest.TestCase):
 
             run_cmd([sys.executable, str(repo / "scripts" / "project_doctor.py"), "--strict"], cwd=repo)
 
-            worker_run = run_cmd([sys.executable, "-m", "flowrepo.main", "--once"], cwd=repo, expected=1)
+            help_result = run_cmd([sys.executable, "-m", "flowrepo", "--help"], cwd=repo)
+            self.assertIn("--once", help_result.stdout)
+
+            worker_run = run_cmd([sys.executable, "-m", "flowrepo", "--once"], cwd=repo, expected=1)
             log_payload = json.loads(worker_run.stdout.strip().splitlines()[-1])
             self.assertIn("ts", log_payload)
             self.assertEqual(log_payload["evt"], "worker_cycle")

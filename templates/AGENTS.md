@@ -67,6 +67,7 @@ Regras:
 - não coloque código de produção solto na raiz
 - mantenha a raiz enxuta
 - preserve imports e dependências na direção da arquitetura
+- use `python -m <slug>` como entrypoint público em projetos Python; subcomandos como `gui`, `tui` e `doctor` vivem abaixo desse comando
 - não acople interface diretamente a detalhes de infraestrutura quando houver uma camada de aplicação prevista
 
 ## 5. Configuração, runtime e logs

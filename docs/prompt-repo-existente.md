@@ -10,7 +10,8 @@ Antes de rodar:
 
 ---
 
-```text Você está trabalhando no repositório <REPO_PATH>.
+```text
+Você está trabalhando no repositório <REPO_PATH>.
 
 Objetivo: Elevar este repositório existente ao nível estrutural, documental e operacional do kit Skidbladnir, sem descaracterizar o sistema real que já existe e sem fingir maturidade que o código ainda não sustenta.
 

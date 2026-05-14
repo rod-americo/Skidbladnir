@@ -21,6 +21,7 @@
 - identificadores técnicos em `en-US`
 - parágrafos em Markdown ficam em linha única; não aplicar hard-wrap manual em 80 colunas
 - ambientes Python ficam em `.venv` na raiz do projeto, criados com `python3 -m venv .venv --prompt $(basename "$PWD")`
+- entrypoint público de projeto Python gerado é `python -m <slug>`; não documentar `python -m <slug>.main` como caminho primário
 - mudanças em geração exigem revisão de `templates/`
 - mudanças em `scaffold_project.py`, `bin/newproj` ou `install_newproj.sh` exigem regressão
 - não reintroduzir caminhos locais implícitos como requisito estrutural do kit
