@@ -17,7 +17,7 @@ jobs:
           dotnet-version: "{{DOTNET_VERSION}}"
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: {{DOTNET_RESTORE_COMMAND}}
 
 {{CI_GATE_STEP}}
 {{CI_DEPLOY_STEP}}

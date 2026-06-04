@@ -1,12 +1,12 @@
-# Deploy Manifest
+# Contrato Operacional (`deploy/manifest.json`)
 
-O `deploy/manifest.json` é o contrato obrigatório de operação e deploy do Skidbladnir. Ele não executa deploy; ele declara como o projeto deve ser operado, validado, reiniciado, observado, recuperado e revertido.
+O `deploy/manifest.json` é o contrato obrigatório de operação do Skidbladnir. Ele não executa deploy; ele declara como o projeto deve ser operado, validado, reiniciado, observado, recuperado e revertido.
 
 ## Por que JSON
 
 O formato canônico inicial é JSON para permitir validação com Python stdlib, sem dependência de YAML. Projetos podem manter exemplos YAML adicionais, mas o arquivo obrigatório validado é `deploy/manifest.json`.
 
-O schema formal vive em `schema/deploy-manifest.schema.json` no kit e também deve ser copiado para projetos alinhados. O script `scripts/check_deploy_manifest.py` continua sendo o validador operacional sem dependências externas.
+O schema formal vive em `schema/deploy-manifest.schema.json` no kit e também deve ser copiado para projetos alinhados. O script `scripts/check_deploy_manifest.py` interpreta esse schema sem dependências externas e aplica as regras operacionais específicas do Skidbladnir.
 
 ## Campos obrigatórios
 
@@ -39,7 +39,7 @@ O schema formal vive em `schema/deploy-manifest.schema.json` no kit e também de
   },
   "runtime": {
     "id": "python",
-    "version": "3.11+"
+    "version": "3.9+"
   },
   "deploy": {
     "target": "local",

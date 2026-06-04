@@ -63,7 +63,7 @@ python3 scripts/project_doctor.py
 python3 scripts/project_doctor.py --deploy-strict
 ```
 
-Depois rode a validação do runtime escolhido, por exemplo `python -m pytest -q`, `npm test`, `go test ./...`, `swift build && swift run <Module>` ou `dotnet test`.
+Depois rode a validação do runtime escolhido, por exemplo `python -m pytest -q`, `npm test`, `go test ./...`, `swift build && swift run <Module>` ou `dotnet test <Project>.sln`.
 
 ## Critério de pronto
 

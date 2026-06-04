@@ -1,8 +1,8 @@
 # Skidbladnir
 
-[![CI](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml/badge.svg)](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml) ![License](https://img.shields.io/github/license/rod-americo/Skidbladnir) ![Protocol](https://img.shields.io/badge/protocol-agent--first-2f6f4e) ![Runtimes](https://img.shields.io/badge/runtimes-6-blue) ![Deploy Manifest](https://img.shields.io/badge/deploy%20manifest-required-orange)
+[![CI](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml/badge.svg)](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml) ![Protocol](https://img.shields.io/badge/protocol-agent--first-2f6f4e) ![Runtimes](https://img.shields.io/badge/runtimes-6-blue) ![Ops Contract](https://img.shields.io/badge/ops%20contract-required-orange)
 
-Protocolo documental e operacional para agentes iniciarem ou alinharem repositórios com fronteira explícita, runtime declarado, contratos auditáveis, operação real e manifesto obrigatório de deploy.
+Protocolo documental e operacional para agentes iniciarem ou alinharem repositórios com fronteira explícita, runtime declarado, contratos auditáveis, operação real e contrato operacional obrigatório em `deploy/manifest.json`.
 
 ## Por que Skidbladnir
 
@@ -13,7 +13,7 @@ Protocolo documental e operacional para agentes iniciarem ou alinharem repositó
 - um protocolo para agentes e humanos estruturarem repositórios
 - uma coleção de templates, prompts, regras e scripts prontos
 - uma baseline multiruntime para Python, JavaScript, TypeScript, Go, Swift e C#
-- uma forma de exigir contratos, operação e manifesto de deploy sem automatizar deploy
+- uma forma de exigir contratos e operação auditável sem automatizar deploy
 - um caminho de retrofit para repositórios vivos sem reescrita cosmética
 
 ## O que este projeto não é
@@ -33,7 +33,7 @@ Iniciar projeto:
 ```text
 Vou iniciar um projeto com o escopo: <escopo>.
 Use ~/Skidbladnir como protocolo base.
-Crie a estrutura, manifesto de deploy e validações aplicáveis.
+Crie a estrutura, contrato operacional e validações aplicáveis.
 ```
 
 Ajustar projeto:
@@ -41,17 +41,17 @@ Ajustar projeto:
 ```text
 Quero alinhar este repositório ao protocolo em ~/Skidbladnir.
 Leia o projeto atual antes de alterar arquivos.
-Adapte estrutura, manifesto de deploy e validações sem reescrita cosmética.
+Adapte estrutura, contrato operacional e validações sem reescrita cosmética.
 ```
 
-O agente deve ler os documentos do kit, escolher o runtime, copiar e adaptar os templates, criar ou revisar o manifesto de deploy e rodar as validações possíveis.
+O agente deve ler os documentos do kit, escolher o runtime, copiar e adaptar os templates, criar ou revisar `deploy/manifest.json` e rodar as validações possíveis.
 
 ## Fluxos oficiais
 
 - [Novo Projeto](docs/new-project.md)
 - [Projeto Existente](docs/existing-project.md)
 - [Runtimes](docs/runtimes.md)
-- [Deploy Manifest](docs/deploy-manifest.md)
+- [Contrato Operacional](docs/deploy-manifest.md)
 - [Validação](docs/validation.md)
 - [Prompt Novo Projeto](prompts/novo-projeto.md)
 - [Prompt Projeto Existente](prompts/projeto-existente.md)
@@ -62,19 +62,19 @@ O agente deve ler os documentos do kit, escolher o runtime, copiar e adaptar os 
 - `templates/runtimes/`: orientação por runtime
 - `templates/scripts/`: scripts de validação copiados para projetos alinhados
 - `templates/deploy/`: manifesto operacional copiável
-- `schema/`: schema versionado do manifesto de deploy
-- `docs/`: protocolo de uso, runtimes, validação e manifesto
+- `schema/`: schema versionado do contrato operacional
+- `docs/`: protocolo de uso, runtimes, validação e operação
 - `prompts/`: prompts prontos para agentes
 - `scaffold_project.py`: scaffolder auxiliar para bootstrap rápido e regressão
 - `bin/newproj`: wrapper de compatibilidade para o scaffolder
 - `run_regression_suite.py`: regressão do kit
 - `tests/test_starter_regression.py`: suíte principal de regressão
 
-## Manifesto obrigatório
+## Contrato Operacional
 
-Projetos alinhados ao Skidbladnir devem possuir `deploy/manifest.json`. O manifesto declara comando principal, healthcheck, runtime, portas, environment, secrets esperados, runtime state, logs, restart, backup e rollback.
+Projetos alinhados ao Skidbladnir devem possuir `deploy/manifest.json`. Esse arquivo é um contrato operacional legível por humanos e agentes: declara comando principal, healthcheck, runtime, portas, environment, secrets esperados, runtime state, logs, restart, backup e rollback.
 
-Se o projeto não tiver deploy, o manifesto continua obrigatório com `deploy.target` igual a `none` e justificativa explícita.
+Se o projeto não tiver deploy, o contrato continua obrigatório com `deploy.target` igual a `none` e justificativa explícita.
 
 ## Runtimes
 
@@ -101,7 +101,7 @@ python3 scripts/project_doctor.py
 python3 scripts/project_doctor.py --deploy-strict
 ```
 
-Além disso, cada runtime mantém sua validação própria: `python -m pytest -q`, `npm test`, `go test ./...`, `swift build && swift run <Module>` ou `dotnet test`.
+Além disso, cada runtime mantém sua validação própria: `python -m pytest -q`, `npm test`, `go test ./...`, `swift build && swift run <Module>` ou `dotnet test <Project>.sln`.
 
 ## CLI auxiliar
 
@@ -134,7 +134,7 @@ Skidbladnir/
 
 ## Quando usar
 
-Use quando um projeto precisa nascer ou ser recuperado com fronteira clara, operação explícita, contratos documentados, runtime declarado e manifesto de deploy auditável.
+Use quando um projeto precisa nascer ou ser recuperado com fronteira clara, operação explícita, contratos documentados, runtime declarado e contrato operacional auditável.
 
 ## Quando não usar
 

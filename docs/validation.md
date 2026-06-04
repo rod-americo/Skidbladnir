@@ -24,7 +24,7 @@ Use `--strict` quando os docs principais já estiverem preenchidos. Use `--deplo
 | TypeScript | `npm run build` | `npm test` |
 | Go | `go test ./...` | `go test ./...` |
 | Swift | `swift build` | `swift build && swift run <Module>` |
-| C# | `dotnet build` | `dotnet test` |
+| C# | `dotnet build <Project>.sln` | `dotnet test <Project>.sln` |
 
 ## Regra de honestidade
 

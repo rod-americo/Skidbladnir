@@ -57,7 +57,7 @@ Existe para a equipe de integracao e para o host local que opera o ciclo.
 ## Estado atual
 
 - fase: `funcional`
-- runtime principal: `python3.11`
+- runtime principal: `python3.9`
 - entrypoints principais:
   - `python -m {slug} --interval 30`
   - `python -m {slug} --once`
@@ -429,9 +429,9 @@ Executar, diagnosticar, reiniciar e recuperar o worker sem contexto implicito.
 
 | Ambiente | Objetivo | Runtime | Observacoes |
 | --- | --- | --- | --- |
-| `local` | desenvolvimento | `python3.11` | `host unico do operador` |
-| `homolog` | validacao | `python3.11` | `replay controlado de lotes sinteticos` |
-| `prod` | operacao | `python3.11` | `execucao residente com logs locais` |
+| `local` | desenvolvimento | `python3.9` | `host unico do operador` |
+| `homolog` | validacao | `python3.9` | `replay controlado de lotes sinteticos` |
+| `prod` | operacao | `python3.9` | `execucao residente com logs locais` |
 
 ## 3. Como executar
 
@@ -728,6 +728,21 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertIn("[![CI](", readme_text)
             self.assertIn("![Node]", readme_text)
 
+    def test_deploy_manifest_validator_rejects_schema_violations(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-manifest-schema-") as tmp:
+            repo = Path(tmp) / "ManifestRepo"
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--runtime", "go", "--enforce-gate"])
+
+            manifest_path = repo / "deploy" / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["runtime"]["unexpected"] = "schema violation"
+            manifest["healthcheck"]["timeout_seconds"] = 0
+            manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+
+            result = run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo, expected=1)
+            self.assertIn("$.runtime.unexpected: propriedade nao permitida", result.stderr)
+            self.assertIn("$.healthcheck.timeout_seconds: deve ser maior ou igual a 1", result.stderr)
+
     def test_go_project_includes_ci_manifest_and_smoke(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-go-") as tmp:
             repo = Path(tmp) / "GoRepo"
@@ -818,13 +833,14 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / "src" / "Csharprepo" / "Csharprepo.csproj").exists())
             self.assertTrue((repo / "tests" / "Csharprepo.Tests" / "Csharprepo.Tests.csproj").exists())
             self.assertIn("actions/setup-dotnet@v4", workflow)
-            self.assertIn("dotnet test", workflow)
+            self.assertIn("dotnet restore Csharprepo.sln", workflow)
+            self.assertIn("dotnet test Csharprepo.sln", workflow)
             self.assertEqual(manifest["runtime"]["id"], "csharp")
-            self.assertEqual(manifest["process"]["command"], "dotnet run --project src/Csharprepo")
+            self.assertEqual(manifest["process"]["command"], "dotnet run --project src/Csharprepo/Csharprepo.csproj")
 
             run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
             if shutil.which("dotnet"):
-                run_cmd(["dotnet", "test"], cwd=repo)
+                run_cmd(["dotnet", "test", "Csharprepo.sln"], cwd=repo)
 
     def test_optional_papers_structure_is_generated(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-papers-") as tmp:

@@ -5,10 +5,10 @@ Use `src/<Project>/` e `tests/<Project>.Tests/`, seguindo a convenção do ecoss
 Comandos:
 
 ```bash
-dotnet restore
-dotnet build
-dotnet run --project src/<Project>
-dotnet test
+dotnet restore <Project>.sln
+dotnet build <Project>.sln
+dotnet run --project src/<Project>/<Project>.csproj
+dotnet test <Project>.sln
 ```
 
 O manifesto deve usar `runtime.id` como `csharp`.

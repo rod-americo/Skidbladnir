@@ -157,7 +157,7 @@ def default_readme_badges(runtime: str, repo_url: str) -> str:
         badges.append(f"[![CI]({workflow_url}/badge.svg)]({workflow_url})")
 
     if runtime == "python":
-        badges.append("![Python](https://img.shields.io/badge/python-3.11%2B-blue)")
+        badges.append("![Python](https://img.shields.io/badge/python-3.9%2B-blue)")
     elif runtime == "node":
         badges.append("![Node](https://img.shields.io/badge/node-20%2B-5fa04e)")
     elif runtime == "go":
@@ -309,10 +309,11 @@ def runtime_defaults(
         "CI_DEPLOY_STEP": "      - name: Check deploy manifest\n        run: python3 scripts/check_deploy_manifest.py",
         "CI_STATIC_CHECK_COMMAND": "preencher checagem sintatica",
         "CI_VALIDATE_COMMAND": "preencher validacao de CI",
-        "PYTHON_VERSION": "3.11",
+        "PYTHON_VERSION": "3.9",
         "NODE_VERSION": "20",
         "GO_VERSION": "1.22",
         "DOTNET_VERSION": "8.0.x",
+        "DOTNET_RESTORE_COMMAND": "dotnet restore",
         "logger": "preencher logger principal",
         "json / key-value / outro": "json",
         "arquivo_ou_journal": "preencher local dos logs",
@@ -346,7 +347,7 @@ def runtime_defaults(
     if runtime == "python":
         common.update(
             {
-                "PRIMARY_RUNTIME": "python3.11+",
+                "PRIMARY_RUNTIME": "python3.9+",
                 "DEPENDENCY_FILE": "requirements.txt",
                 "SETUP_COMMANDS": textwrap.dedent(
                     """
@@ -360,7 +361,7 @@ def runtime_defaults(
                 "RUN_COMMAND": f"python -m {project_slug}",
                 "VALIDACAO_MINIMA": "python -m pytest -q",
                 "RESTART_POLICY": "mudancas de codigo Python exigem restart do processo; docs isoladas nao exigem restart",
-                "runtime": "python3.11+",
+                "runtime": "python3.9+",
                 "ENV_1": f"{env_prefix}_CONFIG_FILE",
                 "ENV_2": "APP_ENV",
                 "LOCAL_BOOT_COMMANDS": textwrap.dedent(
@@ -548,32 +549,30 @@ def runtime_defaults(
         )
     elif runtime == "csharp":
         csharp_project = pascalize(project_slug)
+        csharp_solution = f"{csharp_project}.sln"
+        csharp_project_file = f"src/{csharp_project}/{csharp_project}.csproj"
         common.update(
             {
                 "PRIMARY_RUNTIME": "dotnet8+",
                 "DEPENDENCY_FILE": f"{csharp_project}.sln / *.csproj",
-                "SETUP_COMMANDS": "dotnet restore",
+                "SETUP_COMMANDS": f"dotnet restore {csharp_solution}",
                 "OPTIONAL_ENV_SETUP": "export DOTNET_ENVIRONMENT=Development",
-                "RUN_COMMAND": f"dotnet run --project src/{csharp_project}",
-                "VALIDACAO_MINIMA": "dotnet test",
+                "RUN_COMMAND": f"dotnet run --project {csharp_project_file}",
+                "VALIDACAO_MINIMA": f"dotnet test {csharp_solution}",
                 "RESTART_POLICY": "mudancas em C# exigem rebuild/restart do processo; docs isoladas nao exigem restart",
                 "runtime": "dotnet8+",
                 "ENV_1": f"{env_prefix}_CONFIG_FILE",
                 "ENV_2": "DOTNET_ENVIRONMENT",
-                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
-                    """
-                    dotnet restore
-                    cp config/settings.example.json config/settings.local.json
-                    """
-                ).strip(),
-                "PRIMARY_RUN_COMMAND": f"dotnet run --project src/{csharp_project}",
+                "LOCAL_BOOT_COMMANDS": f"dotnet restore {csharp_solution}\ncp config/settings.example.json config/settings.local.json",
+                "PRIMARY_RUN_COMMAND": f"dotnet run --project {csharp_project_file}",
                 "config_local": "config/settings.local.json",
-                "SMOKE_TEST_COMMAND": "dotnet test",
-                "CI_VALIDATE_COMMAND": "dotnet test",
+                "SMOKE_TEST_COMMAND": f"dotnet test {csharp_solution}",
+                "CI_VALIDATE_COMMAND": f"dotnet test {csharp_solution}",
+                "DOTNET_RESTORE_COMMAND": f"dotnet restore {csharp_solution}",
                 "logger": f"src/{csharp_project}",
                 "storage": "filesystem local ou banco definido pelo projeto",
-                "entrypoint_1": f"dotnet run --project src/{csharp_project}",
-                "entrypoint_2": "dotnet test",
+                "entrypoint_1": f"dotnet run --project {csharp_project_file}",
+                "entrypoint_2": f"dotnet test {csharp_solution}",
                 "a capacidade principal": "oferecer um projeto .NET testavel com operacao e manifesto explicitos",
                 "o contexto operacional ou de negocio": "CLI, worker ou servico .NET com comandos publicos claros",
                 "motivacao_1": "nascer com solucao, projeto, testes e manifesto operacional desde o primeiro commit",
@@ -844,7 +843,7 @@ def runtime_process_defaults(runtime: str, project_slug: str, preset: str) -> tu
     if runtime == "python":
         process_command = f"python -m {project_slug}"
         healthcheck_command = "python -m pytest -q"
-        runtime_version = "3.11+"
+        runtime_version = "3.9+"
         if preset == "cli":
             process_command = f"python -m {project_slug} doctor"
             healthcheck_command = f"python -m {project_slug} doctor"
@@ -880,7 +879,7 @@ def runtime_process_defaults(runtime: str, project_slug: str, preset: str) -> tu
 
     if runtime == "csharp":
         project_name = pascalize(project_slug)
-        return f"dotnet run --project src/{project_name}", "dotnet test", "8.0+"
+        return f"dotnet run --project src/{project_name}/{project_name}.csproj", f"dotnet test {project_name}.sln", "8.0+"
 
     return "definido pelo projeto", "definido pelo projeto", "not-applicable"
 
@@ -2757,6 +2756,8 @@ def swift_generated_files(project_name: str, project_slug: str, preset: str) -> 
 def csharp_generated_files(project_name: str, project_slug: str, preset: str) -> dict[str, str]:
     project = pascalize(project_slug)
     test_project = f"{project}.Tests"
+    app_guid = "11111111-1111-1111-1111-111111111111"
+    test_guid = "22222222-2222-2222-2222-222222222222"
     return {
         f"{project}.sln": "\n".join(
             [
@@ -2764,11 +2765,28 @@ def csharp_generated_files(project_name: str, project_slug: str, preset: str) ->
                 "# Visual Studio Version 17",
                 "VisualStudioVersion = 17.0.31903.59",
                 "MinimumVisualStudioVersion = 10.0.40219.1",
-                f'Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{project}", "src\\{project}\\{project}.csproj", "{{11111111-1111-1111-1111-111111111111}}"',
+                f'Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{project}", "src\\{project}\\{project}.csproj", "{{{app_guid}}}"',
                 "EndProject",
-                f'Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{test_project}", "tests\\{test_project}\\{test_project}.csproj", "{{22222222-2222-2222-2222-222222222222}}"',
+                f'Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{test_project}", "tests\\{test_project}\\{test_project}.csproj", "{{{test_guid}}}"',
                 "EndProject",
                 "Global",
+                "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution",
+                "\t\tDebug|Any CPU = Debug|Any CPU",
+                "\t\tRelease|Any CPU = Release|Any CPU",
+                "\tEndGlobalSection",
+                "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution",
+                f"\t\t{{{app_guid}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU",
+                f"\t\t{{{app_guid}}}.Debug|Any CPU.Build.0 = Debug|Any CPU",
+                f"\t\t{{{app_guid}}}.Release|Any CPU.ActiveCfg = Release|Any CPU",
+                f"\t\t{{{app_guid}}}.Release|Any CPU.Build.0 = Release|Any CPU",
+                f"\t\t{{{test_guid}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU",
+                f"\t\t{{{test_guid}}}.Debug|Any CPU.Build.0 = Debug|Any CPU",
+                f"\t\t{{{test_guid}}}.Release|Any CPU.ActiveCfg = Release|Any CPU",
+                f"\t\t{{{test_guid}}}.Release|Any CPU.Build.0 = Release|Any CPU",
+                "\tEndGlobalSection",
+                "\tGlobalSection(SolutionProperties) = preSolution",
+                "\t\tHideSolutionNode = FALSE",
+                "\tEndGlobalSection",
                 "EndGlobal",
             ]
         ),

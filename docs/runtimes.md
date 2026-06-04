@@ -11,7 +11,7 @@ Este documento define a matriz multilinguagem do Skidbladnir para agentes. A CLI
 | TypeScript | `ts` | app em `src/` quando build/transpile exigir | `npm install` | `npm start` | `npm test` |
 | Go | `go` | `cmd/<slug>/` para binário e pacote interno quando necessário | `go mod download` | `go run ./cmd/<slug>` | `go test ./...` |
 | Swift | `swift` | `Sources/<Module>/` e `Sources/<Module>Core/` | `swift package resolve` | `swift run <Module>` | `swift build && swift run <Module>` |
-| C# | `csharp` | `src/<Project>/` e `tests/<Project>.Tests/` | `dotnet restore` | `dotnet run --project src/<Project>` | `dotnet test` |
+| C# | `csharp` | `src/<Project>/` e `tests/<Project>.Tests/` | `dotnet restore <Project>.sln` | `dotnet run --project src/<Project>/<Project>.csproj` | `dotnet test <Project>.sln` |
 | Genérico | `generic` | documentação, scripts e manifesto sem runtime dominante | definido pelo projeto | definido pelo projeto | definido pelo projeto |
 
 ## Presets comuns
