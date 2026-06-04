@@ -49,22 +49,19 @@ Padrão recomendado para projetos novos:
 ├── .github/
 │   └── workflows/
 │       └── ci.yml            # baseline de CI para push e pull_request
-├── requirements.txt / package.json
+├── {{DEPENDENCY_FILE}}
 ├── config/
 │   ├── doctor.json
 │   ├── settings.example.json
 │   └── logging.example.json
+├── deploy/
+│   └── manifest.json       # contrato operacional e de deploy
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── CONTRACTS.md
 │   ├── OPERATIONS.md
 │   └── DECISIONS.md
-{{OPTIONAL_RESEARCH_STRUCTURE}}├── {{PROJECT_SLUG}}/
-│   ├── domain/
-│   ├── application/
-│   ├── infrastructure/
-│   ├── interfaces/
-│   └── main.py
+{{OPTIONAL_RESEARCH_STRUCTURE}}{{RUNTIME_STRUCTURE}}
 ├── tests/
 └── runtime/                  # ignorado no git
 ```
@@ -76,6 +73,7 @@ Regras:
 - use `{{PROJECT_SLUG}}/` na raiz como padrão principal
 - use `src/` só quando isolamento de packaging for requisito consciente
 - `runtime/`, bancos locais, dumps, sessões e caches não devem ser versionados
+- `deploy/manifest.json` deve declarar comando principal, healthcheck, runtime state, logs, restart, backup e rollback
 
 ## Quick start
 
@@ -146,7 +144,9 @@ Registre isso em `docs/CONTRACTS.md` e `docs/ARCHITECTURE.md`.
 Checklist mínimo antes de commitar:
 
 - `python3 scripts/check_project_gate.py` executado, se o gate estiver em enforcement
+- `python3 scripts/check_deploy_manifest.py` executado antes de qualquer publicação ou deploy
 - `python3 scripts/project_doctor.py` executado quando README/docs/contratos já estiverem preenchidos
+- `python3 scripts/project_doctor.py --deploy-strict` executado quando `docs/OPERATIONS.md` ou `deploy/manifest.json` mudar
 - testes relevantes executados
 - lint ou checagem sintática executada
 - `README.md` atualizado se comportamento mudou
@@ -162,6 +162,9 @@ Checklist mínimo antes de commitar:
 - `scripts/project_doctor.py`: valida coerência mínima entre gate, README, arquitetura, contratos e operação
 - `scripts/project_doctor.py --strict`: transforma warnings semânticos em erro bloqueante
 - `scripts/project_doctor.py --audit-config`: audita overrides e aliases de `config/doctor.json`
+- `scripts/check_deploy_manifest.py`: valida o contrato declarado em `deploy/manifest.json`
+- `deploy/manifest.json`: manifesto obrigatório de processo, healthcheck, runtime, logs, restart, backup e rollback
+- `schema/deploy-manifest.schema.json`: schema versionado do manifesto de deploy
 - `.github/workflows/ci.yml`: baseline de CI alinhada ao runtime e ao preset gerados pelo kit
 - `config/doctor.json`: política versionada do doctor para aliases de vocabulário e exceções justificadas
 - `docs/ARCHITECTURE.md`: desenho do sistema e fronteiras
@@ -180,6 +183,7 @@ Checklist mínimo antes de commitar:
 - se o repositório nascer com gate enforced, instale `.githooks/` com `bash scripts/install_git_hooks.sh`
 - não inventar endpoints, campos, contratos ou fluxos sem marcar isso como inferência
 - quando houver mudança que exija restart, deixar isso explícito no diff, no `AGENTS.md` e em `docs/OPERATIONS.md`
+- toda mudança de comando principal, healthcheck, porta, secret, volume, runtime state ou rollback atualiza `deploy/manifest.json`
 
 ## Riscos e limites atuais
 

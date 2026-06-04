@@ -12,27 +12,44 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATE_DIR = BASE_DIR / "templates"
+COMMON_TEMPLATE_DIR = TEMPLATE_DIR / "common"
 STARTER_VERSION_FILE = BASE_DIR / "VERSION"
 STARTER_VERSION = STARTER_VERSION_FILE.read_text(encoding="utf-8").strip() if STARTER_VERSION_FILE.exists() else "0.0.0"
 TEMPLATE_FILES = {
-    "README.md": TEMPLATE_DIR / "README.md",
-    "AGENTS.md": TEMPLATE_DIR / "AGENTS.md",
-    "PROJECT_GATE.md": TEMPLATE_DIR / "PROJECT_GATE.md",
-    "CHANGELOG.md": TEMPLATE_DIR / "CHANGELOG.md",
-    "docs/ARCHITECTURE.md": TEMPLATE_DIR / "docs" / "ARCHITECTURE.md",
-    "docs/CONTRACTS.md": TEMPLATE_DIR / "docs" / "CONTRACTS.md",
-    "docs/OPERATIONS.md": TEMPLATE_DIR / "docs" / "OPERATIONS.md",
-    "docs/DECISIONS.md": TEMPLATE_DIR / "docs" / "DECISIONS.md",
+    "README.md": COMMON_TEMPLATE_DIR / "README.md",
+    "AGENTS.md": COMMON_TEMPLATE_DIR / "AGENTS.md",
+    "PROJECT_GATE.md": COMMON_TEMPLATE_DIR / "PROJECT_GATE.md",
+    "CHANGELOG.md": COMMON_TEMPLATE_DIR / "CHANGELOG.md",
+    "docs/ARCHITECTURE.md": COMMON_TEMPLATE_DIR / "docs" / "ARCHITECTURE.md",
+    "docs/CONTRACTS.md": COMMON_TEMPLATE_DIR / "docs" / "CONTRACTS.md",
+    "docs/OPERATIONS.md": COMMON_TEMPLATE_DIR / "docs" / "OPERATIONS.md",
+    "docs/DECISIONS.md": COMMON_TEMPLATE_DIR / "docs" / "DECISIONS.md",
 }
 OPTIONAL_TEMPLATE_FILES = {
-    "START_CHECKLIST.md": TEMPLATE_DIR / "START_CHECKLIST.md",
+    "START_CHECKLIST.md": COMMON_TEMPLATE_DIR / "START_CHECKLIST.md",
 }
 OPTIONAL_STRUCTURE_TEMPLATE_FILES = {
-    "papers/README.md": TEMPLATE_DIR / "papers" / "README.md",
+    "papers/README.md": COMMON_TEMPLATE_DIR / "papers" / "README.md",
 }
 WORKFLOW_TEMPLATE_FILES = {
     "python": TEMPLATE_DIR / ".github" / "workflows" / "ci-python.yml",
     "node": TEMPLATE_DIR / ".github" / "workflows" / "ci-node.yml",
+    "go": TEMPLATE_DIR / ".github" / "workflows" / "ci-go.yml",
+    "ts": TEMPLATE_DIR / ".github" / "workflows" / "ci-node.yml",
+    "swift": TEMPLATE_DIR / ".github" / "workflows" / "ci-swift.yml",
+    "csharp": TEMPLATE_DIR / ".github" / "workflows" / "ci-csharp.yml",
+}
+SCRIPT_TEMPLATE_FILES = {
+    "scripts/check_project_gate.py": TEMPLATE_DIR / "scripts" / "check_project_gate.py",
+    "scripts/check_deploy_manifest.py": TEMPLATE_DIR / "scripts" / "check_deploy_manifest.py",
+    "scripts/project_doctor.py": TEMPLATE_DIR / "scripts" / "project_doctor.py",
+}
+SCHEMA_TEMPLATE_FILES = {
+    "schema/deploy-manifest.schema.json": BASE_DIR / "schema" / "deploy-manifest.schema.json",
+}
+GATE_ENFORCEMENT_TEMPLATE_FILES = {
+    ".githooks/pre-commit": TEMPLATE_DIR / "githooks" / "pre-commit",
+    "scripts/install_git_hooks.sh": TEMPLATE_DIR / "scripts" / "install_git_hooks.sh",
 }
 PLACEHOLDER_RE = re.compile(r"\{\{([^}]+)\}\}")
 PRESET_CHOICES = (
@@ -85,6 +102,16 @@ def kebabify(value: str) -> str:
     return slugify(value).replace("_", "-")
 
 
+def pascalize(value: str) -> str:
+    parts = re.findall(r"[A-Za-z0-9]+", value)
+    candidate = "".join(part[:1].upper() + part[1:] for part in parts if part)
+    if not candidate:
+        candidate = "Project"
+    if candidate[0].isdigit():
+        candidate = f"Project{candidate}"
+    return candidate
+
+
 def todo_value(raw: str) -> str:
     cleaned = " ".join(raw.split())
     return f"TODO: {cleaned}"
@@ -133,6 +160,14 @@ def default_readme_badges(runtime: str, repo_url: str) -> str:
         badges.append("![Python](https://img.shields.io/badge/python-3.11%2B-blue)")
     elif runtime == "node":
         badges.append("![Node](https://img.shields.io/badge/node-20%2B-5fa04e)")
+    elif runtime == "go":
+        badges.append("![Go](https://img.shields.io/badge/go-1.22%2B-00ADD8)")
+    elif runtime == "ts":
+        badges.append("![TypeScript](https://img.shields.io/badge/typescript-5%2B-3178c6)")
+    elif runtime == "swift":
+        badges.append("![Swift](https://img.shields.io/badge/swift-5.9%2B-f05138)")
+    elif runtime == "csharp":
+        badges.append("![.NET](https://img.shields.io/badge/.NET-8.0%2B-512bd4)")
 
     return "\n".join(badges)
 
@@ -156,6 +191,17 @@ def runtime_defaults(
         "README_BADGES": default_readme_badges(runtime, repo_url),
         "OPTIONAL_RESEARCH_STRUCTURE": "",
         "OPTIONAL_RESEARCH_DOCS": "",
+        "DEPENDENCY_FILE": "requirements.txt / package.json",
+        "RUNTIME_STRUCTURE": textwrap.dedent(
+            f"""
+            ├── {project_slug}/
+            │   ├── domain/
+            │   ├── application/
+            │   ├── infrastructure/
+            │   ├── interfaces/
+            │   └── main.py
+            """
+        ).strip(),
         "DOMINIO_CRITICO": "preencher dominio critico do projeto",
         "DEPENDENCIA_EXTERNA": "preencher dependencia externa principal",
         "HOST_PRINCIPAL": "preencher host principal ou ambiente de referencia",
@@ -260,10 +306,13 @@ def runtime_defaults(
         "logs_path": "runtime/logs/",
         "SMOKE_TEST_COMMAND": "preencher smoke test",
         "CI_GATE_STEP": "",
+        "CI_DEPLOY_STEP": "      - name: Check deploy manifest\n        run: python3 scripts/check_deploy_manifest.py",
         "CI_STATIC_CHECK_COMMAND": "preencher checagem sintatica",
         "CI_VALIDATE_COMMAND": "preencher validacao de CI",
         "PYTHON_VERSION": "3.11",
         "NODE_VERSION": "20",
+        "GO_VERSION": "1.22",
+        "DOTNET_VERSION": "8.0.x",
         "logger": "preencher logger principal",
         "json / key-value / outro": "json",
         "arquivo_ou_journal": "preencher local dos logs",
@@ -297,7 +346,8 @@ def runtime_defaults(
     if runtime == "python":
         common.update(
             {
-                "PRIMARY_RUNTIME": "python3.9+",
+                "PRIMARY_RUNTIME": "python3.11+",
+                "DEPENDENCY_FILE": "requirements.txt",
                 "SETUP_COMMANDS": textwrap.dedent(
                     """
                     python3 -m venv .venv --prompt $(basename "$PWD")
@@ -310,7 +360,7 @@ def runtime_defaults(
                 "RUN_COMMAND": f"python -m {project_slug}",
                 "VALIDACAO_MINIMA": "python -m pytest -q",
                 "RESTART_POLICY": "mudancas de codigo Python exigem restart do processo; docs isoladas nao exigem restart",
-                "runtime": "python3.9+",
+                "runtime": "python3.11+",
                 "ENV_1": f"{env_prefix}_CONFIG_FILE",
                 "ENV_2": "APP_ENV",
                 "LOCAL_BOOT_COMMANDS": textwrap.dedent(
@@ -334,6 +384,7 @@ def runtime_defaults(
         common.update(
             {
                 "PRIMARY_RUNTIME": "node20+",
+                "DEPENDENCY_FILE": "package.json",
                 "SETUP_COMMANDS": "npm install",
                 "OPTIONAL_ENV_SETUP": "export NODE_ENV=development",
                 "RUN_COMMAND": "npm start",
@@ -354,6 +405,195 @@ def runtime_defaults(
                 "CI_VALIDATE_COMMAND": "npm test",
                 "logger": f"{project_slug}/infrastructure/logger.mjs",
                 "storage": "filesystem local ou banco definido pelo projeto",
+            }
+        )
+    elif runtime == "go":
+        common.update(
+            {
+                "PRIMARY_RUNTIME": "go1.22+",
+                "DEPENDENCY_FILE": "go.mod",
+                "SETUP_COMMANDS": "go mod download",
+                "OPTIONAL_ENV_SETUP": "export APP_ENV=development",
+                "RUN_COMMAND": f"go run ./cmd/{project_slug}",
+                "VALIDACAO_MINIMA": "go test ./...",
+                "RESTART_POLICY": "mudancas em codigo Go exigem rebuild/restart do processo; docs isoladas nao exigem restart",
+                "runtime": "go1.22+",
+                "ENV_1": f"{env_prefix}_CONFIG_FILE",
+                "ENV_2": "APP_ENV",
+                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
+                    """
+                    go mod download
+                    cp config/settings.example.json config/settings.local.json
+                    """
+                ).strip(),
+                "PRIMARY_RUN_COMMAND": f"go run ./cmd/{project_slug}",
+                "config_local": "config/settings.local.json",
+                "SMOKE_TEST_COMMAND": "go test ./...",
+                "CI_STATIC_CHECK_COMMAND": "go test ./...",
+                "CI_VALIDATE_COMMAND": "go test ./...",
+                "logger": f"{project_slug}/internal/logging",
+                "storage": "filesystem local ou banco definido pelo projeto",
+                "entrypoint_1": f"go run ./cmd/{project_slug}",
+                "entrypoint_2": "go test ./...",
+                "a capacidade principal": "oferecer um binario Go pequeno, testavel e operacionalmente explicito",
+                "o contexto operacional ou de negocio": "servico, worker ou CLI compilavel com contrato de operacao documentado",
+                "motivacao_1": "nascer com modulo Go, testes e manifesto operacional desde o primeiro commit",
+                "motivacao_2": "separar entrypoint, pacote interno e operacao sem scripts soltos",
+                "motivacao_3": "evitar binario sem contrato de runtime, restart ou smoke test",
+                "API / host / banco / fila / worker / PACS / browser / etc": "runtime Go, host local e dependencias operacionais declaradas",
+                "risco_tecnico_principal": "crescer logica de dominio diretamente no entrypoint sem contratos claros",
+                "passo_1": "definir contrato de comando e flags publicas",
+                "passo_2": "separar pacote interno e entrypoint em cmd",
+                "passo_3": "registrar build, smoke e rollback em docs/OPERATIONS.md",
+                "DOMINIO_CRITICO": "contrato do binario, flags e operacao local",
+            }
+        )
+    elif runtime == "ts":
+        common.update(
+            {
+                "PRIMARY_RUNTIME": "node20+ / typescript5+",
+                "DEPENDENCY_FILE": "package.json / tsconfig.json",
+                "SETUP_COMMANDS": "npm install",
+                "OPTIONAL_ENV_SETUP": "export NODE_ENV=development",
+                "RUN_COMMAND": "npm start",
+                "VALIDACAO_MINIMA": "npm test",
+                "RESTART_POLICY": "mudancas em TypeScript exigem rebuild e restart do processo; docs isoladas nao exigem restart",
+                "runtime": "node20+ / typescript5+",
+                "ENV_1": f"{env_prefix}_CONFIG_FILE",
+                "ENV_2": "NODE_ENV",
+                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
+                    """
+                    npm install
+                    cp config/settings.example.json config/settings.local.json
+                    """
+                ).strip(),
+                "PRIMARY_RUN_COMMAND": "npm start",
+                "config_local": "config/settings.local.json",
+                "SMOKE_TEST_COMMAND": "npm test",
+                "CI_VALIDATE_COMMAND": "npm test",
+                "logger": "src/infrastructure/logger.ts",
+                "storage": "filesystem local ou banco definido pelo projeto",
+                "entrypoint_1": "npm start",
+                "entrypoint_2": "npm test",
+                "a capacidade principal": "oferecer um app TypeScript tipado, testavel e operacionalmente explicito",
+                "o contexto operacional ou de negocio": "servico, worker ou CLI em Node com build e contratos declarados",
+                "motivacao_1": "nascer com typecheck, teste e manifesto operacional desde o primeiro commit",
+                "motivacao_2": "separar fonte TypeScript, artefato buildado e operacao",
+                "motivacao_3": "evitar JavaScript gerado ou runtime Node sem contrato de smoke e rollback",
+                "API / host / banco / fila / worker / PACS / browser / etc": "Node.js, TypeScript e dependencias operacionais declaradas",
+                "risco_tecnico_principal": "deixar build, runtime e contratos de modulo divergirem silenciosamente",
+                "passo_1": "definir comandos publicos de start, build e test",
+                "passo_2": "separar fonte em src e testes tipados",
+                "passo_3": "registrar build, smoke e rollback em docs/OPERATIONS.md",
+                "DOMINIO_CRITICO": "contrato de build, comandos npm e operacao Node",
+                "RUNTIME_STRUCTURE": textwrap.dedent(
+                    """
+                    ├── package.json
+                    ├── tsconfig.json
+                    ├── src/
+                    │   ├── infrastructure/
+                    │   └── main.ts
+                    """
+                ).strip(),
+            }
+        )
+    elif runtime == "swift":
+        swift_module = pascalize(project_slug)
+        common.update(
+            {
+                "PRIMARY_RUNTIME": "swift5.9+",
+                "DEPENDENCY_FILE": "Package.swift",
+                "SETUP_COMMANDS": "swift package resolve",
+                "OPTIONAL_ENV_SETUP": "export APP_ENV=development",
+                "RUN_COMMAND": f"swift run {swift_module}",
+                "VALIDACAO_MINIMA": f"swift build && swift run {swift_module}",
+                "RESTART_POLICY": "mudancas em Swift exigem rebuild/restart do binario; docs isoladas nao exigem restart",
+                "runtime": "swift5.9+",
+                "ENV_1": f"{env_prefix}_CONFIG_FILE",
+                "ENV_2": "APP_ENV",
+                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
+                    """
+                    swift package resolve
+                    cp config/settings.example.json config/settings.local.json
+                    """
+                ).strip(),
+                "PRIMARY_RUN_COMMAND": f"swift run {swift_module}",
+                "config_local": "config/settings.local.json",
+                "SMOKE_TEST_COMMAND": f"swift build && swift run {swift_module}",
+                "CI_VALIDATE_COMMAND": f"swift build && swift run {swift_module}",
+                "logger": f"Sources/{swift_module}Core",
+                "storage": "filesystem local ou banco definido pelo projeto",
+                "entrypoint_1": f"swift run {swift_module}",
+                "entrypoint_2": "swift build",
+                "a capacidade principal": "oferecer um executavel Swift Package Manager com teste e operacao explicita",
+                "o contexto operacional ou de negocio": "CLI, worker ou componente local em Swift com contrato de runtime documentado",
+                "motivacao_1": "nascer como pacote Swift testavel sem improvisar operacao depois",
+                "motivacao_2": "separar core testavel, executavel e manifesto operacional",
+                "motivacao_3": "evitar binario local sem smoke, restart ou rollback declarado",
+                "API / host / banco / fila / worker / PACS / browser / etc": "Swift Package Manager, host local e dependencias operacionais declaradas",
+                "risco_tecnico_principal": "misturar logica testavel diretamente no entrypoint do executavel",
+                "passo_1": "definir comandos publicos de run e test",
+                "passo_2": "separar core testavel e executable target",
+                "passo_3": "registrar build, smoke e rollback em docs/OPERATIONS.md",
+                "DOMINIO_CRITICO": "contrato do executavel Swift e operacao local",
+                "RUNTIME_STRUCTURE": textwrap.dedent(
+                    f"""
+                    ├── Package.swift
+                    ├── Sources/
+                    │   ├── {swift_module}/
+                    │   └── {swift_module}Core/
+                    """
+                ).strip(),
+            }
+        )
+    elif runtime == "csharp":
+        csharp_project = pascalize(project_slug)
+        common.update(
+            {
+                "PRIMARY_RUNTIME": "dotnet8+",
+                "DEPENDENCY_FILE": f"{csharp_project}.sln / *.csproj",
+                "SETUP_COMMANDS": "dotnet restore",
+                "OPTIONAL_ENV_SETUP": "export DOTNET_ENVIRONMENT=Development",
+                "RUN_COMMAND": f"dotnet run --project src/{csharp_project}",
+                "VALIDACAO_MINIMA": "dotnet test",
+                "RESTART_POLICY": "mudancas em C# exigem rebuild/restart do processo; docs isoladas nao exigem restart",
+                "runtime": "dotnet8+",
+                "ENV_1": f"{env_prefix}_CONFIG_FILE",
+                "ENV_2": "DOTNET_ENVIRONMENT",
+                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
+                    """
+                    dotnet restore
+                    cp config/settings.example.json config/settings.local.json
+                    """
+                ).strip(),
+                "PRIMARY_RUN_COMMAND": f"dotnet run --project src/{csharp_project}",
+                "config_local": "config/settings.local.json",
+                "SMOKE_TEST_COMMAND": "dotnet test",
+                "CI_VALIDATE_COMMAND": "dotnet test",
+                "logger": f"src/{csharp_project}",
+                "storage": "filesystem local ou banco definido pelo projeto",
+                "entrypoint_1": f"dotnet run --project src/{csharp_project}",
+                "entrypoint_2": "dotnet test",
+                "a capacidade principal": "oferecer um projeto .NET testavel com operacao e manifesto explicitos",
+                "o contexto operacional ou de negocio": "CLI, worker ou servico .NET com comandos publicos claros",
+                "motivacao_1": "nascer com solucao, projeto, testes e manifesto operacional desde o primeiro commit",
+                "motivacao_2": "seguir convencoes .NET sem fingir layout Python",
+                "motivacao_3": "evitar binario .NET sem smoke, restart ou rollback documentado",
+                "API / host / banco / fila / worker / PACS / browser / etc": ".NET SDK, host local e dependencias operacionais declaradas",
+                "risco_tecnico_principal": "misturar app, contratos e testes sem fronteira de projeto clara",
+                "passo_1": "definir comando de run e projeto principal",
+                "passo_2": "separar src e tests conforme convencao .NET",
+                "passo_3": "registrar build, smoke e rollback em docs/OPERATIONS.md",
+                "DOMINIO_CRITICO": "contrato do projeto .NET e operacao local",
+                "RUNTIME_STRUCTURE": textwrap.dedent(
+                    f"""
+                    ├── {csharp_project}.sln
+                    ├── src/
+                    │   └── {csharp_project}/
+                    ├── tests/
+                    │   └── {csharp_project}.Tests/
+                    """
+                ).strip(),
             }
         )
     else:
@@ -467,7 +707,7 @@ def runtime_defaults(
                 "motivacao_1": "isolar sessao, browser e loop recorrente antes que a integracao fique irreparavelmente frágil",
                 "motivacao_2": "tratar browser automation como fronteira operacional propria, nao como detalhe incidental",
                 "motivacao_3": "evitar scripts de login e scraping sem contrato de artefato, retry ou observabilidade",
-                "entrypoint_1": f"python -m {project_slug} --once --dry-run",
+                "entrypoint_1": f"python -m {project_slug} --interval 30 --dry-run",
                 "entrypoint_2": f"python -m {project_slug} --refresh-session",
                 "API / host / banco / fila / worker / PACS / browser / etc": "playwright, chromium e sistema web autenticado",
                 "risco_tecnico_principal": "deixar login, sessao e scraping crescerem sem contrato de artefato nem regra de reautenticacao",
@@ -475,7 +715,7 @@ def runtime_defaults(
                 "passo_2": "separar login, fetch e loop operacional",
                 "passo_3": "registrar bootstrap do browser e instalacao do chromium em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "sessao autenticada, cookies e fronteira entre browser e worker",
-                "RUN_COMMAND": f"python -m {project_slug} --once --dry-run",
+                "RUN_COMMAND": f"python -m {project_slug} --interval 30 --dry-run",
                 "VALIDACAO_MINIMA": f"python -m {project_slug} --once --dry-run",
                 "RESTART_POLICY": "mudancas no worker ou no fluxo de browser exigem restart do processo residente",
                 "OPTIONAL_ENV_SETUP": textwrap.dedent(
@@ -513,7 +753,7 @@ def runtime_defaults(
                 "passo_2": "documentar execucao once vs residente",
                 "passo_3": "registrar restart e sinais de falha no OPERATIONS.md",
                 "DOMINIO_CRITICO": "unidade de trabalho, idempotencia e retry",
-                "RUN_COMMAND": f"python -m {project_slug} --once",
+                "RUN_COMMAND": f"python -m {project_slug} --interval 30",
                 "VALIDACAO_MINIMA": f"python -m {project_slug} --once",
                 "RESTART_POLICY": "mudancas de codigo do worker exigem restart do processo residente",
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --interval 30",
@@ -536,7 +776,7 @@ def runtime_defaults(
                 "passo_2": "separar ingestao bruta, extração de cabecalho e materializacao",
                 "passo_3": "registrar politicas de staging, limpeza e reprocessamento em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "StudyInstanceUID, identificadores canonicos e staging do pipeline",
-                "RUN_COMMAND": f"python -m {project_slug} --sample",
+                "RUN_COMMAND": f"python -m {project_slug} --inbox runtime/inbox --outbox runtime/outbox",
                 "VALIDACAO_MINIMA": f"python -m {project_slug} --sample",
                 "RESTART_POLICY": "mudancas de etapa exigem nova execucao do pipeline e revisao do staging local",
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --inbox runtime/inbox --outbox runtime/outbox",
@@ -600,13 +840,199 @@ def write_text(path: Path, content: str) -> None:
         path.chmod(path.stat().st_mode | 0o755)
 
 
+def runtime_process_defaults(runtime: str, project_slug: str, preset: str) -> tuple[str, str, str]:
+    if runtime == "python":
+        process_command = f"python -m {project_slug}"
+        healthcheck_command = "python -m pytest -q"
+        runtime_version = "3.11+"
+        if preset == "cli":
+            process_command = f"python -m {project_slug} doctor"
+            healthcheck_command = f"python -m {project_slug} doctor"
+        elif preset == "textual_cli":
+            process_command = f"python -m {project_slug} tui"
+            healthcheck_command = f"python -m {project_slug} doctor"
+        elif preset == "worker":
+            process_command = f"python -m {project_slug} --interval 30"
+            healthcheck_command = f"python -m {project_slug} --once"
+        elif preset == "playwright_worker":
+            process_command = f"python -m {project_slug} --interval 30 --dry-run"
+            healthcheck_command = f"python -m {project_slug} --once --dry-run"
+        elif preset == "pipeline":
+            process_command = f"python -m {project_slug} --item-id demo-001"
+            healthcheck_command = f"python -m {project_slug} --item-id demo-001"
+        elif preset == "dicom_pipeline":
+            process_command = f"python -m {project_slug} --inbox runtime/inbox --outbox runtime/outbox"
+            healthcheck_command = f"python -m {project_slug} --sample"
+        return process_command, healthcheck_command, runtime_version
+
+    if runtime == "node":
+        return "npm start", "npm test", "20+"
+
+    if runtime == "go":
+        return f"go run ./cmd/{project_slug}", "go test ./...", "1.22+"
+
+    if runtime == "ts":
+        return "npm start", "npm test", "node20+ / typescript5+"
+
+    if runtime == "swift":
+        module_name = pascalize(project_slug)
+        return f"swift run {module_name}", f"swift build && swift run {module_name}", "5.9+"
+
+    if runtime == "csharp":
+        project_name = pascalize(project_slug)
+        return f"dotnet run --project src/{project_name}", "dotnet test", "8.0+"
+
+    return "definido pelo projeto", "definido pelo projeto", "not-applicable"
+
+
+def default_deploy_manifest(
+    runtime: str,
+    project_name: str,
+    project_slug: str,
+    preset: str,
+) -> dict[str, object]:
+    process_command, healthcheck_command, runtime_version = runtime_process_defaults(
+        runtime,
+        project_slug,
+        preset,
+    )
+    optional_env = {
+        "python": "APP_ENV",
+        "node": "NODE_ENV",
+        "ts": "NODE_ENV",
+        "go": "APP_ENV",
+        "swift": "APP_ENV",
+        "csharp": "DOTNET_ENVIRONMENT",
+    }.get(runtime)
+
+    return {
+        "version": 1,
+        "project": {
+            "name": project_name,
+            "slug": project_slug,
+        },
+        "runtime": {
+            "id": runtime,
+            "version": runtime_version,
+        },
+        "deploy": {
+            "target": "local",
+            "reason": "baseline local gerada pelo Skidbladnir; ajuste antes de publicar ou operar em outro ambiente",
+        },
+        "process": {
+            "command": process_command,
+            "working_directory": ".",
+            "user": "local operator",
+        },
+        "healthcheck": {
+            "command": healthcheck_command,
+            "timeout_seconds": 30,
+        },
+        "ports": [],
+        "environment": {
+            "required": [],
+            "optional": [optional_env] if optional_env else [],
+        },
+        "secrets": {
+            "required": [],
+        },
+        "runtime_state": {
+            "paths": ["runtime/"],
+        },
+        "logs": {
+            "paths": ["runtime/logs/"],
+        },
+        "restart": {
+            "policy": "restart do processo quando codigo, configuracao ou manifesto de deploy mudar",
+        },
+        "backup": {
+            "policy": "revisar runtime state antes de operar fora do ambiente local",
+        },
+        "rollback": {
+            "strategy": "voltar para ultimo commit validado e reaplicar configuracao host-local preservada",
+        },
+    }
+
+
+def default_logging_config() -> dict[str, object]:
+    return {
+        "version": 1,
+        "formatters": {
+            "json": {
+                "type": "json",
+                "required_fields": ["ts", "lvl", "svc", "mod", "evt", "msg"],
+            }
+        },
+        "policy": {
+            "rule": "logs devem ser estruturados e parseaveis",
+            "example": {
+                "ts": "2026-01-01T00:00:00+00:00",
+                "lvl": "INFO",
+                "svc": "service-name",
+                "mod": "module-name",
+                "evt": "startup",
+                "msg": "servico inicializado",
+            },
+        },
+    }
+
+
+def default_doctor_config() -> dict[str, object]:
+    return {
+        "version": 1,
+        "ignored_warnings": [],
+        "token_alias_groups": [],
+    }
+
+
+def default_app_config(runtime: str, project_name: str, preset: str) -> tuple[str, dict[str, object]]:
+    config_example_path = "config/settings.example.json"
+    if runtime in {"node", "ts"}:
+        config_payload: dict[str, object] = {
+            "app": {
+                "name": project_name,
+                "env": "dev",
+                "logLevel": "INFO",
+            }
+        }
+        return config_example_path, config_payload
+
+    config_payload = {
+        "app": {
+            "name": project_name,
+            "env": "dev",
+            "log_level": "INFO",
+        }
+    }
+
+    if preset == "fastapi":
+        config_payload["server"] = {"host": "127.0.0.1", "port": 8000}
+    elif preset == "textual_cli":
+        config_payload["tui"] = {"refresh_seconds": 2, "title": project_name}
+    elif preset == "playwright_worker":
+        config_payload["browser"] = {
+            "storage_path": "runtime/browser/session.json",
+            "login_url": "",
+            "headless": True,
+        }
+    elif preset == "dicom_pipeline":
+        config_payload["pipeline"] = {
+            "inbox": "runtime/inbox",
+            "outbox": "runtime/outbox",
+            "accept_suffixes": [".dcm", ".dicom"],
+        }
+
+    return config_example_path, config_payload
+
+
 def common_generated_files(
     runtime: str,
     project_name: str,
+    project_slug: str,
     preset: str,
     gate_enforced: bool,
 ) -> dict[str, str]:
-    config_example_path = "config/settings.example.json"
+    config_example_path, config_payload = default_app_config(runtime, project_name, preset)
     files = {
         ".gitignore": textwrap.dedent(
             """
@@ -634,6 +1060,9 @@ def common_generated_files(
             node_modules/
             coverage/
 
+            # Go
+            bin/
+
             # Build artifacts
             build/
             dist/
@@ -644,868 +1073,19 @@ def common_generated_files(
             """
         ),
         "runtime/.gitignore": "*\n!.gitignore\n",
-        "config/logging.example.json": json.dumps(
-            {
-                "version": 1,
-                "formatters": {
-                    "json": {
-                        "type": "json",
-                        "required_fields": ["ts", "lvl", "svc", "mod", "evt", "msg"],
-                    }
-                },
-                "policy": {
-                    "rule": "logs devem ser estruturados e parseaveis",
-                    "example": {
-                        "ts": "2026-01-01T00:00:00+00:00",
-                        "lvl": "INFO",
-                        "svc": "service-name",
-                        "mod": "module-name",
-                        "evt": "startup",
-                        "msg": "servico inicializado",
-                    },
-                },
-            },
+        "config/logging.example.json": json.dumps(default_logging_config(), indent=2, ensure_ascii=True),
+        "config/doctor.json": json.dumps(default_doctor_config(), indent=2, ensure_ascii=True),
+        "deploy/manifest.json": json.dumps(
+            default_deploy_manifest(runtime, project_name, project_slug, preset),
             indent=2,
             ensure_ascii=True,
         ),
-        "config/doctor.json": json.dumps(
-            {
-                "version": 1,
-                "ignored_warnings": [],
-                "token_alias_groups": [],
-            },
-            indent=2,
-            ensure_ascii=True,
-        ),
-        "scripts/check_project_gate.py": textwrap.dedent(
-            """
-            #!/usr/bin/env python3
-
-            from __future__ import annotations
-
-            import re
-            import sys
-            from pathlib import Path
-
-
-            PROJECT_GATE = Path(__file__).resolve().parents[1] / "PROJECT_GATE.md"
-            REQUIRED_SECTION_PREFIXES = ("## 1.", "## 2.", "## 3.", "## 4.", "## 5.")
-            PENDING_MARKERS = ("TODO", "preencher", "{{")
-            WEAK_EXACT_VALUES = {
-                "",
-                "?",
-                "-",
-                "n/a",
-                "na",
-                "nao sei",
-                "não sei",
-                "nao aplicavel",
-                "não aplicável",
-                "nao se aplica",
-                "não se aplica",
-                "a definir",
-                "depois vejo",
-                "talvez",
-                "placeholder",
-            }
-            WEAK_SUBSTRINGS = (
-                "depois vejo",
-                "a definir",
-                "nao sei",
-                "não sei",
-                "talvez",
-                "placeholder",
-                "qualquer coisa",
-            )
-            FIELD_RULES = {
-                "problema real": {"min_words": 5, "min_chars": 24},
-                "usuario ou operador alvo": {"min_words": 3, "min_chars": 12},
-                "resultado esperado": {"min_words": 4, "min_chars": 20},
-                "repositorio candidato que poderia absorver isso": {"min_words": 1, "min_chars": 4},
-                "por que esse acoplamento seria inadequado": {"min_words": 5, "min_chars": 24},
-                "fronteira que justifica um repositório separado": {"min_words": 5, "min_chars": 24},
-                "configuracao": {"min_words": 2, "min_chars": 8},
-                "logging": {"min_words": 2, "min_chars": 8},
-                "runtime": {"min_words": 2, "min_chars": 8},
-                "contratos": {"min_words": 2, "min_chars": 8},
-                "autenticacao ou transporte": {"min_words": 2, "min_chars": 8},
-                "responsabilidades fora de escopo": {"min_words": 4, "min_chars": 20},
-                "integrações que pertencem a outro sistema": {"min_words": 3, "min_chars": 15},
-                "dados que nao devem morar aqui": {"min_words": 2, "min_chars": 12},
-                "host ou ambiente principal": {"min_words": 2, "min_chars": 6},
-                "dependencia externa mais fragil": {"min_words": 2, "min_chars": 6},
-                "necessidade de restart": {"min_words": 3, "min_chars": 12},
-                "necessidade de backup": {"min_words": 3, "min_chars": 12},
-                "risco operacional": {"min_words": 4, "min_chars": 20},
-            }
-
-
-            def normalize_text(value: str) -> str:
-                return " ".join(value.strip().lower().split())
-
-
-            def word_count(value: str) -> int:
-                return len(re.findall(r"[\\w/-]+", value, flags=re.UNICODE))
-
-
-            def collect_fields(text: str) -> dict[str, str]:
-                fields: dict[str, str] = {}
-                current_required = False
-
-                for raw_line in text.splitlines():
-                    line = raw_line.rstrip()
-
-                    if line.startswith("## "):
-                        current_required = line.startswith(REQUIRED_SECTION_PREFIXES)
-                        continue
-
-                    if not current_required or not line.startswith("- "):
-                        continue
-
-                    content = line[2:].strip()
-                    if ":" not in content:
-                        continue
-
-                    label, value = content.split(":", 1)
-                    fields[label.strip()] = value.strip()
-
-                return fields
-
-
-            def classify_fields(fields: dict[str, str]) -> tuple[list[str], list[tuple[str, str]], list[tuple[str, str]]]:
-                pending: list[str] = []
-                weak: list[tuple[str, str]] = []
-                short: list[tuple[str, str]] = []
-
-                for label, rules in FIELD_RULES.items():
-                    value = fields.get(label, "").strip()
-                    normalized = normalize_text(value)
-
-                    if not value:
-                        pending.append(label)
-                        continue
-
-                    if any(marker.lower() in normalized for marker in PENDING_MARKERS):
-                        pending.append(label)
-                        continue
-
-                    if normalized in WEAK_EXACT_VALUES or any(marker in normalized for marker in WEAK_SUBSTRINGS):
-                        weak.append((label, value))
-                        continue
-
-                    words = word_count(value)
-                    chars = len(value)
-                    min_words = int(rules["min_words"])
-                    min_chars = int(rules["min_chars"])
-                    if words < min_words or chars < min_chars:
-                        short.append(
-                            (
-                                label,
-                                f"{words} palavra(s), {chars} caractere(s); minimo {min_words} palavra(s) e {min_chars} caractere(s)",
-                            )
-                        )
-
-                return pending, weak, short
-
-
-            def main() -> int:
-                if not PROJECT_GATE.exists():
-                    print(f"PROJECT_GATE.md ausente: {PROJECT_GATE}", file=sys.stderr)
-                    return 1
-
-                text = PROJECT_GATE.read_text(encoding="utf-8")
-                fields = collect_fields(text)
-                pending, weak, short = classify_fields(fields)
-
-                if pending or weak or short:
-                    print("PROJECT_GATE.md falhou na validacao semantica.", file=sys.stderr)
-
-                if pending:
-                    print("", file=sys.stderr)
-                    print("Pendencias estruturais:", file=sys.stderr)
-                    for field in pending:
-                        print(f"- {field}", file=sys.stderr)
-
-                if weak:
-                    print("", file=sys.stderr)
-                    print("Respostas vagas demais:", file=sys.stderr)
-                    for field, value in weak:
-                        print(f"- {field}: {value}", file=sys.stderr)
-
-                if short:
-                    print("", file=sys.stderr)
-                    print("Respostas curtas demais:", file=sys.stderr)
-                    for field, reason in short:
-                        print(f"- {field}: {reason}", file=sys.stderr)
-
-                if pending or weak or short:
-                    print("", file=sys.stderr)
-                    print(
-                        "Evite respostas como 'a definir', 'nao sei', 'talvez' ou frases curtas sem justificativa.",
-                        file=sys.stderr,
-                    )
-                    print("Preencha o gate antes do primeiro commit relevante.", file=sys.stderr)
-                    return 1
-
-                print("PROJECT_GATE.md validado.")
-                return 0
-
-
-            if __name__ == "__main__":
-                raise SystemExit(main())
-            """
-        ),
-        "scripts/project_doctor.py": textwrap.dedent(
-            """
-            #!/usr/bin/env python3
-
-            from __future__ import annotations
-
-            import argparse
-            import json
-            import re
-            import subprocess
-            import sys
-            from pathlib import Path
-
-
-            ROOT = Path(__file__).resolve().parents[1]
-            DOCTOR_CONFIG_PATH = ROOT / "config" / "doctor.json"
-            REQUIRED_FILES = [
-                ROOT / "README.md",
-                ROOT / "AGENTS.md",
-                ROOT / "PROJECT_GATE.md",
-                DOCTOR_CONFIG_PATH,
-                ROOT / "docs" / "ARCHITECTURE.md",
-                ROOT / "docs" / "CONTRACTS.md",
-                ROOT / "docs" / "OPERATIONS.md",
-                ROOT / "docs" / "DECISIONS.md",
-                ROOT / "scripts" / "check_project_gate.py",
-            ]
-            KEY_DOCS = [
-                ROOT / "README.md",
-                ROOT / "docs" / "ARCHITECTURE.md",
-                ROOT / "docs" / "CONTRACTS.md",
-                ROOT / "docs" / "OPERATIONS.md",
-            ]
-            STOPWORDS = {
-                "este",
-                "esta",
-                "esse",
-                "essa",
-                "para",
-                "com",
-                "sem",
-                "onde",
-                "quando",
-                "ainda",
-                "depois",
-                "sobre",
-                "entre",
-                "muito",
-                "pouco",
-                "seria",
-                "deveria",
-                "repositorio",
-                "repositório",
-                "projeto",
-                "sistema",
-                "modulo",
-                "módulo",
-                "core",
-                "local",
-                "dados",
-                "coisa",
-                "coisas",
-            }
-            KNOWN_WARNING_CODES = {
-                "scope_negative_mismatch",
-                "objective_mismatch",
-                "scope_architecture_mismatch",
-            }
-
-
-            def read_text(path: Path) -> str:
-                return path.read_text(encoding="utf-8")
-
-
-            def extract_section(text: str, heading: str) -> str | None:
-                lines = text.splitlines()
-                for index, line in enumerate(lines):
-                    if line.strip() != heading:
-                        continue
-
-                    level = len(line) - len(line.lstrip("#"))
-                    section: list[str] = []
-                    for candidate in lines[index + 1 :]:
-                        stripped = candidate.strip()
-                        if stripped.startswith("#"):
-                            candidate_level = len(stripped) - len(stripped.lstrip("#"))
-                            if candidate_level <= level:
-                                break
-                        section.append(candidate)
-                    return "\\n".join(section).strip()
-                return None
-
-
-            def extract_first_code_block(section: str | None) -> str | None:
-                if not section:
-                    return None
-                match = re.search(r"```(?:bash)?\\n(.*?)```", section, flags=re.S)
-                if not match:
-                    return None
-                return match.group(1).strip()
-
-
-            def normalize_block(value: str | None) -> str | None:
-                if value is None:
-                    return None
-                lines = [line.strip() for line in value.splitlines() if line.strip()]
-                return "\\n".join(lines)
-
-
-            def extract_bullets(section: str | None) -> list[str]:
-                if not section:
-                    return []
-                bullets: list[str] = []
-                for line in section.splitlines():
-                    stripped = line.strip()
-                    if stripped.startswith("- "):
-                        bullets.append(stripped[2:].strip())
-                return bullets
-
-
-            def extract_readme_entrypoints(text: str) -> list[str]:
-                match = re.search(
-                    r"entrypoints principais:\\n((?:\\s+- `[^`]+`\\n?)+)",
-                    text,
-                    flags=re.S,
-                )
-                if not match:
-                    return []
-                return re.findall(r"`([^`]+)`", match.group(1))
-
-
-            def extract_agents_validation(text: str) -> str | None:
-                match = re.search(r"comando de validacao minima:\\s*`([^`]+)`", text)
-                if not match:
-                    return None
-                return match.group(1).strip()
-
-
-            def normalize_token(token: str) -> str:
-                cleaned = re.sub(r"[^A-Za-zÀ-ÿ0-9_-]+", "", token.lower())
-                return cleaned.strip("_-")
-
-
-            def load_doctor_config(errors: list[str]) -> dict[str, object]:
-                default = {
-                    "version": 1,
-                    "ignored_warnings": [],
-                    "token_alias_groups": [],
-                }
-                if not DOCTOR_CONFIG_PATH.exists():
-                    return default
-
-                try:
-                    raw = json.loads(read_text(DOCTOR_CONFIG_PATH))
-                except json.JSONDecodeError as exc:
-                    add_error(errors, f"config/doctor.json invalido: {exc}")
-                    return default
-
-                if not isinstance(raw, dict):
-                    add_error(errors, "config/doctor.json deve ser um objeto JSON")
-                    return default
-
-                version = raw.get("version", 1)
-                if version != 1:
-                    add_error(errors, "config/doctor.json usa versao nao suportada")
-
-                ignored_warnings_raw = raw.get("ignored_warnings", [])
-                normalized_ignored: list[dict[str, str]] = []
-                seen_ignored_codes: set[str] = set()
-                if not isinstance(ignored_warnings_raw, list):
-                    add_error(errors, "config/doctor.json: ignored_warnings deve ser uma lista")
-                else:
-                    for index, item in enumerate(ignored_warnings_raw):
-                        if not isinstance(item, dict):
-                            add_error(
-                                errors,
-                                f"config/doctor.json: ignored_warnings[{index}] deve ser um objeto",
-                            )
-                            continue
-
-                        code = str(item.get("code", "")).strip()
-                        reason = str(item.get("reason", "")).strip()
-                        if code not in KNOWN_WARNING_CODES:
-                            add_error(
-                                errors,
-                                f"config/doctor.json: codigo de warning desconhecido em ignored_warnings[{index}]",
-                            )
-                            continue
-                        if code in seen_ignored_codes:
-                            add_error(
-                                errors,
-                                f"config/doctor.json: codigo duplicado em ignored_warnings[{index}]",
-                            )
-                            continue
-                        if len(reason) < 12:
-                            add_error(
-                                errors,
-                                f"config/doctor.json: reason curto demais em ignored_warnings[{index}]",
-                            )
-                            continue
-                        seen_ignored_codes.add(code)
-                        normalized_ignored.append({"code": code, "reason": reason})
-
-                alias_groups_raw = raw.get("token_alias_groups", [])
-                normalized_alias_groups: list[set[str]] = []
-                if not isinstance(alias_groups_raw, list):
-                    add_error(errors, "config/doctor.json: token_alias_groups deve ser uma lista")
-                else:
-                    for index, item in enumerate(alias_groups_raw):
-                        if not isinstance(item, list):
-                            add_error(
-                                errors,
-                                f"config/doctor.json: token_alias_groups[{index}] deve ser uma lista",
-                            )
-                            continue
-                        tokens = {normalize_token(str(value)) for value in item if normalize_token(str(value))}
-                        if len(tokens) < 2:
-                            add_error(
-                                errors,
-                                f"config/doctor.json: token_alias_groups[{index}] precisa ter ao menos 2 termos validos",
-                            )
-                            continue
-                        normalized_alias_groups.append(tokens)
-
-                return {
-                    "version": 1,
-                    "ignored_warnings": normalized_ignored,
-                    "token_alias_groups": normalized_alias_groups,
-                }
-
-
-            def significant_tokens(text: str) -> set[str]:
-                tokens = set()
-                for token in re.findall(r"[A-Za-zÀ-ÿ0-9_-]+", text.lower()):
-                    if len(token) < 5:
-                        continue
-                    if token in STOPWORDS:
-                        continue
-                    normalized = normalize_token(token)
-                    if normalized:
-                        tokens.add(normalized)
-                return tokens
-
-
-            def compare_token_sets(
-                left_text: str,
-                right_text: str,
-                alias_groups: list[set[str]],
-            ) -> dict[str, object]:
-                left_tokens = significant_tokens(left_text)
-                right_tokens = significant_tokens(right_text)
-                shared_tokens = left_tokens & right_tokens
-                matched_alias_indexes: list[int] = []
-
-                if not shared_tokens:
-                    for index, group in enumerate(alias_groups):
-                        if left_tokens & group and right_tokens & group:
-                            matched_alias_indexes.append(index)
-
-                return {
-                    "shared_tokens": shared_tokens,
-                    "matched_alias_indexes": matched_alias_indexes,
-                }
-
-
-            def add_error(errors: list[str], message: str) -> None:
-                errors.append(message)
-
-
-            def add_warning(warnings: list[dict[str, str]], code: str, message: str) -> None:
-                warnings.append({"code": code, "message": message})
-
-
-            def parse_args() -> argparse.Namespace:
-                parser = argparse.ArgumentParser(description="Valida coerencia estrutural minima do projeto")
-                parser.add_argument(
-                    "--strict",
-                    action="store_true",
-                    help="trata warnings semanticos como erro",
-                )
-                parser.add_argument(
-                    "--audit-config",
-                    action="store_true",
-                    help="audita config/doctor.json e overrides semanticos",
-                )
-                return parser.parse_args()
-
-
-            def print_warning_list(title: str, warnings: list[dict[str, str]], stream: object) -> None:
-                if not warnings:
-                    return
-                print(title, file=stream)
-                for warning in warnings:
-                    print(f"- [{warning['code']}] {warning['message']}", file=stream)
-
-
-            def run_config_audit(
-                doctor_config: dict[str, object],
-                raw_warnings: list[dict[str, str]],
-                comparison_reports: list[dict[str, object]],
-            ) -> int:
-                ignored_entries = list(doctor_config["ignored_warnings"])
-                alias_groups = list(doctor_config["token_alias_groups"])
-                ignored_reason_by_code = {
-                    item["code"]: item["reason"]
-                    for item in ignored_entries
-                    if isinstance(item, dict) and "code" in item and "reason" in item
-                }
-                raw_codes = {item["code"] for item in raw_warnings}
-                stale_ignored_codes = sorted(set(ignored_reason_by_code) - raw_codes)
-                suppressed_warnings = [
-                    item for item in raw_warnings if item.get("code") in ignored_reason_by_code
-                ]
-
-                alias_usage: dict[int, list[str]] = {}
-                for report in comparison_reports:
-                    for alias_index in report["matched_alias_indexes"]:
-                        alias_usage.setdefault(alias_index, []).append(str(report["code"]))
-
-                print("Doctor config audit:")
-                print(f"- ignored_warnings: {len(ignored_entries)}")
-                print(f"- token_alias_groups: {len(alias_groups)}")
-
-                if not ignored_entries and not alias_groups:
-                    print("- sem overrides configurados")
-
-                if suppressed_warnings:
-                    print("")
-                    print("Warnings suprimidos atualmente:")
-                    for warning in suppressed_warnings:
-                        code = str(warning["code"])
-                        reason = ignored_reason_by_code.get(code, "sem reason registrado")
-                        print(f"- [{code}] {warning['message']}")
-                        print(f"  reason: {reason}")
-
-                if stale_ignored_codes:
-                    print("")
-                    print("Ignored warnings sem efeito atual:", file=sys.stderr)
-                    for code in stale_ignored_codes:
-                        print(f"- [{code}] {ignored_reason_by_code[code]}", file=sys.stderr)
-
-                if alias_usage:
-                    print("")
-                    print("Alias groups em uso:")
-                    for index in sorted(alias_usage):
-                        tokens = ", ".join(sorted(alias_groups[index]))
-                        codes = ", ".join(sorted(set(alias_usage[index])))
-                        print(f"- group {index}: {tokens} -> {codes}")
-
-                unused_alias_indexes = [
-                    index for index in range(len(alias_groups)) if index not in alias_usage
-                ]
-                if unused_alias_indexes:
-                    print("")
-                    print("Alias groups sem uso observavel agora:")
-                    for index in unused_alias_indexes:
-                        tokens = ", ".join(sorted(alias_groups[index]))
-                        print(f"- group {index}: {tokens}")
-
-                if stale_ignored_codes:
-                    return 1
-
-                print("")
-                print("Doctor config audit passou.")
-                return 0
-
-
-            def main() -> int:
-                args = parse_args()
-                errors: list[str] = []
-                warnings: list[dict[str, str]] = []
-
-                for path in REQUIRED_FILES:
-                    if not path.exists():
-                        add_error(errors, f"arquivo obrigatorio ausente: {path.relative_to(ROOT)}")
-
-                if errors:
-                    for message in errors:
-                        print(f"ERRO: {message}", file=sys.stderr)
-                    return 1
-
-                doctor_config = load_doctor_config(errors)
-                if errors:
-                    print("Project doctor encontrou erros:", file=sys.stderr)
-                    for message in errors:
-                        print(f"- {message}", file=sys.stderr)
-                    return 1
-
-                alias_groups = list(doctor_config["token_alias_groups"])
-                ignored_warning_codes = {
-                    item["code"]
-                    for item in doctor_config["ignored_warnings"]
-                    if isinstance(item, dict) and "code" in item
-                }
-
-                docs = {path: read_text(path) for path in KEY_DOCS}
-                readme_text = read_text(ROOT / "README.md")
-                agents_text = read_text(ROOT / "AGENTS.md")
-                gate_text = read_text(ROOT / "PROJECT_GATE.md")
-                architecture_text = read_text(ROOT / "docs" / "ARCHITECTURE.md")
-                contracts_text = read_text(ROOT / "docs" / "CONTRACTS.md")
-                operations_text = read_text(ROOT / "docs" / "OPERATIONS.md")
-
-                gate_check = subprocess.run(
-                    [sys.executable, str(ROOT / "scripts" / "check_project_gate.py")],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                )
-                if gate_check.returncode != 0:
-                    add_error(errors, "PROJECT_GATE.md falhou em scripts/check_project_gate.py")
-
-                for path, text in docs.items():
-                    if "{{" in text:
-                        add_error(errors, f"placeholders nao resolvidos em {path.relative_to(ROOT)}")
-                    if re.search(r"\\bTODO:", text):
-                        add_error(errors, f"TODO remanescente em {path.relative_to(ROOT)}")
-                    if re.search(r"\\bpreencher\\b", text.lower()):
-                        add_error(errors, f"marcador de scaffolding remanescente em {path.relative_to(ROOT)}")
-
-                required_sections = {
-                    ROOT / "README.md": [
-                        "## O que este repositorio e",
-                        "## O que este repositorio NAO e",
-                        "### 4. Rodar",
-                    ],
-                    ROOT / "docs" / "ARCHITECTURE.md": [
-                        "## 2. Escopo",
-                        "## 5. Fluxo principal",
-                    ],
-                    ROOT / "docs" / "CONTRACTS.md": [
-                        "## 2. Entradas canonicas",
-                        "## 3. Saidas canonicas",
-                    ],
-                    ROOT / "docs" / "OPERATIONS.md": [
-                        "### Boot principal",
-                        "## 5. Validacao minima",
-                    ],
-                }
-                for path, headings in required_sections.items():
-                    text = read_text(path)
-                    for heading in headings:
-                        if extract_section(text, heading) is None:
-                            add_error(errors, f"secao ausente em {path.relative_to(ROOT)}: {heading}")
-
-                readme_run = normalize_block(
-                    extract_first_code_block(extract_section(readme_text, "### 4. Rodar"))
-                )
-                ops_run = normalize_block(
-                    extract_first_code_block(extract_section(operations_text, "### Boot principal"))
-                )
-                if readme_run and ops_run and readme_run != ops_run:
-                    add_error(errors, "README.md e docs/OPERATIONS.md divergem no comando principal de execucao")
-
-                readme_entrypoints = [normalize_block(item) for item in extract_readme_entrypoints(readme_text)]
-                readme_entrypoints = [item for item in readme_entrypoints if item]
-                if readme_entrypoints and ops_run and ops_run not in readme_entrypoints:
-                    add_error(errors, "README.md nao lista o boot principal operacional entre os entrypoints")
-
-                agents_validation = extract_agents_validation(agents_text)
-                ops_validation = normalize_block(
-                    extract_first_code_block(extract_section(operations_text, "## 5. Validacao minima"))
-                )
-                if agents_validation and ops_validation and normalize_block(agents_validation) != ops_validation:
-                    add_error(errors, "AGENTS.md e docs/OPERATIONS.md divergem na validacao minima")
-
-                negative_scope_readme = " ".join(
-                    extract_bullets(extract_section(readme_text, "## O que este repositorio NAO e"))
-                )
-                negative_scope_gate = " ".join(
-                    extract_bullets(
-                        extract_section(gate_text, "## 4. O que este projeto NAO pode carregar?")
-                    )
-                )
-                comparison_reports: list[dict[str, object]] = []
-                if negative_scope_readme and negative_scope_gate:
-                    negative_comparison = compare_token_sets(
-                        negative_scope_readme,
-                        negative_scope_gate,
-                        alias_groups,
-                    )
-                    comparison_reports.append(
-                        {
-                            "code": "scope_negative_mismatch",
-                            "matched_alias_indexes": list(negative_comparison["matched_alias_indexes"]),
-                        }
-                    )
-                    if not negative_comparison["shared_tokens"] and not negative_comparison["matched_alias_indexes"]:
-                        add_warning(
-                            warnings,
-                            "scope_negative_mismatch",
-                            "README.md e PROJECT_GATE.md parecem desconectados na definicao de fora de escopo",
-                        )
-
-                positive_scope_readme = " ".join(
-                    extract_bullets(extract_section(readme_text, "## O que este repositorio e"))
-                )
-                positive_scope_gate = " ".join(
-                    extract_bullets(extract_section(gate_text, "## 1. Por que este projeto existe?"))
-                )
-                if positive_scope_readme and positive_scope_gate:
-                    positive_comparison = compare_token_sets(
-                        positive_scope_readme,
-                        positive_scope_gate,
-                        alias_groups,
-                    )
-                    comparison_reports.append(
-                        {
-                            "code": "objective_mismatch",
-                            "matched_alias_indexes": list(positive_comparison["matched_alias_indexes"]),
-                        }
-                    )
-                    if not positive_comparison["shared_tokens"] and not positive_comparison["matched_alias_indexes"]:
-                        add_warning(
-                            warnings,
-                            "objective_mismatch",
-                            "README.md e PROJECT_GATE.md parecem desconectados na definicao do objetivo do repositorio",
-                        )
-
-                architecture_scope = " ".join(
-                    extract_bullets(extract_section(architecture_text, "## 2. Escopo"))
-                )
-                if architecture_scope and negative_scope_readme:
-                    architecture_comparison = compare_token_sets(
-                        architecture_scope,
-                        negative_scope_readme,
-                        alias_groups,
-                    )
-                    comparison_reports.append(
-                        {
-                            "code": "scope_architecture_mismatch",
-                            "matched_alias_indexes": list(architecture_comparison["matched_alias_indexes"]),
-                        }
-                    )
-                    if not architecture_comparison["shared_tokens"] and not architecture_comparison["matched_alias_indexes"]:
-                        add_warning(
-                            warnings,
-                            "scope_architecture_mismatch",
-                            "README.md e docs/ARCHITECTURE.md usam vocabularios muito diferentes para o escopo",
-                        )
-
-                contracts_inputs = extract_section(contracts_text, "## 2. Entradas canonicas") or ""
-                contracts_outputs = extract_section(contracts_text, "## 3. Saidas canonicas") or ""
-                if contracts_inputs.count("|") < 10:
-                    add_error(errors, "docs/CONTRACTS.md parece nao ter entradas canonicas suficientes")
-                if contracts_outputs.count("|") < 8:
-                    add_error(errors, "docs/CONTRACTS.md parece nao ter saidas canonicas suficientes")
-
-                active_warnings = [
-                    item for item in warnings if item.get("code") not in ignored_warning_codes
-                ]
-
-                if errors:
-                    print("Project doctor encontrou erros:", file=sys.stderr)
-                    for message in errors:
-                        print(f"- {message}", file=sys.stderr)
-                    if active_warnings:
-                        print("", file=sys.stderr)
-                        print_warning_list("Warnings:", active_warnings, sys.stderr)
-                    return 1
-
-                if args.audit_config:
-                    return run_config_audit(doctor_config, warnings, comparison_reports)
-
-                if args.strict and active_warnings:
-                    print("Project doctor encontrou warnings em modo strict:", file=sys.stderr)
-                    for warning in active_warnings:
-                        print(f"- [{warning['code']}] {warning['message']}", file=sys.stderr)
-                    return 1
-
-                if active_warnings:
-                    print("Project doctor passou com warnings:")
-                    for warning in active_warnings:
-                        print(f"- [{warning['code']}] {warning['message']}")
-                    return 0
-
-                print("Project doctor passou.")
-                return 0
-
-
-            if __name__ == "__main__":
-                raise SystemExit(main())
-            """
-        ),
+        config_example_path: json.dumps(config_payload, indent=2, ensure_ascii=True),
     }
 
-    if gate_enforced:
-        files[".githooks/pre-commit"] = textwrap.dedent(
-            """
-            #!/usr/bin/env bash
-            set -euo pipefail
+    if preset == "playwright_worker":
+        files["runtime/browser/.gitignore"] = "*\n!.gitignore\n"
 
-            python3 scripts/check_project_gate.py
-            """
-        )
-        files["scripts/install_git_hooks.sh"] = textwrap.dedent(
-            """
-            #!/usr/bin/env bash
-            set -euo pipefail
-
-            if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-              echo "Este diretorio ainda nao e um repositorio git." >&2
-              echo "Rode 'git init' antes de instalar os hooks." >&2
-              exit 1
-            fi
-
-            git config core.hooksPath .githooks
-            echo "Git hooks instalados em .githooks"
-            """
-        )
-
-    if runtime == "node":
-        config_payload: dict[str, object] = {
-            "app": {
-                "name": project_name,
-                "env": "dev",
-                "logLevel": "INFO",
-            }
-        }
-    else:
-        config_payload = {
-            "app": {
-                "name": project_name,
-                "env": "dev",
-                "log_level": "INFO",
-            }
-        }
-
-        if preset == "fastapi":
-            config_payload["server"] = {"host": "127.0.0.1", "port": 8000}
-        elif preset == "textual_cli":
-            config_payload["tui"] = {"refresh_seconds": 2, "title": project_name}
-        elif preset == "playwright_worker":
-            config_payload["browser"] = {
-                "storage_path": "runtime/browser/session.json",
-                "login_url": "",
-                "headless": True,
-            }
-            files["runtime/browser/.gitignore"] = "*\n!.gitignore\n"
-        elif preset == "dicom_pipeline":
-            config_payload["pipeline"] = {
-                "inbox": "runtime/inbox",
-                "outbox": "runtime/outbox",
-                "accept_suffixes": [".dcm", ".dicom"],
-            }
-
-    files[config_example_path] = json.dumps(
-        config_payload,
-        indent=2,
-        ensure_ascii=True,
-    )
     return files
 
 
@@ -2844,6 +2424,434 @@ def node_generated_files(project_name: str, project_slug: str, preset: str) -> d
     }
 
 
+def go_generated_files(project_name: str, project_slug: str, preset: str) -> dict[str, str]:
+    module_name = kebabify(project_name)
+    env_prefix = project_slug.upper()
+    return {
+        "go.mod": textwrap.dedent(
+            f"""
+            module {module_name}
+
+            go 1.22
+            """
+        ),
+        f"cmd/{project_slug}/main.go": textwrap.dedent(
+            f"""
+            package main
+
+            import (
+                "os"
+
+                "{module_name}/internal/app"
+            )
+
+            func main() {{
+                os.Exit(app.Run(os.Stdout))
+            }}
+            """
+        ),
+        "internal/app/app.go": textwrap.dedent(
+            f"""
+            package app
+
+            import (
+                "encoding/json"
+                "fmt"
+                "io"
+                "os"
+                "time"
+            )
+
+            type Settings struct {{
+                App struct {{
+                    Name     string `json:"name"`
+                    Env      string `json:"env"`
+                    LogLevel string `json:"log_level"`
+                }} `json:"app"`
+            }}
+
+            type LogEvent struct {{
+                TS  string `json:"ts"`
+                Lvl string `json:"lvl"`
+                Svc string `json:"svc"`
+                Mod string `json:"mod"`
+                Evt string `json:"evt"`
+                Msg string `json:"msg"`
+            }}
+
+            func Run(output io.Writer) int {{
+                settings := loadSettings()
+                event := LogEvent{{
+                    TS:  time.Now().UTC().Format(time.RFC3339),
+                    Lvl: defaultText(settings.App.LogLevel, "INFO"),
+                    Svc: defaultText(settings.App.Name, "{project_name}"),
+                    Mod: "main",
+                    Evt: "startup",
+                    Msg: "service initialized",
+                }}
+                if err := json.NewEncoder(output).Encode(event); err != nil {{
+                    fmt.Fprintln(os.Stderr, err)
+                    return 1
+                }}
+                return 0
+            }}
+
+            func loadSettings() Settings {{
+                for _, path := range candidatePaths() {{
+                    if path == "" {{
+                        continue
+                    }}
+                    payload, err := os.ReadFile(path)
+                    if err != nil {{
+                        continue
+                    }}
+                    var settings Settings
+                    if err := json.Unmarshal(payload, &settings); err == nil {{
+                        return settings
+                    }}
+                }}
+                var settings Settings
+                settings.App.Name = "{project_name}"
+                settings.App.Env = defaultText(os.Getenv("APP_ENV"), "dev")
+                settings.App.LogLevel = "INFO"
+                return settings
+            }}
+
+            func candidatePaths() []string {{
+                return []string{{
+                    os.Getenv("{env_prefix}_CONFIG_FILE"),
+                    "config/settings.local.json",
+                    "config/settings.example.json",
+                }}
+            }}
+
+            func defaultText(value string, fallback string) string {{
+                if value == "" {{
+                    return fallback
+                }}
+                return value
+            }}
+            """
+        ),
+        "internal/app/app_test.go": textwrap.dedent(
+            """
+            package app
+
+            import (
+                "bytes"
+                "encoding/json"
+                "testing"
+            )
+
+            func TestRunWritesStartupEvent(t *testing.T) {
+                var output bytes.Buffer
+                if code := Run(&output); code != 0 {
+                    t.Fatalf("Run() code = %d, want 0", code)
+                }
+
+                var event LogEvent
+                if err := json.Unmarshal(output.Bytes(), &event); err != nil {
+                    t.Fatalf("startup event is not JSON: %v", err)
+                }
+                if event.Evt != "startup" {
+                    t.Fatalf("event = %q, want startup", event.Evt)
+                }
+            }
+            """
+        ),
+    }
+
+
+def ts_generated_files(project_name: str, project_slug: str, preset: str) -> dict[str, str]:
+    dist_name = kebabify(project_name)
+    env_prefix = project_slug.upper()
+    return {
+        "package.json": json.dumps(
+            {
+                "name": dist_name,
+                "version": "0.1.0",
+                "private": True,
+                "type": "module",
+                "scripts": {
+                    "build": "tsc -p tsconfig.json",
+                    "start": "npm run build && node dist/src/main.js",
+                    "test": "npm run build && node --test dist/tests/*.test.js",
+                },
+                "engines": {"node": ">=20"},
+                "devDependencies": {
+                    "@types/node": "^20.0.0",
+                    "typescript": "^5.0.0",
+                },
+            },
+            indent=2,
+            ensure_ascii=True,
+        ),
+        "tsconfig.json": json.dumps(
+            {
+                "compilerOptions": {
+                    "target": "ES2022",
+                    "module": "NodeNext",
+                    "moduleResolution": "NodeNext",
+                    "strict": True,
+                    "rootDir": ".",
+                    "outDir": "dist",
+                    "declaration": True,
+                    "skipLibCheck": True,
+                },
+                "include": ["src/**/*.ts", "tests/**/*.ts"],
+            },
+            indent=2,
+            ensure_ascii=True,
+        ),
+        "src/main.ts": textwrap.dedent(
+            f"""
+            import fs from "node:fs";
+            import process from "node:process";
+
+            type Settings = {{
+              app?: {{
+                name?: string;
+                env?: string;
+                logLevel?: string;
+                log_level?: string;
+              }};
+            }};
+
+            type LogEvent = {{
+              ts: string;
+              lvl: string;
+              svc: string;
+              mod: string;
+              evt: string;
+              msg: string;
+            }};
+
+            function candidatePaths(): string[] {{
+              return [
+                process.env.{env_prefix}_CONFIG_FILE,
+                "config/settings.local.json",
+                "config/settings.example.json"
+              ].filter((value): value is string => Boolean(value));
+            }}
+
+            function loadSettings(): Settings {{
+              for (const path of candidatePaths()) {{
+                if (!fs.existsSync(path)) {{
+                  continue;
+                }}
+                return JSON.parse(fs.readFileSync(path, "utf-8")) as Settings;
+              }}
+              return {{}};
+            }}
+
+            export function startupEvent(): LogEvent {{
+              const settings = loadSettings();
+              return {{
+                ts: new Date().toISOString(),
+                lvl: settings.app?.logLevel ?? settings.app?.log_level ?? "INFO",
+                svc: settings.app?.name ?? "{project_name}",
+                mod: "main",
+                evt: "startup",
+                msg: "service initialized"
+              }};
+            }}
+
+            export function main(): number {{
+              process.stdout.write(`${{JSON.stringify(startupEvent())}}\\n`);
+              return 0;
+            }}
+
+            if (import.meta.url === `file://${{process.argv[1]}}`) {{
+              process.exit(main());
+            }}
+            """
+        ),
+        "tests/smoke.test.ts": textwrap.dedent(
+            """
+            import test from "node:test";
+            import assert from "node:assert/strict";
+            import { startupEvent } from "../src/main.js";
+
+            test("startup event is structured", () => {
+              const event = startupEvent();
+              assert.equal(event.evt, "startup");
+              assert.ok(event.ts);
+            });
+            """
+        ),
+    }
+
+
+def swift_generated_files(project_name: str, project_slug: str, preset: str) -> dict[str, str]:
+    module_name = pascalize(project_slug)
+    core_name = f"{module_name}Core"
+    return {
+        "Package.swift": textwrap.dedent(
+            f"""
+            // swift-tools-version: 5.9
+            import PackageDescription
+
+            let package = Package(
+                name: "{module_name}",
+                platforms: [
+                    .macOS(.v13)
+                ],
+                products: [
+                    .executable(name: "{module_name}", targets: ["{module_name}"])
+                ],
+                targets: [
+                    .target(name: "{core_name}"),
+                    .executableTarget(name: "{module_name}", dependencies: ["{core_name}"])
+                ]
+            )
+            """
+        ),
+        f"Sources/{core_name}/App.swift": textwrap.dedent(
+            f"""
+            import Foundation
+
+            public struct LogEvent: Codable {{
+                public let ts: String
+                public let lvl: String
+                public let svc: String
+                public let mod: String
+                public let evt: String
+                public let msg: String
+            }}
+
+            public enum App {{
+                public static func startupEvent(now: Date = Date()) -> LogEvent {{
+                    let formatter = ISO8601DateFormatter()
+                    return LogEvent(
+                        ts: formatter.string(from: now),
+                        lvl: "INFO",
+                        svc: "{project_name}",
+                        mod: "main",
+                        evt: "startup",
+                        msg: "service initialized"
+                    )
+                }}
+
+                public static func run() -> Int32 {{
+                    let event = startupEvent()
+                    let encoder = JSONEncoder()
+                    guard let payload = try? encoder.encode(event), let line = String(data: payload, encoding: .utf8) else {{
+                        return 1
+                    }}
+                    print(line)
+                    return 0
+                }}
+            }}
+            """
+        ),
+        f"Sources/{module_name}/main.swift": textwrap.dedent(
+            f"""
+            import {core_name}
+
+            _ = App.run()
+            """
+        ),
+    }
+
+
+def csharp_generated_files(project_name: str, project_slug: str, preset: str) -> dict[str, str]:
+    project = pascalize(project_slug)
+    test_project = f"{project}.Tests"
+    return {
+        f"{project}.sln": "\n".join(
+            [
+                "Microsoft Visual Studio Solution File, Format Version 12.00",
+                "# Visual Studio Version 17",
+                "VisualStudioVersion = 17.0.31903.59",
+                "MinimumVisualStudioVersion = 10.0.40219.1",
+                f'Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{project}", "src\\{project}\\{project}.csproj", "{{11111111-1111-1111-1111-111111111111}}"',
+                "EndProject",
+                f'Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{test_project}", "tests\\{test_project}\\{test_project}.csproj", "{{22222222-2222-2222-2222-222222222222}}"',
+                "EndProject",
+                "Global",
+                "EndGlobal",
+            ]
+        ),
+        f"src/{project}/{project}.csproj": textwrap.dedent(
+            """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <OutputType>Exe</OutputType>
+                <TargetFramework>net8.0</TargetFramework>
+                <ImplicitUsings>enable</ImplicitUsings>
+                <Nullable>enable</Nullable>
+              </PropertyGroup>
+            </Project>
+            """
+        ),
+        f"src/{project}/Program.cs": textwrap.dedent(
+            f"""
+            using System.Text.Json;
+
+            namespace {project};
+
+            public record LogEvent(string Ts, string Lvl, string Svc, string Mod, string Evt, string Msg);
+
+            public static class App
+            {{
+                public static LogEvent StartupEvent() =>
+                    new(DateTimeOffset.UtcNow.ToString("O"), "INFO", "{project_name}", "main", "startup", "service initialized");
+
+                public static int Run(TextWriter output)
+                {{
+                    output.WriteLine(JsonSerializer.Serialize(StartupEvent()));
+                    return 0;
+                }}
+            }}
+
+            public static class Program
+            {{
+                public static int Main() => App.Run(Console.Out);
+            }}
+            """
+        ),
+        f"tests/{test_project}/{test_project}.csproj": textwrap.dedent(
+            f"""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net8.0</TargetFramework>
+                <ImplicitUsings>enable</ImplicitUsings>
+                <Nullable>enable</Nullable>
+                <IsPackable>false</IsPackable>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+                <PackageReference Include="xunit" Version="2.9.0" />
+                <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+              </ItemGroup>
+              <ItemGroup>
+                <ProjectReference Include="../../src/{project}/{project}.csproj" />
+              </ItemGroup>
+            </Project>
+            """
+        ),
+        f"tests/{test_project}/AppTests.cs": textwrap.dedent(
+            f"""
+            using {project};
+            using Xunit;
+
+            namespace {test_project};
+
+            public class AppTests
+            {{
+                [Fact]
+                public void StartupEventIsStructured()
+                {{
+                    var evt = App.StartupEvent();
+                    Assert.Equal("startup", evt.Evt);
+                    Assert.False(string.IsNullOrWhiteSpace(evt.Ts));
+                }}
+            }}
+            """
+        ),
+    }
+
+
 def generic_generated_files(project_slug: str) -> dict[str, str]:
     base_dir = project_slug
     return {
@@ -2862,12 +2870,20 @@ def generate_files(
     preset: str,
     gate_enforced: bool,
 ) -> dict[str, str]:
-    files = common_generated_files(runtime, project_name, preset, gate_enforced)
+    files = common_generated_files(runtime, project_name, project_slug, preset, gate_enforced)
     if runtime == "python":
         files.update(python_generated_files(project_name, project_slug, preset, gate_enforced))
         files.update(preset_python_files(project_name, project_slug, preset))
     elif runtime == "node":
         files.update(node_generated_files(project_name, project_slug, preset))
+    elif runtime == "go":
+        files.update(go_generated_files(project_name, project_slug, preset))
+    elif runtime == "ts":
+        files.update(ts_generated_files(project_name, project_slug, preset))
+    elif runtime == "swift":
+        files.update(swift_generated_files(project_name, project_slug, preset))
+    elif runtime == "csharp":
+        files.update(csharp_generated_files(project_name, project_slug, preset))
     else:
         files.update(generic_generated_files(project_slug))
     return files
@@ -2895,6 +2911,19 @@ def render_and_write_templates(
         template_files.update(OPTIONAL_STRUCTURE_TEMPLATE_FILES)
 
     for relative_path, source_path in template_files.items():
+        source_text = source_path.read_text(encoding="utf-8")
+        rendered_text = render_template(source_text, values, runtime)
+        write_text(destination / relative_path, rendered_text)
+
+    script_template_files = dict(SCRIPT_TEMPLATE_FILES)
+    if gate_enforced:
+        script_template_files.update(GATE_ENFORCEMENT_TEMPLATE_FILES)
+    for relative_path, source_path in script_template_files.items():
+        source_text = source_path.read_text(encoding="utf-8")
+        rendered_text = render_template(source_text, values, runtime)
+        write_text(destination / relative_path, rendered_text)
+
+    for relative_path, source_path in SCHEMA_TEMPLATE_FILES.items():
         source_text = source_path.read_text(encoding="utf-8")
         rendered_text = render_template(source_text, values, runtime)
         write_text(destination / relative_path, rendered_text)
@@ -2939,7 +2968,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--runtime",
-        choices=("python", "node", "generic"),
+        choices=("python", "node", "ts", "go", "swift", "csharp", "generic"),
         default="python",
         help="runtime base do scaffolding (default: python)",
     )

@@ -10,7 +10,21 @@ Use este kit quando um projeto novo:
 
 Se a resposta correta for "isso é um módulo de outro sistema", não gere repo novo.
 
-## 1. Preparar o comando global
+## 1. Escolher o modo de uso
+
+O uso principal do Skidbladnir é por agente lendo o protocolo em `~/Skidbladnir`.
+
+Use:
+
+- `docs/new-project.md` para projeto novo
+- `docs/existing-project.md` para projeto existente
+- `docs/runtimes.md` para escolher runtime
+- `docs/deploy-manifest.md` para preencher `deploy/manifest.json`
+- `docs/validation.md` para validar a rodada
+
+O comando `newproj` continua existindo como bootstrap auxiliar para Python, Node, TypeScript, Go, Swift e C#.
+
+## 2. Preparar o comando global auxiliar
 
 Instale ou atualize o wrapper:
 
@@ -22,7 +36,7 @@ newproj --version
 
 Se o binário já estiver em `~/Scripts/bin` e esse diretório já estiver no `PATH`, a instalação pode ser mantida como está.
 
-## 2. Escolher o preset certo
+## 3. Escolher o preset certo
 
 Regra prática:
 
@@ -36,7 +50,7 @@ Regra prática:
 
 Se estiver em dúvida entre dois presets, escolha o mais simples e endureça depois.
 
-## 3. Gerar o projeto
+## 4. Gerar o projeto com o scaffolder auxiliar
 
 Exemplo:
 
@@ -50,12 +64,14 @@ O que isso cria:
 - camadas `domain / application / infrastructure / interfaces`
 - pacote ou app principal em `/<slug>/`, preservando a raiz limpa
 - `PROJECT_GATE.md`
+- `deploy/manifest.json`
 - `config/doctor.json`
 - `scripts/check_project_gate.py`
+- `scripts/check_deploy_manifest.py`
 - `scripts/project_doctor.py`
 - hook local se o gate estiver enforced
 
-## 4. Ler antes de codar
+## 5. Ler antes de codar
 
 Entre no projeto gerado e leia, nesta ordem:
 
@@ -65,10 +81,11 @@ Entre no projeto gerado e leia, nesta ordem:
 4. `docs/ARCHITECTURE.md`
 5. `docs/CONTRACTS.md`
 6. `docs/OPERATIONS.md`
+7. `deploy/manifest.json`
 
 Não escreva código de produção antes disso.
 
-## 5. Preencher o gate
+## 6. Preencher o gate
 
 Primeiro responda o `PROJECT_GATE.md`.
 
@@ -91,7 +108,29 @@ Se falhar:
 - troque frases curtas por justificativas defensáveis
 - elimine `TODO`, `preencher`, `talvez`, `não sei`
 
-## 6. Inicializar git e hooks
+## 7. Preencher o manifesto de deploy
+
+Revise `deploy/manifest.json` antes do primeiro push relevante.
+
+O manifesto deve declarar:
+
+- comando principal
+- healthcheck
+- runtime e versão
+- portas expostas
+- env vars e secrets esperados
+- runtime state e logs
+- restart, backup e rollback
+
+Valide:
+
+```bash
+python3 scripts/check_deploy_manifest.py
+```
+
+Se o projeto não tiver deploy, use `deploy.target` como `none` e explique em `deploy.reason`.
+
+## 8. Inicializar git e hooks
 
 Se gerou com `--enforce-gate`:
 
@@ -102,7 +141,7 @@ bash scripts/install_git_hooks.sh
 
 Isso faz o pre-commit barrar commits com gate ruim.
 
-## 7. Ajustar os docs estruturais
+## 9. Ajustar os docs estruturais
 
 Preencha o mínimo viável destes arquivos:
 
@@ -111,6 +150,7 @@ Preencha o mínimo viável destes arquivos:
 - `docs/CONTRACTS.md`
 - `docs/OPERATIONS.md`
 - `AGENTS.md`
+- `deploy/manifest.json`
 
 Regras:
 
@@ -119,14 +159,16 @@ Regras:
 - `CONTRACTS.md`: entradas, saídas, identificadores e quebras
 - `OPERATIONS.md`: boot, validação, restart, logs e backup
 - `AGENTS.md`: política local de colaboração e validação mínima
+- `deploy/manifest.json`: processo, healthcheck, runtime state, logs, restart, backup e rollback
 
-## 8. Rodar o doctor
+## 10. Rodar o doctor
 
 Quando os docs já estiverem reais:
 
 ```bash
 python3 scripts/project_doctor.py
 python3 scripts/project_doctor.py --strict
+python3 scripts/project_doctor.py --deploy-strict
 python3 scripts/project_doctor.py --audit-config
 ```
 
@@ -134,9 +176,10 @@ Interpretação:
 
 - `doctor`: valida baseline e mostra warnings semânticos
 - `strict`: trata warnings semânticos como erro
+- `deploy-strict`: valida coerência entre `docs/OPERATIONS.md` e `deploy/manifest.json`
 - `audit-config`: audita `config/doctor.json`
 
-## 9. Corrigir warnings semânticos do jeito certo
+## 11. Corrigir warnings semânticos do jeito certo
 
 Se o doctor disser que os documentos usam vocábulos diferentes:
 
@@ -164,7 +207,7 @@ python3 scripts/project_doctor.py --audit-config
 
 Se o audit acusar `ignored_warnings` sem efeito atual, remova o lixo.
 
-## 10. Fazer o bootstrap da stack
+## 12. Fazer o bootstrap da stack
 
 Exemplos comuns:
 
@@ -186,7 +229,7 @@ Para `node`:
 npm install
 ```
 
-## 11. Rodar a validação mínima do projeto
+## 13. Rodar a validação mínima do projeto
 
 Use o comando registrado no `AGENTS.md` e no `docs/OPERATIONS.md`.
 
@@ -197,14 +240,16 @@ Exemplos:
 - fastapi-service: `python -m pytest -q`
 - dicom-pipeline: `python -m <slug> --sample`
 
-## 12. Fazer o primeiro commit relevante
+## 14. Fazer o primeiro commit relevante
 
 Antes de commitar:
 
 1. `python3 scripts/check_project_gate.py`
-2. `python3 scripts/project_doctor.py`
-3. validação mínima da stack
-4. revisar `git diff`
+2. `python3 scripts/check_deploy_manifest.py`
+3. `python3 scripts/project_doctor.py`
+4. `python3 scripts/project_doctor.py --deploy-strict`
+5. validação mínima da stack
+6. revisar `git diff`
 
 Se o projeto nasceu com runtime suportado pelo kit, revise também o baseline de CI em `.github/workflows/ci.yml` antes do primeiro push.
 
@@ -212,8 +257,9 @@ Se a mudança afeta operação:
 
 - declare restart
 - atualize `docs/OPERATIONS.md`
+- atualize `deploy/manifest.json`
 
-## 13. Rotina de crescimento
+## 15. Rotina de crescimento
 
 A cada mudança estrutural:
 
@@ -221,9 +267,10 @@ A cada mudança estrutural:
 - atualize `ARCHITECTURE.md` se a fronteira mudou
 - atualize `CONTRACTS.md` se entrada ou saída mudou
 - atualize `OPERATIONS.md` se boot, restart, logs ou backup mudou
+- atualize `deploy/manifest.json` se comando, healthcheck, env, secret, porta, runtime, logs, backup ou rollback mudou
 - rode `project_doctor.py --audit-config` quando mexer em `config/doctor.json`
 
-## 14. Atualizar o próprio kit
+## 16. Atualizar o próprio kit
 
 Quando mexer no scaffolder:
 
@@ -234,11 +281,12 @@ newproj --version
 
 Só considere a alteração pronta se a regressão passar.
 
-## 15. Erros Clássicos A Evitar
+## 17. Erros Clássicos A Evitar
 
 - criar repo novo quando era módulo
 - deixar `README.md` genérico por semanas
 - esconder regra de negócio em script solto
 - usar `ignored_warnings` para silenciar desalinhamento real
 - esquecer restart policy
+- omitir manifesto de deploy porque o deploy ainda é manual
 - crescer sem `CONTRACTS.md` minimamente confiável

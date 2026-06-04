@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -41,13 +42,13 @@ def write_valid_docs(repo: Path, project_name: str, slug: str) -> None:
 Daemon operacional para reconciliacao remota de cargas assincronas.
 Existe para a equipe de integracao e para o host local que opera o ciclo.
 
-## O que este repositorio e
+## O Que Este Repositório É
 
 - daemon autonomo para reconciliacao remota de cargas assincronas
 - componente duravel focado em coleta ciclica
 - fronteira separada porque lida com browser, polling e isolamento local
 
-## O que este repositorio NAO e
+## O Que Este Repositório Não É
 
 - servico HTTP para consulta manual
 - repositorio de contratos clinicos
@@ -377,14 +378,14 @@ Dependencias criticas:
 
 Registrar entradas, saidas, identificadores e assuncoes do worker.
 
-## 2. Entradas canonicas
+## 2. Entradas Canônicas
 
 | Nome | Origem | Formato | Obrigatorio | Observacoes |
 | --- | --- | --- | --- | --- |
 | `batch_queue.json` | `runtime/inbox` | `file` | sim | `lista de lotes pendentes com batch_id externo` |
 | `session.json` | `runtime/browser` | `json` | nao | `cookie persistido para evitar relogin a cada ciclo` |
 
-## 3. Saidas canonicas
+## 3. Saídas Canônicas
 
 | Nome | Destino | Formato | Garantias |
 | --- | --- | --- | --- |
@@ -458,7 +459,7 @@ python -m {slug} --interval 30
 - path de runtime state: `runtime/`
 - path de logs: `runtime/logs/`
 
-## 5. Validacao minima
+## 5. Validação mínima
 
 Depois de subir:
 
@@ -573,7 +574,9 @@ class StarterRegressionTests(unittest.TestCase):
             )
 
             self.assertTrue((repo / "config" / "doctor.json").exists())
+            self.assertTrue((repo / "deploy" / "manifest.json").exists())
             self.assertTrue((repo / "scripts" / "project_doctor.py").exists())
+            self.assertTrue((repo / "scripts" / "check_deploy_manifest.py").exists())
             self.assertTrue((repo / ".githooks" / "pre-commit").exists())
             self.assertTrue((repo / ".github" / "workflows" / "ci.yml").exists())
             self.assertTrue((repo / "flowrepo" / "main.py").exists())
@@ -586,6 +589,7 @@ class StarterRegressionTests(unittest.TestCase):
             operations_text = (repo / "docs" / "OPERATIONS.md").read_text(encoding="utf-8")
             self.assertIn("python -m pytest -q", ci_workflow)
             self.assertIn("python3 scripts/check_project_gate.py", ci_workflow)
+            self.assertIn("python3 scripts/check_deploy_manifest.py", ci_workflow)
             self.assertIn('python3 -m venv .venv --prompt $(basename "$PWD")', readme_text)
             self.assertIn('python3 -m venv .venv --prompt $(basename "$PWD")', operations_text)
             self.assertIn("[![CI](", readme_text)
@@ -598,6 +602,7 @@ class StarterRegressionTests(unittest.TestCase):
             write_valid_docs(repo, "FlowRepo", "flowrepo")
 
             run_cmd([sys.executable, str(repo / "scripts" / "check_project_gate.py")], cwd=repo)
+            run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
 
             doctor_warning = run_cmd([sys.executable, str(repo / "scripts" / "project_doctor.py")], cwd=repo)
             self.assertIn("[objective_mismatch]", doctor_warning.stdout)
@@ -624,6 +629,7 @@ class StarterRegressionTests(unittest.TestCase):
             )
 
             run_cmd([sys.executable, str(repo / "scripts" / "project_doctor.py"), "--strict"], cwd=repo)
+            run_cmd([sys.executable, str(repo / "scripts" / "project_doctor.py"), "--deploy-strict"], cwd=repo)
 
             help_result = run_cmd([sys.executable, "-m", "flowrepo", "--help"], cwd=repo)
             self.assertIn("--once", help_result.stdout)
@@ -713,6 +719,7 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertIn("npm install", workflow)
             self.assertIn("npm test", workflow)
             self.assertIn("python3 scripts/check_project_gate.py", workflow)
+            self.assertIn("python3 scripts/check_deploy_manifest.py", workflow)
             self.assertEqual(package_json["scripts"]["test"], "node --test tests/*.test.mjs")
             self.assertEqual(package_json["engines"], {"node": ">=20"})
             self.assertNotIn("dependencies", package_json)
@@ -720,6 +727,104 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertIn('from "node:test"', (repo / "tests" / "smoke.test.mjs").read_text(encoding="utf-8"))
             self.assertIn("[![CI](", readme_text)
             self.assertIn("![Node]", readme_text)
+
+    def test_go_project_includes_ci_manifest_and_smoke(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-go-") as tmp:
+            repo = Path(tmp) / "GoRepo"
+            run_cmd(
+                [
+                    sys.executable,
+                    str(SCAFFOLDER),
+                    str(repo),
+                    "--runtime",
+                    "go",
+                    "--enforce-gate",
+                ]
+            )
+
+            workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+            manifest = json.loads((repo / "deploy" / "manifest.json").read_text(encoding="utf-8"))
+            readme_text = (repo / "README.md").read_text(encoding="utf-8")
+
+            self.assertTrue((repo / "go.mod").exists())
+            self.assertTrue((repo / "cmd" / "gorepo" / "main.go").exists())
+            self.assertTrue((repo / "internal" / "app" / "app.go").exists())
+            self.assertTrue((repo / "internal" / "app" / "app_test.go").exists())
+            self.assertTrue((repo / "schema" / "deploy-manifest.schema.json").exists())
+            self.assertIn("actions/setup-go@v5", workflow)
+            self.assertIn("go test ./...", workflow)
+            self.assertIn("python3 scripts/check_deploy_manifest.py", workflow)
+            self.assertEqual(manifest["runtime"]["id"], "go")
+            self.assertEqual(manifest["process"]["command"], "go run ./cmd/gorepo")
+            self.assertIn("![Go]", readme_text)
+
+            run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
+            if shutil.which("go"):
+                run_cmd(["go", "test", "./..."], cwd=repo)
+
+    def test_typescript_project_includes_ci_manifest_and_smoke(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-ts-") as tmp:
+            repo = Path(tmp) / "TsRepo"
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--runtime", "ts", "--enforce-gate"])
+
+            workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+            package_json = json.loads((repo / "package.json").read_text(encoding="utf-8"))
+            manifest = json.loads((repo / "deploy" / "manifest.json").read_text(encoding="utf-8"))
+
+            self.assertTrue((repo / "tsconfig.json").exists())
+            self.assertTrue((repo / "src" / "main.ts").exists())
+            self.assertTrue((repo / "tests" / "smoke.test.ts").exists())
+            self.assertIn("npm install", workflow)
+            self.assertIn("npm test", workflow)
+            self.assertEqual(package_json["scripts"]["test"], "npm run build && node --test dist/tests/*.test.js")
+            self.assertEqual(manifest["runtime"]["id"], "ts")
+            self.assertEqual(manifest["process"]["command"], "npm start")
+
+            run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
+            if shutil.which("npm"):
+                run_cmd(["npm", "install"], cwd=repo)
+                run_cmd(["npm", "test"], cwd=repo)
+
+    def test_swift_project_includes_ci_manifest_and_smoke(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-swift-") as tmp:
+            repo = Path(tmp) / "SwiftRepo"
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--runtime", "swift", "--enforce-gate"])
+
+            workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+            manifest = json.loads((repo / "deploy" / "manifest.json").read_text(encoding="utf-8"))
+
+            self.assertTrue((repo / "Package.swift").exists())
+            self.assertTrue((repo / "Sources" / "Swiftrepo" / "main.swift").exists())
+            self.assertTrue((repo / "Sources" / "SwiftrepoCore" / "App.swift").exists())
+            self.assertIn("macos-latest", workflow)
+            self.assertIn("swift package resolve", workflow)
+            self.assertEqual(manifest["runtime"]["id"], "swift")
+            self.assertEqual(manifest["process"]["command"], "swift run Swiftrepo")
+
+            run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
+            if shutil.which("swift"):
+                run_cmd(["swift", "build"], cwd=repo)
+                run_cmd(["swift", "run", "Swiftrepo"], cwd=repo)
+
+    def test_csharp_project_includes_ci_manifest_and_smoke(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-csharp-") as tmp:
+            repo = Path(tmp) / "CSharpRepo"
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--runtime", "csharp", "--enforce-gate"])
+
+            workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+            manifest = json.loads((repo / "deploy" / "manifest.json").read_text(encoding="utf-8"))
+
+            self.assertTrue((repo / "Csharprepo.sln").exists())
+            self.assertTrue((repo / "src" / "Csharprepo" / "Csharprepo.csproj").exists())
+            self.assertTrue((repo / "tests" / "Csharprepo.Tests" / "Csharprepo.Tests.csproj").exists())
+            self.assertIn("actions/setup-dotnet@v4", workflow)
+            self.assertIn("dotnet test", workflow)
+            self.assertEqual(manifest["runtime"]["id"], "csharp")
+            self.assertEqual(manifest["process"]["command"], "dotnet run --project src/Csharprepo")
+
+            run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
+            if shutil.which("dotnet"):
+                run_cmd(["dotnet", "test"], cwd=repo)
 
     def test_optional_papers_structure_is_generated(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-papers-") as tmp:

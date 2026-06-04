@@ -2,35 +2,38 @@
 
 ## Princípio
 
-O roadmap de `Skidbladnir` deve privilegiar clareza de produto, utilidade operacional e estabilidade do kit antes de adicionar volume de features.
+O roadmap de `Skidbladnir` deve privilegiar clareza de protocolo, utilidade operacional para agentes e estabilidade do kit antes de adicionar volume de features.
 
 ## v1.0.x
 
 Objetivo:
 
-fechar a publicação inicial com tese clara, instalação simples e baseline confiável.
+fechar a publicação inicial com tese clara, protocolo para agentes, instalação auxiliar simples e baseline confiável.
 
 Frentes:
 
 - publicar o projeto com nome, posicionamento e README público coerentes
+- consolidar o uso principal por agentes lendo `~/Skidbladnir`
 - manter a suíte de regressão do scaffolder estável
-- consolidar os presets principais já existentes
-- manter o prompt de retrofit como caminho oficial para repositórios legados
+- consolidar templates e scripts comuns como fonte de verdade
+- manter o fluxo de retrofit como caminho oficial para repositórios legados
+- tornar `deploy/manifest.json` obrigatório nos projetos alinhados
+- manter Python, Node, TypeScript, Go, Swift e C# como scaffolds auxiliares executáveis
 - documentar claramente quando usar e quando não usar o kit
 
 ## v1.1
 
 Objetivo:
 
-melhorar ergonomia e previsibilidade do uso diário.
+melhorar ergonomia e previsibilidade do uso por agentes.
 
 Frentes:
 
-- comando de bootstrap mais direto para instalação local
+- prompts mais curtos para uso recorrente
 - exemplos de saída reais por preset
-- documentação pública com árvores de projeto gerado
+- documentação pública com árvores por runtime
 - modo mais simples para escolher presets
-- melhoria do fluxo de atualização do `newproj`
+- melhoria do fluxo de atualização do `newproj` como compatibilidade auxiliar
 
 ## v1.2
 
@@ -44,6 +47,7 @@ Frentes:
 - regras mais claras para adoção gradual de gate e doctor em bases legadas
 - baseline de retrofit por classe de projeto: API, worker, pipeline, desktop
 - exemplos reais de before/after em recuperação estrutural
+- validação mais rica de `deploy/manifest.json` em repositórios legados
 
 ## v1.3
 
@@ -57,6 +61,7 @@ Frentes:
 - presets de documentação por domínio
 - auditoria mais rica de inconsistências entre docs e operação
 - convenções opcionais para changelog e releases
+- aprofundar presets específicos por runtime sem transformar o kit em framework
 
 ## v2.0
 
@@ -66,8 +71,8 @@ extrair uma camada comum realmente reutilizável sem destruir o caráter leve do
 
 Frentes:
 
-- biblioteca core opcional para config, logging e contratos
-- integração mais forte entre scaffolder e componentes compartilháveis
+- biblioteca core opcional para validação de gate, doctor e deploy manifest
+- integração mais forte entre protocolo, scaffolder auxiliar e componentes compartilháveis
 - estratégia de evolução sem acoplamento forçado entre repositórios
 
 ## O que evitar no roadmap

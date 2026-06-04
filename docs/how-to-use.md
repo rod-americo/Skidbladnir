@@ -2,6 +2,11 @@
 
 Arquivos complementares do kit:
 
+- `new-project.md`: fluxo oficial para agentes criarem projetos novos
+- `existing-project.md`: fluxo oficial para agentes alinharem repositórios existentes
+- `runtimes.md`: matriz multilinguagem do protocolo
+- `deploy-manifest.md`: contrato obrigatório de operação e deploy
+- `validation.md`: validação comum e por runtime
 - `../INSTALL.md`: instalação e update do comando `newproj`
 - `manual-passo-a-passo.md`: fluxo operacional completo do zero ao primeiro commit
 - `prompt-repo-existente.md`: prompt genérico para recuperar repositórios já em funcionamento
@@ -10,16 +15,21 @@ Arquivos complementares do kit:
 
 ## Fluxo recomendado
 
-1. Gere o projeto com `newproj` ou `scaffold_project.py`.
-2. Revise `README.md` e `AGENTS.md` antes de escrever código de produção.
-3. Ajuste `docs/ARCHITECTURE.md`, `docs/CONTRACTS.md` e `docs/OPERATIONS.md` antes da primeira integração real.
-4. Se usar `--include-checklist`, rode `START_CHECKLIST.md` antes do primeiro push relevante.
+O fluxo principal é por agente lendo o protocolo em `~/Skidbladnir`, não por execução manual de uma CLI pelo usuário.
+
+1. Para projeto novo, use `docs/new-project.md` e `prompts/novo-projeto.md`.
+2. Para projeto existente, use `docs/existing-project.md` e `prompts/projeto-existente.md`.
+3. Escolha runtime e preset com `docs/runtimes.md`.
+4. Crie ou revise `deploy/manifest.json` usando `docs/deploy-manifest.md`.
+5. Rode a validação comum descrita em `docs/validation.md`.
+
+`newproj` e `scaffold_project.py` continuam disponíveis como bootstrap auxiliar para Python, Node, TypeScript, Go, Swift e C#, mas não são a interface principal do kit.
 
 Para repositórios antigos que já existem e não nasceram com o scaffolder, use `prompt-repo-existente.md` em vez de gerar um projeto novo.
 
 ## Layout recomendado
 
-Padrão principal para projetos Python e Node deste kit:
+Padrão principal para projetos Python e Node gerados pelo scaffolder auxiliar:
 
 - raiz limpa para `README`, `docs`, `config`, `tests`, `scripts` e `runtime`
 - pacote ou app principal direto em `/<slug>/`
@@ -39,6 +49,8 @@ MeuProjeto/
 ```
 
 Use `src/<slug>` só quando o repositório tiver uma necessidade explícita de isolamento de packaging e isso estiver documentado.
+
+Para Go, Swift, C# e TypeScript, siga a matriz de `docs/runtimes.md`; esses runtimes já têm scaffold auxiliar, mas ainda exigem adaptação contextual pelo agente.
 
 Exemplos:
 
@@ -88,12 +100,12 @@ Comandos iniciais esperados:
   - smoke test: `python -m <slug> doctor`
 - `worker`
   - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug> --once`
-  - modo residente: `python -m <slug> --interval 30`
+  - run: `python -m <slug> --interval 30`
   - smoke test: `python -m <slug> --once`
 - `playwright-worker`
   - setup: `python -m pip install -r requirements.txt`
   - bootstrap browser: `python -m playwright install chromium`
+  - run: `python -m <slug> --interval 30 --dry-run`
   - run inicial: `python -m <slug> --once --dry-run`
   - refresh real: `python -m <slug> --refresh-session`
   - smoke test: `python -m <slug> --once --dry-run`
@@ -103,8 +115,8 @@ Comandos iniciais esperados:
   - smoke test: `python -m <slug> --item-id demo-001`
 - `dicom-pipeline`
   - setup: `python -m pip install -r requirements.txt`
+  - run: `python -m <slug> --inbox runtime/inbox --outbox runtime/outbox`
   - run inicial: `python -m <slug> --sample`
-  - run real: `python -m <slug> --inbox runtime/inbox --outbox runtime/outbox`
   - smoke test: `python -m <slug> --sample`
 
 Fragilidade conhecida:
@@ -131,7 +143,7 @@ Use a regressão sempre que mudar:
 - `install_newproj.sh`
 - templates base de docs
 
-Projetos Python e Node gerados pelo kit agora também saem com um baseline de CI em `.github/workflows/ci.yml`.
+Projetos Python, Node, TypeScript, Go, Swift e C# gerados pelo kit agora também saem com um baseline de CI em `.github/workflows/ci.yml`.
 
 O objetivo desse workflow é simples:
 
@@ -139,12 +151,14 @@ O objetivo desse workflow é simples:
 - rodar checagem sintática quando fizer sentido
 - executar a suíte de testes do projeto
 - validar `PROJECT_GATE.md` quando o projeto nascer com `--enforce-gate`
+- validar `deploy/manifest.json`
 
 ## Gate Enforced
 
 Se você usar `--enforce-gate`, o projeto sai com:
 
 - `scripts/check_project_gate.py`
+- `scripts/check_deploy_manifest.py`
 - `.githooks/pre-commit`
 - `scripts/install_git_hooks.sh`
 - `tests/test_project_gate.py` para runtimes Python
@@ -156,6 +170,7 @@ Fluxo esperado:
 3. rode `git init`
 4. rode `bash scripts/install_git_hooks.sh`
 5. confirme que `python3 scripts/check_project_gate.py` passa
+6. confirme que `python3 scripts/check_deploy_manifest.py` passa
 
 O gate agora falha em 3 casos:
 
@@ -169,6 +184,7 @@ Depois que `README.md`, `docs/ARCHITECTURE.md`, `docs/CONTRACTS.md` e `docs/OPER
 
 ```bash
 python3 scripts/project_doctor.py
+python3 scripts/project_doctor.py --deploy-strict
 newproj doctor .
 newproj doctor --strict .
 newproj doctor --audit-config .
@@ -180,7 +196,9 @@ O doctor valida:
 - placeholders e `TODO` remanescentes nos docs principais
 - coerência entre `README.md` e `docs/OPERATIONS.md` no comando principal
 - coerência entre `AGENTS.md` e `docs/OPERATIONS.md` na validação mínima
+- coerência entre `deploy/manifest.json` e `docs/OPERATIONS.md` quando usado com `--deploy-strict`
 - preenchimento do `PROJECT_GATE.md`
+- validade estrutural do `deploy/manifest.json`
 - warnings com código estável para desalinhamento entre gate, README e arquitetura
 
 Use `--strict` quando quiser tratar esses warnings como erro bloqueante. Use `--audit-config` para auditar `config/doctor.json`, listar warnings suprimidos, aliases em uso e exceções sem efeito atual.

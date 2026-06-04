@@ -34,6 +34,7 @@ Este documento deve permitir executar, diagnosticar, reiniciar e recuperar o sis
   - `{{ENV_2}}`
 - path de runtime state: `{{runtime_path}}`
 - path de logs: `{{logs_path}}`
+- manifesto operacional: `deploy/manifest.json`
 
 ## 5. Validação mínima
 
@@ -41,6 +42,13 @@ Depois de subir:
 
 ```bash
 {{SMOKE_TEST_COMMAND}}
+```
+
+Validar o manifesto operacional:
+
+```bash
+python3 scripts/check_deploy_manifest.py
+python3 scripts/project_doctor.py --deploy-strict
 ```
 
 Conferir:
@@ -99,3 +107,4 @@ Checklist mínimo:
 - novo path de runtime
 - nova regra de restart
 - nova rotina de backup ou limpeza
+- mudança em `deploy/manifest.json`

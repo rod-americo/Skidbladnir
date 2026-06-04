@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "project": {
+    "name": "{{PROJECT_NAME}}",
+    "slug": "{{PROJECT_SLUG}}"
+  },
+  "runtime": {
+    "id": "{{PRIMARY_RUNTIME_ID}}",
+    "version": "{{PRIMARY_RUNTIME_VERSION}}"
+  },
+  "deploy": {
+    "target": "{{DEPLOY_TARGET}}",
+    "reason": "{{DEPLOY_REASON}}"
+  },
+  "process": {
+    "command": "{{PRIMARY_RUN_COMMAND}}",
+    "working_directory": ".",
+    "user": "{{DEPLOY_USER}}"
+  },
+  "healthcheck": {
+    "command": "{{SMOKE_TEST_COMMAND}}",
+    "timeout_seconds": 30
+  },
+  "ports": [],
+  "environment": {
+    "required": [],
+    "optional": []
+  },
+  "secrets": {
+    "required": []
+  },
+  "runtime_state": {
+    "paths": ["runtime/"]
+  },
+  "logs": {
+    "paths": ["runtime/logs/"]
+  },
+  "restart": {
+    "policy": "{{RESTART_POLICY}}"
+  },
+  "backup": {
+    "policy": "{{BACKUP_POLICY}}"
+  },
+  "rollback": {
+    "strategy": "{{ROLLBACK_STRATEGY}}"
+  }
+}

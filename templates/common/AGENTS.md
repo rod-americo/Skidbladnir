@@ -123,11 +123,13 @@ Antes de concluir:
 - revisar `git diff` e `git status`
 - confirmar que não há artefatos temporarios sendo versionados
 - deixar claro o que foi validado e o que não foi
+- validar `deploy/manifest.json` com `python3 scripts/check_deploy_manifest.py` quando houver mudança operacional
 
 Se a mudança afetar execução:
 
 - declarar se exige restart total, parcial ou nenhum restart
 - atualizar `docs/OPERATIONS.md` quando a rotina operacional mudar
+- atualizar `deploy/manifest.json` quando comando, healthcheck, porta, runtime state, logs, backup, rollback ou restart mudar
 
 ## 8. Documentação obrigatória
 
@@ -138,6 +140,7 @@ Atualize junto com o código quando necessário:
 - `docs/CONTRACTS.md`: entradas, saídas, eventos, schemas, invariantes
 - `docs/OPERATIONS.md`: execução, logs, restart, incidentes, backup
 - `docs/DECISIONS.md`: decisões que alteram a forma como o sistema cresce
+- `deploy/manifest.json`: processo, healthcheck, runtime state, logs, restart, backup e rollback
 
 Se a mudança não couber em nenhum desses arquivos, provavelmente ela ainda não foi enquadrada estruturalmente.
 
@@ -177,7 +180,9 @@ Preencha este bloco ao iniciar um projeto real:
 - comando de validação mínima: `{{VALIDACAO_MINIMA}}`
 - regra de restart: `{{RESTART_POLICY}}`
 - gate check local: `python3 scripts/check_project_gate.py`
+- deploy manifest check: `python3 scripts/check_deploy_manifest.py`
 - doctor estrutural: `python3 scripts/project_doctor.py`
 - doctor estrito: `python3 scripts/project_doctor.py --strict`
+- doctor deploy strict: `python3 scripts/project_doctor.py --deploy-strict`
 - doctor audit: `python3 scripts/project_doctor.py --audit-config`
 - policy do doctor: `config/doctor.json`

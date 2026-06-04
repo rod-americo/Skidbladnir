@@ -11,13 +11,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          node-version: "{{NODE_VERSION}}"
+          go-version: "{{GO_VERSION}}"
 
-      - name: Install dependencies
-        run: npm install
+      - name: Download dependencies
+        run: go mod download
 
 {{CI_GATE_STEP}}
 {{CI_DEPLOY_STEP}}

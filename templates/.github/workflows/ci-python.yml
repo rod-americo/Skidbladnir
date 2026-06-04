@@ -25,6 +25,7 @@ jobs:
         run: |
           {{CI_STATIC_CHECK_COMMAND}}
 {{CI_GATE_STEP}}
+{{CI_DEPLOY_STEP}}
       - name: Run test suite
         run: |
           {{CI_VALIDATE_COMMAND}}

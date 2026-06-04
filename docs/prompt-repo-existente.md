@@ -33,14 +33,16 @@ Restrições:
 - Parágrafos Markdown em linha única, sem hard-wrap manual em 80 colunas.
 
 Fonte de verdade para baseline:
-- `<SKIDBLADNIR_PATH>/templates/README.md`
-- `<SKIDBLADNIR_PATH>/templates/AGENTS.md`
-- `<SKIDBLADNIR_PATH>/templates/PROJECT_GATE.md`
-- `<SKIDBLADNIR_PATH>/templates/START_CHECKLIST.md`
-- `<SKIDBLADNIR_PATH>/templates/docs/ARCHITECTURE.md`
-- `<SKIDBLADNIR_PATH>/templates/docs/CONTRACTS.md`
-- `<SKIDBLADNIR_PATH>/templates/docs/OPERATIONS.md`
-- `<SKIDBLADNIR_PATH>/templates/docs/DECISIONS.md`
+- `<SKIDBLADNIR_PATH>/templates/common/README.md`
+- `<SKIDBLADNIR_PATH>/templates/common/AGENTS.md`
+- `<SKIDBLADNIR_PATH>/templates/common/PROJECT_GATE.md`
+- `<SKIDBLADNIR_PATH>/templates/common/START_CHECKLIST.md`
+- `<SKIDBLADNIR_PATH>/templates/common/docs/ARCHITECTURE.md`
+- `<SKIDBLADNIR_PATH>/templates/common/docs/CONTRACTS.md`
+- `<SKIDBLADNIR_PATH>/templates/common/docs/OPERATIONS.md`
+- `<SKIDBLADNIR_PATH>/templates/common/docs/DECISIONS.md`
+- `<SKIDBLADNIR_PATH>/docs/runtimes.md`
+- `<SKIDBLADNIR_PATH>/docs/deploy-manifest.md`
 - scripts e policy de gate/doctor do starter
 
 Tarefa principal: Fazer uma rodada completa de recuperação estrutural do repositório, adotando a baseline do starter kit de forma adaptada ao sistema real, sem maquiagem e sem overengineering.
@@ -91,10 +93,12 @@ Entregáveis obrigatórios:
 - docs/CONTRACTS.md
 - docs/OPERATIONS.md
 - docs/DECISIONS.md
+- deploy/manifest.json
 
 4. Adicionar ou revisar a baseline operacional do starter
 - config/doctor.json ou governance/doctor.json, conforme fizer sentido para o repo
 - scripts/check_project_gate.py
+- scripts/check_deploy_manifest.py
 - scripts/project_doctor.py
 - se fizer sentido, .githooks/pre-commit
 - se fizer sentido, scripts/install_git_hooks.sh
@@ -111,6 +115,7 @@ Entregáveis obrigatórios:
 - Layout real do código, preservando raiz limpa e evitando espalhar produção na top-level fora do módulo principal.
 - Contratos centrais.
 - Runtime state, persistência, logs e paths operacionais.
+- Manifesto de deploy com processo, healthcheck, secrets esperados, restart, backup e rollback.
 - Hotspots e dívidas técnicas conhecidas.
 
 7. Materializar a operação real
@@ -121,6 +126,7 @@ Entregáveis obrigatórios:
 - restart real
 - troubleshooting real
 - dependências externas reais
+- manifesto real em `deploy/manifest.json`, usando `deploy.target: "manual"` se a operação ainda for manual ou `deploy.target: "none"` se não houver processo implantável
 
 8. Preparar o repositório para evolução segura
 - Ajustar .gitignore se necessário para runtime mutável.
@@ -137,6 +143,7 @@ O que eu espero de cada documento:
 - CONTRACTS.md: modelos, entradas, saídas, invariantes, identificadores e integrações
 - OPERATIONS.md: boot, env, runtime, logs, restart, troubleshooting, smoke e operação crítica
 - DECISIONS.md: decisões já tomadas, tradeoffs e alternativas rejeitadas
+- deploy/manifest.json: runtime, alvo de deploy, processo, healthcheck, portas, env, secrets, runtime state, logs, restart, backup e rollback
 - START_CHECKLIST.md: o que já está feito, o que ainda falta e o que não deve acontecer na próxima rodada
 
 Pontos críticos:
@@ -153,11 +160,14 @@ Decisões de adaptação que você deve tomar com critério:
 - Se vale ligar gate enforcement agora ou apenas preparar a base
 - Se o repo comporta hook local sem atrapalhar a rotina
 - Se existe espaço para teste novo ou se a rodada deve focar em documentação e guardrails
+- Se `deploy.target` deve ser `none`, `manual`, `local`, `systemd`, `container`, `compose` ou `kubernetes`, sem inventar infraestrutura inexistente
 
 Validação mínima obrigatória:
 - checagem sintática dos scripts Python novos, se houver
 - scripts/check_project_gate.py passando, se existir
+- scripts/check_deploy_manifest.py passando, se existir
 - scripts/project_doctor.py passando, ou explicação precisa do bloqueio
+- scripts/project_doctor.py --deploy-strict passando, ou explicação precisa do bloqueio
 - scripts/project_doctor.py --audit-config passando, ou explicação precisa do bloqueio
 - testes existentes executados quando forem relevantes e viáveis
 - smoke real quando a mudança tocar operação crítica e houver comando para isso

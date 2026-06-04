@@ -14,6 +14,7 @@ Use este checklist antes do primeiro push de um projeto novo.
 - `AGENTS.md` criado e ajustado para o domínio
 - `PROJECT_GATE.md` preenchido
 - `CHANGELOG.md` criado
+- `deploy/manifest.json` criado
 - `docs/ARCHITECTURE.md` criado
 - `docs/CONTRACTS.md` criado
 - `docs/OPERATIONS.md` criado
@@ -34,6 +35,7 @@ Use este checklist antes do primeiro push de um projeto novo.
 - runtime state, bancos locais e sessões estão fora do versionamento
 - caminho de logs definido
 - entrypoint principal documentado
+- manifesto de deploy validado por `python3 scripts/check_deploy_manifest.py`
 
 ## 4. Contratos
 
@@ -52,6 +54,7 @@ Use este checklist antes do primeiro push de um projeto novo.
 - comando mínimo de teste definido
 - comando mínimo de lint ou checagem sintática definido
 - comportamento de restart documentado
+- `python3 scripts/project_doctor.py --deploy-strict` passa quando operação e manifesto já estiverem reais
 - critério de smoke test definido
 
 ## 6. Disciplina de crescimento
