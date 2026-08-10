@@ -71,9 +71,11 @@ Regras:
 - preserve a separação `domain / application / infrastructure / interfaces`
 - mantenha a raiz enxuta e intencional
 - use `{{PROJECT_SLUG}}/` na raiz como padrão principal
+- quando houver TUI ou GUI Python dedicada, use `tui/` ou `gui/` apenas como launcher top-level fino para `python -m tui` ou `python -m gui`; mantenha a implementação em `{{PROJECT_SLUG}}/interfaces/`
 - use `src/` só quando isolamento de packaging for requisito consciente
 - `runtime/`, bancos locais, dumps, sessões e caches não devem ser versionados
 - `deploy/manifest.json` deve declarar comando principal, healthcheck, runtime state, logs, restart, backup e rollback
+- a escolha do runtime deve estar justificada no `PROJECT_GATE.md` por restrições técnicas e operacionais, não por preferência de linguagem; sem fator decisivo, o default é Python
 
 ## Quick start
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 PROJECT_GATE = Path(__file__).resolve().parents[1] / "PROJECT_GATE.md"
-REQUIRED_SECTION_PREFIXES = ("## 1.", "## 2.", "## 3.", "## 4.", "## 5.")
+REQUIRED_SECTION_PREFIXES = ("## 1.", "## 2.", "## 3.", "## 4.", "## 5.", "## 6.")
 PENDING_MARKERS = ("TODO", "preencher", "{{")
 WEAK_EXACT_VALUES = {
     "",
@@ -57,6 +57,10 @@ FIELD_RULES = {
     "necessidade de restart": {"min_words": 3, "min_chars": 12},
     "necessidade de backup": {"min_words": 3, "min_chars": 12},
     "risco operacional": {"min_words": 4, "min_chars": 20},
+    "restrições determinantes do runtime": {"min_words": 5, "min_chars": 24},
+    "runtime escolhido": {"min_words": 1, "min_chars": 2},
+    "alternativa principal considerada": {"min_words": 1, "min_chars": 2},
+    "justificativa operacional": {"min_words": 5, "min_chars": 24},
 }
 
 

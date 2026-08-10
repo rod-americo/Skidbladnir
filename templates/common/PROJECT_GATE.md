@@ -40,7 +40,16 @@ Se a resposta for "quase tudo", provavelmente isso ainda não deveria nascer com
 - necessidade de backup:
 - risco operacional:
 
-## 6. Condição de saída
+## 6. Por que este runtime foi escolhido?
+
+Não responda com preferência pessoal. Se nenhuma restrição determinar outra linguagem, registre explicitamente que Python foi adotado como default do kit.
+
+- restrições determinantes do runtime:
+- runtime escolhido: `{{RUNTIME_ID}}`
+- alternativa principal considerada:
+- justificativa operacional:
+
+## 7. Condição de saída
 
 Este repositório só deveria existir se:
 

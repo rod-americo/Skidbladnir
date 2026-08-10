@@ -67,8 +67,17 @@ Regras:
 - não coloque código de produção solto na raiz
 - mantenha a raiz enxuta
 - preserve imports e dependências na direção da arquitetura
-- use `python -m <slug>` como entrypoint público em projetos Python; subcomandos como `gui`, `tui` e `doctor` vivem abaixo desse comando
+- use `python -m <slug>` como entrypoint público do domínio em projetos Python
+- para TUI e GUI dedicadas, prefira launchers top-level finos em `tui/` e `gui/`, executados com `python -m tui` e `python -m gui`, que delegam para `<slug>/interfaces/`; não coloque regra de negócio nesses launchers
 - não acople interface diretamente a detalhes de infraestrutura quando houver uma camada de aplicação prevista
+
+Escolha de runtime:
+
+- em repositório existente, preserve o runtime salvo incompatibilidade concreta
+- em projeto novo, escolha autonomamente por plataforma, SDK, deploy, distribuição, interoperabilidade e requisitos mensuráveis
+- não peça preferência de linguagem quando as restrições forem suficientes
+- entre opções equivalentes, reduza dependências e custo operacional; sem fator decisivo, use Python
+- registre a justificativa no `PROJECT_GATE.md` e tradeoffs relevantes em `docs/DECISIONS.md`
 
 ## 5. Configuração, runtime e logs
 

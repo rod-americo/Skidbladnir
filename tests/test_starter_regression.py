@@ -247,7 +247,14 @@ Documento preenchido antes do primeiro commit relevante.
 - necessidade de backup: apenas manifestos consolidados e logs estruturados relevantes para auditoria local.
 - risco operacional: duplicar lotes ou perder reprocessamento se a sessao quebrar sem sinalizacao clara.
 
-## 6. Condicao de saida
+## 6. Por que este runtime foi escolhido?
+
+- restrições determinantes do runtime: automacao orientada a integracoes HTTP, filesystem local e bibliotecas maduras para parsing e testes.
+- runtime escolhido: python
+- alternativa principal considerada: go
+- justificativa operacional: Python reduz o bootstrap e integra diretamente com as bibliotecas exigidas sem impor build adicional.
+
+## 7. Condicao de saida
 
 Este repositório so deveria existir se:
 
@@ -559,6 +566,29 @@ class StarterRegressionTests(unittest.TestCase):
             wrapper_version = run_cmd([str(target_bin / "newproj"), "--version"])
             self.assertEqual(wrapper_version.stdout.strip(), f"newproj {KIT_VERSION}")
 
+    def test_gate_requires_runtime_decision(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-runtime-gate-") as tmp:
+            repo = Path(tmp) / "RuntimeGate"
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--enforce-gate"])
+
+            gate = (repo / "PROJECT_GATE.md").read_text(encoding="utf-8")
+            self.assertIn("## 6. Por que este runtime foi escolhido?", gate)
+            self.assertIn("- runtime escolhido: `python`", gate)
+            (repo / "PROJECT_GATE.md").write_text(
+                gate.replace("- runtime escolhido: `python`", "- runtime escolhido:"),
+                encoding="utf-8",
+            )
+
+            result = run_cmd(
+                [sys.executable, str(repo / "scripts" / "check_project_gate.py")],
+                cwd=repo,
+                expected=1,
+            )
+            self.assertIn("restrições determinantes do runtime", result.stderr)
+            self.assertIn("runtime escolhido", result.stderr)
+            self.assertIn("alternativa principal considerada", result.stderr)
+            self.assertIn("justificativa operacional", result.stderr)
+
     def test_doctor_strict_audit_and_wrapper_flow(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-flow-") as tmp:
             repo = Path(tmp) / "FlowRepo"
@@ -697,6 +727,22 @@ class StarterRegressionTests(unittest.TestCase):
                 requirements = (repo / "requirements.txt").read_text(encoding="utf-8").splitlines()
                 self.assertEqual(len(requirements), len(set(requirements)))
                 self.assertTrue(expected.issubset(requirements), preset)
+
+    def test_textual_cli_uses_top_level_tui_launcher(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="starter-textual-cli-") as tmp:
+            repo = Path(tmp) / "PainelLocal"
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--preset", "textual-cli"])
+
+            manifest = json.loads((repo / "deploy" / "manifest.json").read_text(encoding="utf-8"))
+            readme = (repo / "README.md").read_text(encoding="utf-8")
+            launcher = (repo / "tui" / "__main__.py").read_text(encoding="utf-8")
+
+            self.assertEqual(manifest["process"]["command"], "python -m tui")
+            self.assertIn("python -m tui", readme)
+            self.assertIn("painellocal.interfaces.tui.app import build_app", launcher)
+            self.assertNotIn("python -m painellocal.tui", readme)
+            workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+            self.assertIn("python -m compileall -q painellocal tui scripts tests", workflow)
 
     def test_node_project_includes_ci_baseline(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-node-") as tmp:

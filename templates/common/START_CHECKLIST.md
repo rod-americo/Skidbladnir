@@ -30,6 +30,8 @@ Use este checklist antes do primeiro push de um projeto novo.
 
 ## 3. Configuração e runtime
 
+- runtime escolhido por restrições técnicas e operacionais, não por preferência de linguagem
+- restrições, alternativa principal e justificativa do runtime registradas no `PROJECT_GATE.md`
 - segredos não entram no git
 - existe `settings.example.*` ou equivalente
 - runtime state, bancos locais e sessões estão fora do versionamento
@@ -77,3 +79,4 @@ Se qualquer resposta for "não sei", o projeto ainda está nascendo sem baseline
 - qual arquivo explica a arquitetura?
 - qual arquivo explica a operação?
 - qual arquivo explica contratos?
+- quais restrições determinaram o runtime?

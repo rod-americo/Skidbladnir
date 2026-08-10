@@ -7,6 +7,8 @@
 - separação entre `README` público e templates gerados
 - adoção de `templates/` como fonte de verdade do scaffolder
 - wrapper `newproj` movido para `bin/` dentro do repositório
+- preferência por launchers Python top-level `python -m tui` e `python -m gui` para interfaces dedicadas; o preset `textual-cli` agora gera `tui/__main__.py`
+- escolha autônoma do runtime por restrições técnicas e operacionais, com Python como default e justificativa obrigatória no `PROJECT_GATE.md`
 
 ### Added
 - `ROADMAP.md`

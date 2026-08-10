@@ -44,7 +44,7 @@ Leia o projeto atual antes de alterar arquivos.
 Adapte estrutura, contrato operacional e validações sem reescrita cosmética.
 ```
 
-O agente deve ler os documentos do kit, escolher o runtime, copiar e adaptar os templates, criar ou revisar `deploy/manifest.json` e rodar as validações possíveis.
+O agente deve ler os documentos do kit, escolher autonomamente o runtime a partir das restrições técnicas e operacionais, copiar e adaptar os templates, criar ou revisar `deploy/manifest.json` e rodar as validações possíveis. Preferência pessoal por linguagem não é critério; quando nenhuma restrição determinar outra escolha, o default do kit é Python.
 
 ## Fluxos oficiais
 
@@ -89,6 +89,8 @@ O protocolo cobre:
 - Genérico, quando não houver runtime dominante
 
 A CLI atual materializa Python, Node, TypeScript, Go, Swift e C#. Os templates e o protocolo continuam sendo o caminho preferencial para adaptação contextual por agentes.
+
+Em projetos Python, o domínio continua usando `python -m <slug>` como entrypoint público principal. Quando TUI ou GUI forem aplicações dedicadas, prefira launchers top-level explícitos como `python -m tui` e `python -m gui`, mantendo esses pacotes finos e delegando a implementação ao pacote do projeto.
 
 ## Validação comum
 

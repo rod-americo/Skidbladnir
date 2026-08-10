@@ -16,7 +16,9 @@ Antes de editar:
 
 - leia `README.md`, docs existentes e arquivos de configuração
 - identifique entrypoints reais
+- preserve entrypoints compatíveis; ao criar uma TUI ou GUI Python dedicada, prefira `python -m tui` ou `python -m gui` como launcher público fino em vez de `python -m <slug>.tui`
 - identifique runtime principal e toolchain
+- preserve o runtime existente, salvo incompatibilidade concreta com plataforma, SDK, operação ou requisitos mensuráveis; preferência de linguagem não justifica migração
 - identifique composição ou orquestração central
 - identifique contratos canônicos, schemas, modelos, payloads e integrações
 - identifique runtime state, logs, cache, banco local, secrets e configuração host-local
@@ -51,6 +53,7 @@ O manifesto deve refletir a operação atual, mesmo que ela seja parcial. Se o d
 - não esconder hotspots em linguagem genérica
 - não remover docs úteis já existentes sem absorver o conteúdo
 - não empurrar toda a governança para `AGENTS.md`
+- não trocar linguagem apenas porque outra seria a escolha default em um projeto novo
 
 ## Validação
 

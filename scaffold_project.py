@@ -209,6 +209,7 @@ def runtime_defaults(
         "VALIDACAO_MINIMA": "preencher comando minimo de validacao",
         "RESTART_POLICY": "preencher regra de restart por tipo de mudanca",
         "PRIMARY_RUNTIME": "preencher runtime principal",
+        "RUNTIME_ID": runtime,
         "ENV_OR_SETTING_1": f"{env_prefix}_CONFIG_FILE",
         "ENV_OR_SETTING_2": "LOG_LEVEL",
         "host | local | CI": "host",
@@ -660,7 +661,7 @@ def runtime_defaults(
                 "motivacao_1": "dar ao operador um cockpit local antes que a rotina vire script solto e opaco",
                 "motivacao_2": "separar interface, estado operacional e comandos de diagnostico com intencao clara",
                 "motivacao_3": "evitar acoplamento entre regra de negocio e rendering da interface textual",
-                "entrypoint_1": f"python -m {project_slug} tui",
+                "entrypoint_1": "python -m tui",
                 "entrypoint_2": f"python -m {project_slug} doctor",
                 "API / host / banco / fila / worker / PACS / browser / etc": "terminal do operador, textual, rich e fontes locais de estado",
                 "risco_tecnico_principal": "misturar regra de negocio com rendering da interface e perder operabilidade fora da TUI",
@@ -668,11 +669,12 @@ def runtime_defaults(
                 "passo_2": "separar fonte de dados, comando doctor e app Textual",
                 "passo_3": "registrar fallback operacional sem TUI em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "estado operacional visivel, comandos de triagem e leitura consistente",
-                "RUN_COMMAND": f"python -m {project_slug} tui",
+                "RUN_COMMAND": "python -m tui",
                 "VALIDACAO_MINIMA": f"python -m {project_slug} doctor",
                 "RESTART_POLICY": "mudancas na TUI exigem nova execucao da interface; nao ha processo residente obrigatorio",
-                "PRIMARY_RUN_COMMAND": f"python -m {project_slug} tui",
+                "PRIMARY_RUN_COMMAND": "python -m tui",
                 "SMOKE_TEST_COMMAND": f"python -m {project_slug} doctor",
+                "CI_STATIC_CHECK_COMMAND": f"python -m compileall -q {project_slug} tui scripts tests",
             }
         )
     elif preset == "cli":
@@ -848,7 +850,7 @@ def runtime_process_defaults(runtime: str, project_slug: str, preset: str) -> tu
             process_command = f"python -m {project_slug} doctor"
             healthcheck_command = f"python -m {project_slug} doctor"
         elif preset == "textual_cli":
-            process_command = f"python -m {project_slug} tui"
+            process_command = "python -m tui"
             healthcheck_command = f"python -m {project_slug} doctor"
         elif preset == "worker":
             process_command = f"python -m {project_slug} --interval 30"
@@ -1469,6 +1471,21 @@ def preset_python_files(project_name: str, project_slug: str, preset: str) -> di
 
     if preset == "textual_cli":
         return {
+            "tui/__init__.py": '"""Launcher publico da TUI."""\n',
+            "tui/__main__.py": textwrap.dedent(
+                f"""
+                from {project_slug}.interfaces.tui.app import build_app
+
+
+                def main() -> int:
+                    build_app().run()
+                    return 0
+
+
+                if __name__ == "__main__":
+                    raise SystemExit(main())
+                """
+            ),
             f"{package_dir}/application/commands.py": textwrap.dedent(
                 """
                 def doctor() -> str:
@@ -2988,7 +3005,7 @@ def parse_args() -> argparse.Namespace:
         "--runtime",
         choices=("python", "node", "ts", "go", "swift", "csharp", "generic"),
         default="python",
-        help="runtime base do scaffolding (default: python)",
+        help="runtime escolhido pelas restricoes do projeto (default sem fator decisivo: python)",
     )
     parser.add_argument(
         "--preset",

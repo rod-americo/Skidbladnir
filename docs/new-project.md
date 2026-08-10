@@ -19,12 +19,28 @@ Criar um repositório novo com identidade, fronteira, runtime, contratos, opera�
 Antes de criar arquivos, determine:
 
 - escopo real do projeto
-- runtime principal: `python`, `node`, `ts`, `go`, `swift`, `csharp` ou `generic`
+- restrições que determinam runtime: plataforma nativa, SDK ou biblioteca dominante, ambiente de deploy, necessidade de binário autônomo, interface, interoperabilidade e requisitos mensuráveis de desempenho, memória ou concorrência
+- runtime principal escolhido autonomamente entre `python`, `node`, `ts`, `go`, `swift`, `csharp` ou `generic`
 - tipo principal: `base`, `cli`, `worker`, `http-service` ou `pipeline`
 - comando principal esperado
+- interfaces dedicadas e seus launchers públicos; em Python, prefira `python -m tui` e `python -m gui` a módulos públicos aninhados como `python -m <slug>.tui`
 - comando de validação mínima
 - runtime state, logs e configuração host-local
 - se haverá processo residente, serviço HTTP, job batch ou biblioteca sem deploy
+
+## Escolha autônoma do runtime
+
+Não pergunte ao usuário qual linguagem ele prefere quando as restrições do sistema forem suficientes para decidir. Pergunte apenas pelo contexto ausente que possa alterar materialmente arquitetura ou operação, como plataforma de execução, SDK obrigatório, formato do artefato, integração com ecossistema existente e metas mensuráveis de desempenho.
+
+Use esta ordem de decisão:
+
+1. adote o runtime imposto por plataforma, SDK, integração ou ambiente operacional
+2. quando mais de um runtime atender igualmente, escolha o que reduzir dependências, build, distribuição e custo operacional
+3. quando não houver fator decisivo, use Python
+4. registre em `PROJECT_GATE.md` as restrições determinantes, o runtime escolhido, a principal alternativa considerada e a justificativa operacional
+5. registre em `docs/DECISIONS.md` quando a escolha tiver tradeoff relevante ou contrariar o default
+
+Não escolha linguagem por familiaridade presumida do usuário ou do agente. A superfície humana de revisão é comportamento, contratos, testes, operação, riscos e resultados; a implementação continua sujeita às validações do runtime escolhido.
 
 ## Entregáveis obrigatórios
 
@@ -67,4 +83,4 @@ Depois rode a validação do runtime escolhido, por exemplo `python -m pytest -q
 
 ## Critério de pronto
 
-O projeto está pronto para a primeira rodada quando os documentos descrevem o escopo real, o manifesto descreve como operar ou por que não há deploy, os scripts de validação passam ou têm bloqueio explicado, e o runtime escolhido possui ao menos um smoke test honesto.
+O projeto está pronto para a primeira rodada quando os documentos descrevem o escopo real, o gate justifica a escolha do runtime, o manifesto descreve como operar ou por que não há deploy, os scripts de validação passam ou têm bloqueio explicado, e o runtime escolhido possui ao menos um smoke test honesto.

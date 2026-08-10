@@ -27,6 +27,8 @@ Restrições:
 - Não invente readiness operacional.
 - Não faça refactor massivo de diretórios só para parecer limpo.
 - Preserve raiz limpa; se houver espaço para organizar melhor a estrutura, prefira o módulo ou app principal em `/<slug>/` em vez de `src/<slug>`, salvo quando `src/` já for requisito consciente do repositório.
+- Preserve entrypoints existentes; quando criar uma TUI ou GUI Python dedicada, prefira um launcher top-level fino executado com `python -m tui` ou `python -m gui` a um novo comando público como `python -m <slug>.tui` ou `python -m <slug>.gui`.
+- Preserve o runtime existente, salvo incompatibilidade concreta com plataforma, SDK, operação ou requisito mensurável; não migre linguagem por preferência do agente ou do usuário.
 - Não crie contratos, testes ou docs que contradigam o comportamento real do código.
 - Documentação humana em pt-BR.
 - Identificadores técnicos em en-US.

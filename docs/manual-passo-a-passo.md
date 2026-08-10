@@ -38,6 +38,8 @@ Se o binário já estiver em `~/Scripts/bin` e esse diretório já estiver no `P
 
 ## 3. Escolher o preset certo
 
+Antes do preset, deixe o agente escolher o runtime pelas restrições reais de plataforma, SDK, deploy, distribuição, interoperabilidade e desempenho mensurável. Não pergunte por preferência de linguagem; sem fator decisivo, use Python. Registre a justificativa no `PROJECT_GATE.md`.
+
 Regra prática:
 
 - `fastapi-service`: API HTTP pequena, repo-owned
@@ -95,6 +97,7 @@ Objetivo do gate:
 - provar por que não deveria ser só um módulo
 - delimitar o que não pertence aqui
 - explicitar custo operacional
+- justificar o runtime pelas restrições do sistema, pela alternativa principal considerada e pelo custo operacional
 
 Valide:
 
@@ -237,6 +240,8 @@ Exemplos:
 
 - worker: `python -m <slug> --once`
 - cli: `python -m <slug> doctor`
+- TUI dedicada: `python -m tui`
+- GUI dedicada: `python -m gui`
 - fastapi-service: `python -m pytest -q`
 - dicom-pipeline: `python -m <slug> --sample`
 

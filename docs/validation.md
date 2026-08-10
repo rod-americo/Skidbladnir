@@ -36,4 +36,5 @@ Se a toolchain não existir localmente, não invente validação. Registre o com
 - scripts comuns executados ou bloqueio explicado
 - teste do runtime executado ou bloqueio explicado
 - manifesto de deploy coerente com operação real
+- `PROJECT_GATE.md` registra restrições, runtime escolhido, alternativa considerada e justificativa operacional
 - docs atualizados junto com qualquer mudança de comando, contrato, restart, runtime state, log, backup ou rollback

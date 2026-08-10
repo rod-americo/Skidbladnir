@@ -50,3 +50,4 @@ Cada decisão relevante deve incluir:
 - introduzir fila, worker ou deploy remoto
 - mover responsabilidade entre repositórios
 - formalizar ou quebrar um contrato externo
+- escolher runtime fora do default ou aceitar tradeoff relevante entre linguagens

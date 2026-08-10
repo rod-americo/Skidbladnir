@@ -19,7 +19,7 @@ O fluxo principal é por agente lendo o protocolo em `~/Skidbladnir`, não por e
 
 1. Para projeto novo, use `docs/new-project.md` e `prompts/novo-projeto.md`.
 2. Para projeto existente, use `docs/existing-project.md` e `prompts/projeto-existente.md`.
-3. Escolha runtime e preset com `docs/runtimes.md`.
+3. Deixe o agente escolher runtime e preset pelas restrições descritas em `docs/runtimes.md`; sem fator decisivo, use Python.
 4. Crie ou revise `deploy/manifest.json` usando `docs/deploy-manifest.md`.
 5. Rode a validação comum descrita em `docs/validation.md`.
 
@@ -33,7 +33,7 @@ Padrão principal para projetos Python e Node gerados pelo scaffolder auxiliar:
 
 - raiz limpa para `README`, `docs`, `config`, `tests`, `scripts` e `runtime`
 - pacote ou app principal direto em `/<slug>/`
-- entrypoint Python sempre por `python -m <slug>`; comandos específicos entram como argumentos ou subcomandos, por exemplo `python -m <slug> --help`, `python -m <slug> tui` e `python -m <slug> gui`
+- entrypoint do domínio Python por `python -m <slug>`; TUI e GUI dedicadas usam preferencialmente launchers top-level finos, `python -m tui` e `python -m gui`, que delegam para `<slug>/interfaces/`
 - entrypoint Node por `node <slug>/main.mjs` ou `npm start`
 
 Exemplo:
@@ -96,7 +96,7 @@ Comandos iniciais esperados:
   - smoke test: `python -m <slug> doctor`
 - `textual-cli`
   - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug> tui`
+  - run: `python -m tui`
   - smoke test: `python -m <slug> doctor`
 - `worker`
   - setup: `python -m pip install -r requirements.txt`
