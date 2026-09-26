@@ -1,7 +1,7 @@
 [package]
 name = "{{DIST_NAME}}"
 version = "0.1.0"
-edition = "2024"
+edition = "{{RUST_EDITION}}"
 rust-version = "{{RUST_VERSION}}"
 publish = false
 

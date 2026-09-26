@@ -31,11 +31,12 @@ def check_toolchain(runtime: str, env: dict[str, str]) -> None:
     if not shutil.which(command[0], path=env["PATH"]):
         raise RuntimeError(f"toolchain obrigatória ausente: {command[0]}; nada foi validado")
     output = run(command, Path.cwd(), env)
-    expected = RUNTIMES[runtime]["version"].split("+")[0]
+    expected = RUNTIMES[runtime]["version"]
     if runtime == "swift":
-        valid = re.search(r"Swift version 6\.4(?:\.0)?(?: |\n)", output)
+        pattern = re.escape(expected[:-2]) + r"(?:\.0)?" if expected.endswith(".0") else re.escape(expected)
+        valid = re.search(r"Swift version " + pattern + r"(?: |\n)", output)
     else:
-        valid = expected in output
+        valid = re.search(r"(?<!\d)" + re.escape(expected) + r"(?![\d.-])", output)
     if not valid:
         raise RuntimeError(f"{runtime}: esperado {expected}, recebido {output.strip()}")
 

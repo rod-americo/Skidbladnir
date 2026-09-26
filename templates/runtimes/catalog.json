@@ -82,7 +82,8 @@
       "run": "go run ./cmd/{slug}",
       "test": "go vet ./... && go test -race ./...",
       "build": "go build -o bin/{slug} ./cmd/{slug}",
-      "smoke": "go run ./cmd/{slug}"
+      "smoke": "go run ./cmd/{slug}",
+      "language_version": "1.27.0"
     },
     "swift": {
       "name": "Swift",
@@ -111,7 +112,8 @@
       "run": "dotnet run --no-restore --project src/{module}/{module}.csproj",
       "test": "dotnet test {module}.sln --no-restore",
       "build": "dotnet build {module}.sln --no-restore",
-      "smoke": "dotnet run --no-restore --project src/{module}/{module}.csproj"
+      "smoke": "dotnet run --no-restore --project src/{module}/{module}.csproj",
+      "target_framework": "net10.0"
     },
     "java": {
       "name": "Java",
@@ -127,7 +129,9 @@
       "run": "java -jar target/{dist}-0.1.0.jar",
       "test": "./mvnw -B verify",
       "build": "./mvnw -B package",
-      "smoke": "java -jar target/{dist}-0.1.0.jar"
+      "smoke": "java -jar target/{dist}-0.1.0.jar",
+      "maven_sha256": "5af3b743dd8b876b5c45da33b676251e5f1687712644abb4ee519ca56e1d89ce",
+      "wrapper_version": "3.3.4"
     },
     "rust": {
       "name": "Rust",

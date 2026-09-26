@@ -660,6 +660,7 @@ def runtime_defaults(
         "JAVA_VERSION": RUNTIMES["java"]["version"],
         "RUST_VERSION": RUNTIMES["rust"]["version"],
         "SWIFT_VERSION": RUNTIMES["swift"]["version"],
+        "SWIFT_VERSION_PATTERN": re.escape(RUNTIMES["swift"]["version"][:-2]) + r"(\.0)?" if RUNTIMES["swift"]["version"].endswith(".0") else re.escape(RUNTIMES["swift"]["version"]),
         "SWIFT_CONTAINER": RUNTIMES["swift"]["container"],
         "DOTNET_RESTORE_COMMAND": runtime_commands("csharp", project_slug)["setup"],
         "CI_SETUP_PYTHON": "      - name: Set up validation Python\n        uses: " + CATALOG["actions"]["python"] + "\n        with:\n          python-version: \"" + CATALOG["validation_python"] + "\"",
@@ -1027,7 +1028,7 @@ def go_generated_files(project_name: str, project_slug: str, preset: str) -> dic
             f"""
             module {module_name}
 
-            go 1.27.0
+            go {RUNTIMES["go"]["language_version"]}
 
             toolchain go{RUNTIMES["go"]["version"]}
             """
@@ -1285,7 +1286,7 @@ def swift_generated_files(project_name: str, project_slug: str, preset: str) -> 
     return {
         "Package.swift": textwrap.dedent(
             f"""
-            // swift-tools-version: 6.4
+            // swift-tools-version: {".".join(RUNTIMES["swift"]["version"].split(".")[:2])}
             import PackageDescription
 
             let package = Package(
@@ -1392,11 +1393,11 @@ def csharp_generated_files(project_name: str, project_slug: str, preset: str) ->
             ]
         ),
         f"src/{project}/{project}.csproj": textwrap.dedent(
-            """
+            f"""
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <OutputType>Exe</OutputType>
-                <TargetFramework>net10.0</TargetFramework>
+                <TargetFramework>{RUNTIMES["csharp"]["target_framework"]}</TargetFramework>
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
               </PropertyGroup>
@@ -1433,7 +1434,7 @@ def csharp_generated_files(project_name: str, project_slug: str, preset: str) ->
             f"""
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
-                <TargetFramework>net10.0</TargetFramework>
+                <TargetFramework>{RUNTIMES["csharp"]["target_framework"]}</TargetFramework>
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
                 <IsPackable>false</IsPackable>
@@ -1502,6 +1503,13 @@ def runtime_template_files(runtime: str, project_name: str, project_slug: str, d
         "JAVA_PACKAGE_PATH": "local/project_" + project_slug,
         "RUST_CRATE": "project_" + project_slug,
         "RUST_VERSION": RUNTIMES["rust"]["version"],
+        "RUST_EDITION": RUNTIMES["rust"]["edition"],
+        "DOTNET_VERSION": RUNTIMES["csharp"]["version"],
+        "NODE_VERSION": RUNTIMES["node"]["version"],
+        "JAVA_RELEASE": RUNTIMES["java"]["version"].split(".")[0],
+        "MAVEN_VERSION": RUNTIMES["java"]["maven_version"],
+        "MAVEN_SHA256": RUNTIMES["java"]["maven_sha256"],
+        "WRAPPER_VERSION": RUNTIMES["java"]["wrapper_version"],
     }
     return {
         render_template(str(path.relative_to(source)), values, runtime): render_template(path.read_text(encoding="utf-8"), values, runtime)

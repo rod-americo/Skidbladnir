@@ -17,7 +17,7 @@ jobs:
           persist-credentials: false
 {{CI_SETUP_PYTHON}}
       - name: Verify provisioned Swift version
-        run: swift --version | grep -E 'Swift version 6\.4(\.0)? '
+        run: swift --version | grep -E 'Swift version {{SWIFT_VERSION_PATTERN}} '
       - run: swift package resolve
 
 {{CI_GATE_STEP}}

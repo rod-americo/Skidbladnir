@@ -105,6 +105,18 @@ class RuntimeContractsTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'toolchain obrigatória ausente'):
                 run_runtime_checks.check_toolchain('java', {'PATH': ''})
 
+    def test_toolchain_version_check_uses_catalog_exactly(self) -> None:
+        import run_runtime_checks
+        with patch('run_runtime_checks.shutil.which', return_value='/tool'):
+            with patch('run_runtime_checks.run', return_value='Apple Swift version 6.4 (build)'):
+                run_runtime_checks.check_toolchain('swift', {'PATH': ''})
+                with patch.dict(RUNTIMES['swift'], version='6.5.0'):
+                    with self.assertRaisesRegex(RuntimeError, 'esperado 6.5.0'):
+                        run_runtime_checks.check_toolchain('swift', {'PATH': ''})
+            with patch('run_runtime_checks.run', return_value='rustc 1.98.1-nightly'):
+                with self.assertRaisesRegex(RuntimeError, 'esperado 1.98.1'):
+                    run_runtime_checks.check_toolchain('rust', {'PATH': ''})
+
 
 if __name__ == '__main__':
     unittest.main()

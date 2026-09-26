@@ -5,7 +5,7 @@
   <artifactId>{{DIST_NAME}}</artifactId>
   <version>0.1.0</version>
   <properties>
-    <maven.compiler.release>25</maven.compiler.release>
+    <maven.compiler.release>{{JAVA_RELEASE}}</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputTimestamp>2026-09-26T00:00:00Z</project.build.outputTimestamp>
   </properties>
