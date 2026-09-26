@@ -18,6 +18,8 @@ def artifacts() -> dict[Path, str]:
         if runtime == 'generic':
             continue
         lines += [f"### {profile['name']} (`{runtime}`)", "", "Bootstrap:", "", "```bash", profile['setup'], "```", "", "Checks de desenvolvimento:", "", "```bash", profile['test'], profile['build'], "```", "", "Smoke local:", "", "```bash", profile['smoke'], "```", ""]
+        if runtime == 'java':
+            lines += [f"A CI solicita `{profile['ci_version']}` ao `setup-java`, notação SemVer publicada pela [API do Adoptium](https://api.adoptium.net/v3/assets/feature_releases/25/ga?architecture=x64&image_type=jdk&os=linux&page_size=10&project=jdk) para Temurin `{profile['version']}`. O manifesto e a verificação da toolchain preservam a versão Java original; o seletor exato da CI fica em `ci_version` no catálogo.", ""]
     workflow = f'''# Gerado por sync_runtime_catalog.py; não editar versões aqui.
 name: CI
 
@@ -63,7 +65,8 @@ jobs:
 '''
         if runtime in ('node', 'ts', 'go', 'csharp', 'java'):
             action = {'ts': 'node', 'csharp': 'dotnet'}.get(runtime, runtime)
-            workflow += f"      - uses: {actions[action]}\n        with:\n          {action}-version: \"{profile['version']}\"\n"
+            setup_version = profile.get('ci_version', profile['version'])
+            workflow += f"      - uses: {actions[action]}\n        with:\n          {action}-version: \"{setup_version}\"\n"
             if runtime == 'java':
                 workflow += '          distribution: temurin\n'
             if runtime == 'go':

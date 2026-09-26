@@ -20,6 +20,7 @@
 - HTTP exige URL válida; validadores não executam comandos operacionais. Manifestos versão 1 e IDs anteriores continuam aceitos.
 - baselines sem implantação usam `deploy.target: none`; testes, smoke e probes ficam separados; estado/logs refletem o código.
 - código dos presets Python passa a viver em templates, com tipos e lint verificados; arquitetura em quatro camadas deixa de ser obrigatória.
+- CI do kit e dos projetos Java usa o seletor SemVer do Adoptium para provisionar a release exata, preservando a versão Java original no manifesto e nos checks.
 
 ### Validation
 

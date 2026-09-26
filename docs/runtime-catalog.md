@@ -171,6 +171,8 @@ Smoke local:
 java -jar target/{dist}-0.1.0.jar
 ```
 
+A CI solicita `25.0.4+101.0.LTS` ao `setup-java`, notação SemVer publicada pela [API do Adoptium](https://api.adoptium.net/v3/assets/feature_releases/25/ga?architecture=x64&image_type=jdk&os=linux&page_size=10&project=jdk) para Temurin `25.0.4.1+1`. O manifesto e a verificação da toolchain preservam a versão Java original; o seletor exato da CI fica em `ci_version` no catálogo.
+
 ### Rust (`rust`)
 
 Bootstrap:

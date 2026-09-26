@@ -82,6 +82,31 @@ class RuntimeContractsTests(unittest.TestCase):
                     self.assertEqual(manifest["deploy"]["target"], "none")
                     self.assertIn("probe seguro", manifest["deploy"]["reason"])
 
+    def test_java_ci_uses_action_notation_for_the_pinned_release(self) -> None:
+        from sync_runtime_catalog import artifacts
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            render_and_write_templates(repo, "java", "base", "Contract", "contract", "", False, False, False)
+            workflows = [
+                (repo / ".github/workflows/ci.yml").read_text(),
+                artifacts()[STARTER_ROOT / ".github/workflows/ci.yml"],
+            ]
+            for workflow in workflows:
+                selector = re.search(r'java-version: "([^"]+)"', workflow).group(1)
+                self.assertEqual(selector, RUNTIMES['java']['ci_version'])
+                self.assertRegex(selector, r"^\d+\.\d+\.\d+\+[0-9A-Za-z.-]+$")
+            manifest = json.loads((repo / "deploy/manifest.json").read_text())
+            self.assertEqual(manifest['runtime']['version'], RUNTIMES['java']['version'])
+
+        import run_runtime_checks
+        with patch('run_runtime_checks.shutil.which', return_value='/tool'):
+            with patch('run_runtime_checks.run', return_value='Temurin-' + RUNTIMES['java']['version']):
+                run_runtime_checks.check_toolchain('java', {'PATH': ''})
+            with patch('run_runtime_checks.run', return_value='Temurin-' + RUNTIMES['java']['ci_version']):
+                with self.assertRaisesRegex(RuntimeError, 'esperado'):
+                    run_runtime_checks.check_toolchain('java', {'PATH': ''})
+
     def test_legacy_and_additional_manifest_runtime_ids(self) -> None:
         validator = runpy.run_path(str(STARTER_ROOT / "templates/scripts/check_deploy_manifest.py"))
         schema = json.loads((STARTER_ROOT / "schema/deploy-manifest.schema.json").read_text())

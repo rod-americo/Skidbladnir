@@ -18,7 +18,7 @@ jobs:
       - uses: {{ACTION_JAVA}}
         with:
           distribution: temurin
-          java-version: "{{JAVA_VERSION}}"
+          java-version: "{{JAVA_CI_VERSION}}"
 
 {{CI_GATE_STEP}}
 {{CI_DEPLOY_STEP}}

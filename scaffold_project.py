@@ -657,7 +657,7 @@ def runtime_defaults(
         "NODE_VERSION": RUNTIMES["node"]["version"],
         "GO_VERSION": RUNTIMES["go"]["version"],
         "DOTNET_VERSION": RUNTIMES["csharp"]["version"],
-        "JAVA_VERSION": RUNTIMES["java"]["version"],
+        "JAVA_CI_VERSION": RUNTIMES["java"]["ci_version"],
         "RUST_VERSION": RUNTIMES["rust"]["version"],
         "SWIFT_VERSION": RUNTIMES["swift"]["version"],
         "SWIFT_VERSION_PATTERN": re.escape(RUNTIMES["swift"]["version"][:-2]) + r"(\.0)?" if RUNTIMES["swift"]["version"].endswith(".0") else re.escape(RUNTIMES["swift"]["version"]),
