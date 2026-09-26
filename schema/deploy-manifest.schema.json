@@ -22,6 +22,7 @@
   ],
   "properties": {
     "version": {
+      "type": "integer",
       "const": 1
     },
     "project": {

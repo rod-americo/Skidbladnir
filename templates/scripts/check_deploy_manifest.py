@@ -8,6 +8,7 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -272,19 +273,37 @@ def require_text(payload: Mapping[str, Any], dotted_path: str, errors: list[str]
 
 def validate_operational_rules(payload: Mapping[str, Any]) -> list[str]:
     errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["manifesto: deve ser um objeto JSON"]
 
     for path, value in walk_strings(payload, "$"):
         normalized = value.strip().lower()
-        if "preencher" in normalized or normalized.startswith("todo"):
+        if "{{" in normalized or "preencher" in normalized or normalized.startswith("todo"):
             errors.append(f"{path}: valor ainda esta como placeholder")
+
+    for field in ("project.name", "project.slug", "runtime.id", "runtime.version", "restart.policy", "backup.policy", "rollback.strategy"):
+        require_text(payload, field, errors)
+
+    healthcheck = payload.get("healthcheck")
+    has_command = isinstance(healthcheck, dict) and isinstance(healthcheck.get("command"), str) and bool(healthcheck["command"].strip())
+    has_http = False
+    if isinstance(healthcheck, dict) and "http" in healthcheck:
+        http = healthcheck["http"]
+        url = http.get("url") if isinstance(http, dict) else None
+        try:
+            parsed = urlsplit(url) if isinstance(url, str) else None
+            has_http = bool(parsed and parsed.scheme in ("http", "https") and parsed.hostname and not parsed.username and not parsed.password and not any(char.isspace() for char in url))
+            if parsed:
+                _ = parsed.port
+        except ValueError:
+            has_http = False
+        if not has_http:
+            errors.append("healthcheck.http.url: exige URL HTTP(S) valida, sem credenciais")
 
     deploy_target = require_text(payload, "deploy.target", errors)
     require_text(payload, "deploy.reason", errors)
     if deploy_target != "none":
         require_text(payload, "process.command", errors)
-        healthcheck = payload.get("healthcheck")
-        has_command = isinstance(healthcheck, dict) and isinstance(healthcheck.get("command"), str) and bool(healthcheck["command"].strip())
-        has_http = isinstance(healthcheck, dict) and isinstance(healthcheck.get("http"), dict)
         if not has_command and not has_http:
             errors.append("healthcheck: precisa declarar command ou http quando deploy.target nao e none")
 

@@ -144,10 +144,15 @@ def extract_readme_entrypoints(text: str) -> list[str]:
 
 
 def extract_agents_validation(text: str) -> str | None:
-    match = re.search(r"comando de validacao minima:\s*`([^`]+)`", text)
-    if not match:
-        return None
-    return match.group(1).strip()
+    return extract_field(text, "comando de validacao minima")
+
+
+def extract_field(text: str, label: str) -> str | None:
+    for line in text.splitlines():
+        key, separator, value = line.strip().removeprefix("- ").partition(":")
+        if separator and normalize_heading(key) == normalize_heading(label):
+            return value.strip().strip("`") or None
+    return None
 
 
 def normalize_token(token: str) -> str:
@@ -489,8 +494,21 @@ def main() -> int:
     ops_validation = normalize_block(
         extract_first_code_block(extract_section(operations_text, "## 5. Validacao minima"))
     )
+    if not agents_validation:
+        add_error(errors, "AGENTS.md nao declara comando de validacao minima")
     if agents_validation and ops_validation and normalize_block(agents_validation) != ops_validation:
         add_error(errors, "AGENTS.md e docs/OPERATIONS.md divergem na validacao minima")
+
+    try:
+        manifest = json.loads(read_text(DEPLOY_MANIFEST_PATH))
+    except json.JSONDecodeError:
+        manifest = {}
+    runtime = manifest.get("runtime", {}) if isinstance(manifest, dict) else {}
+    declared_runtime = runtime.get("id") if isinstance(runtime, dict) else None
+    gate_runtime = extract_field(gate_text, "runtime escolhido")
+    aliases = {"js": "node"}
+    if gate_runtime and declared_runtime and aliases.get(gate_runtime, gate_runtime) != aliases.get(declared_runtime, declared_runtime):
+        add_error(errors, "PROJECT_GATE.md e deploy/manifest.json divergem no runtime escolhido")
 
     if args.deploy_strict:
         try:

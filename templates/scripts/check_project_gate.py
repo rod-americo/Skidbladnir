@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 
@@ -68,6 +69,11 @@ def normalize_text(value: str) -> str:
     return " ".join(value.strip().lower().split())
 
 
+def normalize_label(value: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", value)
+    return normalize_text("".join(char for char in decomposed if not unicodedata.combining(char)))
+
+
 def word_count(value: str) -> int:
     return len(re.findall(r"[\w/-]+", value, flags=re.UNICODE))
 
@@ -77,7 +83,7 @@ def collect_fields(text: str) -> dict[str, str]:
     current_required = False
 
     for raw_line in text.splitlines():
-        line = raw_line.rstrip()
+        line = raw_line.strip()
 
         if line.startswith("## "):
             current_required = line.startswith(REQUIRED_SECTION_PREFIXES)
@@ -91,7 +97,7 @@ def collect_fields(text: str) -> dict[str, str]:
             continue
 
         label, value = content.split(":", 1)
-        fields[label.strip()] = value.strip()
+        fields[normalize_label(label)] = value.strip()
 
     return fields
 
@@ -102,7 +108,7 @@ def classify_fields(fields: dict[str, str]) -> tuple[list[str], list[tuple[str, 
     short: list[tuple[str, str]] = []
 
     for label, rules in FIELD_RULES.items():
-        value = fields.get(label, "").strip()
+        value = fields.get(normalize_label(label), "").strip()
         normalized = normalize_text(value)
 
         if not value:
@@ -142,7 +148,7 @@ def main() -> int:
     pending, weak, short = classify_fields(fields)
 
     if pending or weak or short:
-        print("PROJECT_GATE.md falhou na validacao semantica.", file=sys.stderr)
+        print("PROJECT_GATE.md falhou na validacao estrutural.", file=sys.stderr)
 
     if pending:
         print("", file=sys.stderr)

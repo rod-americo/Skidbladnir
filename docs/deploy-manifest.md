@@ -137,3 +137,5 @@ python3 scripts/project_doctor.py --deploy-strict
 ```
 
 O primeiro comando valida o schema mínimo. O segundo valida coerência entre manifesto e documentação operacional quando o projeto já possui doctor.
+
+Quando usar `healthcheck.http`, declare uma URL em `healthcheck.http.url`, com esquema `http` ou `https`, host e sem credenciais embutidas. Um objeto HTTP vazio é inválido. O validador é estático: ele não acessa a URL nem executa comandos do manifesto.

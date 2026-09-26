@@ -15,6 +15,8 @@ python3 scripts/project_doctor.py --audit-config
 
 Use `--strict` quando os docs principais já estiverem preenchidos. Use `--deploy-strict` quando `docs/OPERATIONS.md` e `deploy/manifest.json` precisarem estar coerentes. Use `--audit-config` quando houver aliases ou warnings ignorados em `config/doctor.json`.
 
+O gate reconhece rótulos com ou sem acentos e normaliza espaços; o doctor preserva o texto dos comandos e confere o runtime escolhido contra o manifesto. Esses checks verificam estrutura e consistência declarada, não comprovam correção do software nem qualidade semântica das justificativas.
+
 ## Validação por runtime
 
 | Runtime | Sintaxe/build | Teste |
