@@ -63,6 +63,11 @@ FIELD_RULES = {
     "alternativa principal considerada": {"min_words": 1, "min_chars": 2},
     "justificativa operacional": {"min_words": 5, "min_chars": 24},
 }
+V2_FIELD_RULES = {
+    "riscos e mitigacoes do runtime": {"min_words": 5, "min_chars": 24},
+    "evidencias para a escolha": {"min_words": 5, "min_chars": 24},
+    "criterios mensuraveis de escala": {"min_words": 5, "min_chars": 24},
+}
 
 
 def normalize_text(value: str) -> str:
@@ -102,12 +107,13 @@ def collect_fields(text: str) -> dict[str, str]:
     return fields
 
 
-def classify_fields(fields: dict[str, str]) -> tuple[list[str], list[tuple[str, str]], list[tuple[str, str]]]:
+def classify_fields(fields: dict[str, str], version: int = 1) -> tuple[list[str], list[tuple[str, str]], list[tuple[str, str]]]:
     pending: list[str] = []
     weak: list[tuple[str, str]] = []
     short: list[tuple[str, str]] = []
 
-    for label, rules in FIELD_RULES.items():
+    requirements = FIELD_RULES | (V2_FIELD_RULES if version >= 2 else {})
+    for label, rules in requirements.items():
         value = fields.get(normalize_label(label), "").strip()
         normalized = normalize_text(value)
 
@@ -145,7 +151,8 @@ def main() -> int:
 
     text = PROJECT_GATE.read_text(encoding="utf-8")
     fields = collect_fields(text)
-    pending, weak, short = classify_fields(fields)
+    version = 2 if "<!-- skidbladnir:gate:2 -->" in text else 1
+    pending, weak, short = classify_fields(fields, version)
 
     if pending or weak or short:
         print("PROJECT_GATE.md falhou na validacao estrutural.", file=sys.stderr)

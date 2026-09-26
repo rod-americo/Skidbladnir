@@ -47,7 +47,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "enum": ["python", "node", "js", "ts", "go", "swift", "csharp", "generic"]
+          "pattern": "^[a-z][a-z0-9_-]*$"
         },
         "version": {
           "type": "string",
@@ -97,7 +97,14 @@
           "minimum": 1
         },
         "http": {
-          "type": "object"
+          "type": "object",
+          "required": ["url"],
+          "properties": {
+            "url": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     },

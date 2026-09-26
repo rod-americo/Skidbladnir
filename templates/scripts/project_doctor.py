@@ -507,7 +507,7 @@ def main() -> int:
     declared_runtime = runtime.get("id") if isinstance(runtime, dict) else None
     gate_runtime = extract_field(gate_text, "runtime escolhido")
     aliases = {"js": "node"}
-    if gate_runtime and declared_runtime and aliases.get(gate_runtime, gate_runtime) != aliases.get(declared_runtime, declared_runtime):
+    if gate_runtime and isinstance(declared_runtime, str) and aliases.get(gate_runtime, gate_runtime) != aliases.get(declared_runtime, declared_runtime):
         add_error(errors, "PROJECT_GATE.md e deploy/manifest.json divergem no runtime escolhido")
 
     if args.deploy_strict:
@@ -531,8 +531,17 @@ def main() -> int:
             )
             if process_command and ops_run and process_command != ops_run:
                 add_error(errors, "deploy/manifest.json e docs/OPERATIONS.md divergem no comando principal")
-            if healthcheck_command and ops_validation and healthcheck_command != ops_validation:
-                add_error(errors, "deploy/manifest.json e docs/OPERATIONS.md divergem na validacao minima")
+            health_section = extract_section(operations_text, "### Saude operacional")
+            # Documentos 1.x colocavam o probe na seção de validação mínima.
+            ops_health = normalize_block(extract_first_code_block(health_section)) if health_section else ops_validation
+            if healthcheck_command and (health_section or ops_health) and healthcheck_command != ops_health:
+                add_error(errors, "deploy/manifest.json e docs/OPERATIONS.md divergem no healthcheck operacional")
+            http = healthcheck.get("http", {}) if isinstance(healthcheck, dict) else {}
+            url = http.get("url") if isinstance(http, dict) else None
+            if isinstance(url, str) and health_section:
+                documented_urls = [item.rstrip(".,;)") for item in re.findall(r"https?://[^\s`<>]+", health_section)]
+                if url not in documented_urls:
+                    add_error(errors, "deploy/manifest.json e docs/OPERATIONS.md divergem na URL do healthcheck")
 
     negative_scope_readme = " ".join(
         extract_bullets(extract_section(readme_text, "## O que este repositorio NAO e"))

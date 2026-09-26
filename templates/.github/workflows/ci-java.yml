@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: {{ACTION_CHECKOUT}}
+        with:
+          persist-credentials: false
+{{CI_SETUP_PYTHON}}
+      - uses: {{ACTION_JAVA}}
+        with:
+          distribution: temurin
+          java-version: "{{JAVA_VERSION}}"
+
+{{CI_GATE_STEP}}
+{{CI_DEPLOY_STEP}}
+      - name: Development checks
+        run: {{CI_VALIDATE_COMMAND}}
+      - name: Build
+        run: {{CI_STATIC_CHECK_COMMAND}}

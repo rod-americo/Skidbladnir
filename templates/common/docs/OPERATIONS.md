@@ -38,11 +38,23 @@ Este documento deve permitir executar, diagnosticar, reiniciar e recuperar o sis
 
 ## 5. Validação mínima
 
-Depois de subir:
+Testes de desenvolvimento (não são probes de saúde):
+
+```bash
+{{TEST_COMMAND}}
+```
+
+### Smoke local
+
+Verifica uma execução curta, fora de produção. Não monitora um processo residente.
 
 ```bash
 {{SMOKE_TEST_COMMAND}}
 ```
+
+### Saúde operacional
+
+{{HEALTHCHECK_DESCRIPTION}}. A validação estática do manifesto não executa o comando nem consulta a URL. `deploy.target: none` indica implantação ainda não configurada.
 
 Validar o manifesto operacional:
 
@@ -72,9 +84,9 @@ Conferir:
 
 Ao mudar:
 
-- `domain/` ou `application/`: `{{restart_impact}}`
-- `infrastructure/`: `{{restart_impact}}`
-- `interfaces/`: `{{restart_impact}}`
+- núcleo e regras: `{{restart_impact}}`
+- IO e adapters: `{{restart_impact}}`
+- entrypoints e interfaces: `{{restart_impact}}`
 - `config/`: `{{restart_impact}}`
 - `docs/` apenas: `{{restart_impact}}`
 

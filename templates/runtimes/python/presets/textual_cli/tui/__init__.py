@@ -1,0 +1,1 @@
+"""Launcher publico da TUI."""

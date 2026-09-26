@@ -1,0 +1,5 @@
+# Dependências diretas validadas nesta release; regenere o lock após revisão.
+pydicom==3.0.2
+pytest==9.1.1
+ruff==0.16.9
+mypy==2.3.1

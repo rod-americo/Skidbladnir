@@ -286,6 +286,8 @@ def validate_operational_rules(payload: Mapping[str, Any]) -> list[str]:
 
     healthcheck = payload.get("healthcheck")
     has_command = isinstance(healthcheck, dict) and isinstance(healthcheck.get("command"), str) and bool(healthcheck["command"].strip())
+    if isinstance(healthcheck, dict) and "command" in healthcheck and not has_command:
+        errors.append("healthcheck.command: comando declarado não pode ser vazio")
     has_http = False
     if isinstance(healthcheck, dict) and "http" in healthcheck:
         http = healthcheck["http"]

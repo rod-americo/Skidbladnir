@@ -5,22 +5,15 @@
     "slug": "{{PROJECT_SLUG}}"
   },
   "runtime": {
-    "id": "{{PRIMARY_RUNTIME_ID}}",
+    "id": "{{RUNTIME_ID}}",
     "version": "{{PRIMARY_RUNTIME_VERSION}}"
   },
   "deploy": {
-    "target": "{{DEPLOY_TARGET}}",
-    "reason": "{{DEPLOY_REASON}}"
+    "target": "none",
+    "reason": "baseline sem implantação configurada; comando local documentado"
   },
-  "process": {
-    "command": "{{PRIMARY_RUN_COMMAND}}",
-    "working_directory": ".",
-    "user": "{{DEPLOY_USER}}"
-  },
-  "healthcheck": {
-    "command": "{{SMOKE_TEST_COMMAND}}",
-    "timeout_seconds": 30
-  },
+  "process": {},
+  "healthcheck": {},
   "ports": [],
   "environment": {
     "required": [],
@@ -30,18 +23,18 @@
     "required": []
   },
   "runtime_state": {
-    "paths": ["runtime/"]
+    "paths": []
   },
   "logs": {
-    "paths": ["runtime/logs/"]
+    "paths": []
   },
   "restart": {
-    "policy": "{{RESTART_POLICY}}"
+    "policy": "não há serviço supervisionado no baseline"
   },
   "backup": {
-    "policy": "{{BACKUP_POLICY}}"
+    "policy": "não há estado persistente criado pelo baseline"
   },
   "rollback": {
-    "strategy": "{{ROLLBACK_STRATEGY}}"
+    "strategy": "restaurar artefato validado anterior e preservar configuração e dados locais"
   }
 }

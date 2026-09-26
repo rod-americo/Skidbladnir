@@ -4,23 +4,25 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: {{ACTION_CHECKOUT}}
+        with:
+          persist-credentials: false
+{{CI_SETUP_PYTHON}}
+      - uses: {{ACTION_DOTNET}}
         with:
           dotnet-version: "{{DOTNET_VERSION}}"
-
-      - name: Restore dependencies
-        run: {{DOTNET_RESTORE_COMMAND}}
+      - run: {{DOTNET_RESTORE_COMMAND}}
 
 {{CI_GATE_STEP}}
 {{CI_DEPLOY_STEP}}
-      - name: Run test suite
-        run: |
-          {{CI_VALIDATE_COMMAND}}
+      - name: Development checks
+        run: {{CI_VALIDATE_COMMAND}}
+      - name: Build
+        run: {{CI_STATIC_CHECK_COMMAND}}

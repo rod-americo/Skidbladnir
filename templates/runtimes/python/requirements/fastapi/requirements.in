@@ -1,0 +1,7 @@
+# Dependências diretas validadas nesta release; regenere o lock após revisão.
+fastapi==0.141.1
+uvicorn==0.54.0
+httpx==0.28.1
+pytest==9.1.1
+ruff==0.16.9
+mypy==2.3.1

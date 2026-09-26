@@ -4,18 +4,25 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-24.04
+    container: {{SWIFT_CONTAINER}}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Resolve package
-        run: swift package resolve
+      - uses: {{ACTION_CHECKOUT}}
+        with:
+          persist-credentials: false
+{{CI_SETUP_PYTHON}}
+      - name: Verify provisioned Swift version
+        run: swift --version | grep -E 'Swift version 6\.4(\.0)? '
+      - run: swift package resolve
 
 {{CI_GATE_STEP}}
 {{CI_DEPLOY_STEP}}
-      - name: Run test suite
-        run: |
-          {{CI_VALIDATE_COMMAND}}
+      - name: Development checks
+        run: {{CI_VALIDATE_COMMAND}}
+      - name: Build
+        run: {{CI_STATIC_CHECK_COMMAND}}

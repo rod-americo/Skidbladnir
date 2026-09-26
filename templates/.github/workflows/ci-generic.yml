@@ -1,0 +1,19 @@
+name: Structural checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  structural:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: {{ACTION_CHECKOUT}}
+        with:
+          persist-credentials: false
+{{CI_SETUP_PYTHON}}
+{{CI_GATE_STEP}}
+{{CI_DEPLOY_STEP}}

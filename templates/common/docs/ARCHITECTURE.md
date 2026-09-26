@@ -33,6 +33,8 @@ Dependências críticas:
 
 ## 4. Módulos Principais
 
+Adote somente as fronteiras necessárias e preserve o layout convencional do runtime. As quatro responsabilidades abaixo são uma opção de organização: documente os módulos que realmente existem, remova seções sem função e justifique o custo de cada camada. Um programa pequeno pode ter apenas núcleo testável e entrypoint.
+
 ### 4.1 Domain
 
 - entidades e regras centrais

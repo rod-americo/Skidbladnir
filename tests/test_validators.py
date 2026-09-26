@@ -11,6 +11,17 @@ from test_starter_regression import SCAFFOLDER, STARTER_ROOT, run_cmd, write_val
 
 
 class ValidatorTests(unittest.TestCase):
+    def test_gate_v2_adds_evidence_without_rejecting_legacy_fields(self) -> None:
+        gate = runpy.run_path(str(STARTER_ROOT / "templates/scripts/check_project_gate.py"))
+        fields = {
+            gate["normalize_label"](label): "Operação local com contratos explícitos e validação automatizada verificável."
+            for label in gate["FIELD_RULES"]
+        }
+        self.assertEqual(gate["classify_fields"](fields), ([], [], []))
+        pending, weak, short = gate["classify_fields"](fields, version=2)
+        self.assertEqual(set(pending), set(gate["V2_FIELD_RULES"]))
+        self.assertEqual(weak + short, [])
+
     def test_filled_real_gate_accepts_accents_and_spacing(self) -> None:
         gate = runpy.run_path(str(STARTER_ROOT / "templates/scripts/check_project_gate.py"))
         template = (STARTER_ROOT / "templates/common/PROJECT_GATE.md").read_text()
@@ -21,7 +32,7 @@ class ValidatorTests(unittest.TestCase):
         )
         for value in (filled, filled.replace("usuário ou operador", "  USUARIO   ou   operador")):
             with self.subTest(value=value[:20]):
-                self.assertEqual(gate["classify_fields"](gate["collect_fields"](value)), ([], [], []))
+                self.assertEqual(gate["classify_fields"](gate["collect_fields"](value), version=2), ([], [], []))
 
     def test_agents_template_validation_keeps_command_unchanged(self) -> None:
         doctor = runpy.run_path(str(STARTER_ROOT / "templates/scripts/project_doctor.py"))
@@ -47,7 +58,26 @@ class ValidatorTests(unittest.TestCase):
         payload["process"] = {}
         payload["healthcheck"] = {}
         self.assertEqual(validator["validate_operational_rules"](payload), [])
+        payload["healthcheck"] = {"command": "  "}
+        self.assertTrue(validator["validate_operational_rules"](payload))
         self.assertTrue(validator["validate_operational_rules"]([]))
+
+    def test_doctor_compares_operational_probe_separately(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "Review"
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--runtime", "python", "--preset", "worker"])
+            write_valid_docs(repo, "Review", "review")
+            operations = repo / "docs/OPERATIONS.md"
+            operations.write_text(operations.read_text() + "\n### Saúde operacional\n\n```bash\nprobe --read-only\n```\n")
+            manifest = repo / "deploy/manifest.json"
+            payload = json.loads(manifest.read_text())
+            payload["healthcheck"] = {"command": "probe --read-only"}
+            manifest.write_text(json.dumps(payload))
+            run_cmd([sys.executable, str(repo / "scripts/project_doctor.py"), "--deploy-strict"])
+            payload["healthcheck"] = {"http": {"url": "http://127.0.0.1:8000/health"}}
+            manifest.write_text(json.dumps(payload))
+            result = run_cmd([sys.executable, str(repo / "scripts/project_doctor.py"), "--deploy-strict"], expected=1)
+            self.assertIn("divergem na URL do healthcheck", result.stderr)
 
     def test_doctor_rejects_runtime_and_validation_divergence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

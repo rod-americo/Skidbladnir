@@ -1,14 +1,5 @@
-# TypeScript Runtime Template
+# TypeScript
 
-Use `src/` quando build, typecheck ou empacotamento exigirem separação entre fonte e artefato.
+Use `src/`, TypeScript estrito, `package-lock.json` e `npm ci`. `npm test` compila e executa testes; `npm start` é o entrypoint. A versão do runtime no manifesto é a versão Node; TypeScript é fixado nas dependências.
 
-Comandos:
-
-```bash
-npm install
-npm run build
-npm test
-npm start
-```
-
-O manifesto deve usar `runtime.id` como `ts`.
+Versões e comandos exatos estão no [catálogo](../catalog.json) e na [documentação gerada](../../../docs/runtime-catalog.md). A existência deste scaffold não favorece a escolha da linguagem. O baseline usa `deploy.target: none`, salvo preset com operação HTTP local explícita.

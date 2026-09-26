@@ -52,8 +52,8 @@ def main() -> int:
         return 0
 
     if len(sys.argv) == 1:
-        print("Uso: newproj <destino> [opcoes]")
-        print("Exemplo: newproj ~/ApiNova --preset fastapi-service --include-checklist")
+        print("Uso: newproj <destino> --runtime <id> [opcoes]")
+        print("Exemplo: newproj ~/ApiNova --runtime python --preset fastapi-service --include-checklist")
         print("Doctor: newproj doctor .")
         print("Doctor strict: newproj doctor --strict .")
         print("Doctor audit: newproj doctor --audit-config .")

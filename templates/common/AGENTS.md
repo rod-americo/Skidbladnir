@@ -44,7 +44,7 @@ Ao iniciar qualquer tarefa, responda primeiro:
 
 - isto pertence a este repositório?
 - isto deveria ser uma extensão de um módulo existente, e não um subsistema novo?
-- esta mudança afeta domínio, aplicação, infraestrutura ou interface?
+- quais módulos e contratos esta mudança afeta?
 - existe algum comportamento semelhante que deveria ser extraído em vez de duplicado?
 
 Não use este repositório para:
@@ -55,7 +55,7 @@ Não use este repositório para:
 
 ## 4. Baseline de arquitetura
 
-Prefira a seguinte separação:
+Dimensione a arquitetura ao projeto e siga convenções do ecossistema. Um núcleo testável e um entrypoint podem bastar. As quatro responsabilidades abaixo são uma opção, cuja adoção deve ser justificada:
 
 - `domain/`: regras e modelos centrais do problema
 - `application/`: casos de uso e orquestração
@@ -76,8 +76,9 @@ Escolha de runtime:
 - em repositório existente, preserve o runtime salvo incompatibilidade concreta
 - em projeto novo, escolha autonomamente por plataforma, SDK, deploy, distribuição, interoperabilidade e requisitos mensuráveis
 - não peça preferência de linguagem quando as restrições forem suficientes
-- entre opções equivalentes, reduza dependências e custo operacional; sem fator decisivo, use Python
-- registre a justificativa no `PROJECT_GATE.md` e tradeoffs relevantes em `docs/DECISIONS.md`
+- nenhuma linguagem é default; compare manutenção, prevenção de regressões, verificabilidade, bibliotecas, suporte, distribuição e requisitos medidos de recursos e concorrência
+- disponibilidade de scaffold não é critério de preferência; migrações exigem benefício concreto e custo de transição explícito
+- registre restrições, alternativas viáveis, justificativa, riscos, mitigação e evidências no `PROJECT_GATE.md`; decisões e experimentos relevantes ficam em `docs/DECISIONS.md`
 
 ## 5. Configuração, runtime e logs
 
@@ -97,13 +98,13 @@ Logging:
 
 ## 6. Política de commit e branch
 
-Workflow padrão para repositório solo:
+Use uma branch com worktree ou checkout isolado por tarefa independente. Registre objetivo, escopo, responsabilidade por arquivos/módulos, critérios de aceite e commit de referência em `docs/TASK_TEMPLATE.md`. Autores concorrentes não compartilham checkout; coordene sobreposições e contratos compartilhados antes de editar.
 
-- trabalhar diretamente em `main`
-- não criar branches auxiliares sem necessidade explícita
-- manter um commit por mudança lógica
-- preferir commits curtos, intencionais e fáceis de reverter
-- fazer push só depois de revisar diff, validação e impacto operacional
+Designe um integrador por conjunto de mudanças concorrentes. Ele organiza dependências e valida novamente o resultado combinado. O autor entrega commits pequenos, alterações, resultados de validação, bloqueios e próximo passo; contexto durável deve permitir continuidade sem memória da conversa.
+
+A integração rotineira pode ser autônoma somente com checks exigidos aprovados, revisão independente por outro agente ou pessoa diferente do autor, permissões já configuradas e validação do commit combinado. Registre as revisões exatas avaliadas. Mudanças após os checks ou resolução de conflitos exigem nova validação e revisão do resultado afetado. Não habilite automerge nem altere proteções remotas para contornar uma dependência.
+
+Decisão humana é obrigatória para integridade de dados, migrações, dados sensíveis, autenticação/permissões, produção, contratos incompatíveis ou enfraquecimento de controles. Risco não esclarecido também depende de decisão humana. Apresente impacto, alternativas, evidências e retorno; decisões já concedidas continuam válidas dentro do escopo aprovado. Avance nas partes independentes enquanto uma decisão estiver pendente.
 
 Mensagem de commit:
 
@@ -122,16 +123,18 @@ Tipos comuns:
 - `chore`
 - `perf`
 
-Se este repositório deixar de ser solo ou passar a exigir branches protegidas, atualize este arquivo e o `README.md` no mesmo commit.
+Respeite as permissões de push e integração já concedidas ao projeto; trabalho local e criação de commits não autorizam publicação remota por si só.
 
 ## 7. Validação obrigatória
 
 Antes de concluir:
 
-- executar a validação mais relevante para os arquivos alterados
+- executar os checks exigidos e testes proporcionais de contratos, falhas e compatibilidade
+- medir requisitos de escala com carga, ambiente e critérios verificáveis
+- separar testes de desenvolvimento, smoke local e saúde operacional; documentação aprovada não comprova comportamento
 - revisar `git diff` e `git status`
 - confirmar que não há artefatos temporarios sendo versionados
-- deixar claro o que foi validado e o que não foi
+- deixar claro o que foi validado e o que não foi; ferramenta ausente é bloqueio, não aprovação
 - validar `deploy/manifest.json` com `python3 scripts/check_deploy_manifest.py` quando houver mudança operacional
 
 Se a mudança afetar execução:

@@ -60,7 +60,8 @@ Padrão recomendado para projetos novos:
 │   ├── ARCHITECTURE.md
 │   ├── CONTRACTS.md
 │   ├── OPERATIONS.md
-│   └── DECISIONS.md
+│   ├── DECISIONS.md
+│   └── TASK_TEMPLATE.md
 {{OPTIONAL_RESEARCH_STRUCTURE}}{{RUNTIME_STRUCTURE}}
 ├── tests/
 └── runtime/                  # ignorado no git
@@ -68,14 +69,14 @@ Padrão recomendado para projetos novos:
 
 Regras:
 
-- preserve a separação `domain / application / infrastructure / interfaces`
+- dimensione a arquitetura ao problema; quatro camadas são uma opção que exige justificativa
 - mantenha a raiz enxuta e intencional
-- use `{{PROJECT_SLUG}}/` na raiz como padrão principal
+- siga as convenções do ecossistema escolhido e mantenha um núcleo testável
 - quando houver TUI ou GUI Python dedicada, use `tui/` ou `gui/` apenas como launcher top-level fino para `python -m tui` ou `python -m gui`; mantenha a implementação em `{{PROJECT_SLUG}}/interfaces/`
-- use `src/` só quando isolamento de packaging for requisito consciente
+- use `src/`, `Sources/`, `cmd/` ou pacote na raiz conforme o runtime e a distribuição
 - `runtime/`, bancos locais, dumps, sessões e caches não devem ser versionados
 - `deploy/manifest.json` deve declarar comando principal, healthcheck, runtime state, logs, restart, backup e rollback
-- a escolha do runtime deve estar justificada no `PROJECT_GATE.md` por restrições técnicas e operacionais, não por preferência de linguagem; sem fator decisivo, o default é Python
+- justifique o runtime no `PROJECT_GATE.md` por restrições, alternativas, riscos e evidências; nenhuma linguagem é default e a existência de scaffold não determina a escolha
 
 ## Quick start
 
@@ -93,6 +94,8 @@ cd {{PROJECT_NAME}}
 ```
 
 ### 3. Configurar
+
+{{CONFIG_DESCRIPTION}}
 
 ```bash
 cp config/settings.example.json config/settings.local.json
@@ -114,12 +117,7 @@ Princípios:
 - defaults de execução devem ficar centralizados, não espalhados
 - deixe claro o que é obrigatório, opcional e ambiente-específico
 
-Tabela mínima:
-
-| Entrada | Tipo | Obrigatório | Origem | Exemplo |
-| --- | --- | --- | --- | --- |
-| `{{ENV_OR_SETTING_1}}` | `env | arquivo | cli` | sim | `{{host | local | CI}}` | `{{valor_exemplo}}` |
-| `{{ENV_OR_SETTING_2}}` | `env | arquivo | cli` | não | `{{host | local | CI}}` | `{{valor_exemplo}}` |
+Entradas consumidas pelo código devem constar em `deploy/manifest.json` e `docs/OPERATIONS.md`. O exemplo de logging documenta o formato; não configura automaticamente um coletor nem cria arquivos de logs.
 
 ## Contratos e fronteiras
 
@@ -159,6 +157,7 @@ Checklist mínimo antes de commitar:
 ## Documentação do repositório
 
 - `AGENTS.md`: regras de colaboração para agentes e autores
+- `docs/TASK_TEMPLATE.md`: objetivo, escopo, referência, responsabilidades, validações e passagem de contexto
 - `PROJECT_GATE.md`: justificativa de existência e fronteira do repositório
 - `scripts/check_project_gate.py`: valida se o gate foi realmente preenchido e se as respostas têm densidade mínima
 - `scripts/project_doctor.py`: valida coerência mínima entre gate, README, arquitetura, contratos e operação
@@ -181,7 +180,9 @@ Checklist mínimo antes de commitar:
 - commits em `en-US`, preferencialmente `type(scope): summary`
 - documentação humana em `pt-BR`, salvo repositórios editoriais ou públicos que exijam outro idioma
 - identificadores técnicos em `en-US`
-- uma mudança lógica por commit
+- uma mudança lógica por commit e tarefa independente por checkout isolado
+- integrações rotineiras exigem checks aprovados, revisão independente, permissões existentes e validação pelo integrador
+- fronteiras sensíveis e risco não esclarecido exigem decisão humana conforme `AGENTS.md`
 - se o repositório nascer com gate enforced, instale `.githooks/` com `bash scripts/install_git_hooks.sh`
 - não inventar endpoints, campos, contratos ou fluxos sem marcar isso como inferência
 - quando houver mudança que exija restart, deixar isso explícito no diff, no `AGENTS.md` e em `docs/OPERATIONS.md`

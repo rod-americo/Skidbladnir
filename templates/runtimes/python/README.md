@@ -1,17 +1,5 @@
-# Python Runtime Template
+# Python
 
-Use pacote direto em `/<slug>/` como padrão principal.
+Use pacote na raiz e `python -m <slug>`; `.venv` fica na raiz. Os presets especializados são opt-in e exigem `--runtime python`. Código comum está em `files/`, extensões em `presets/` e requisitos congelados em `requirements/`. Execute Ruff, mypy e pytest. Quatro camadas são opcionais; launchers TUI/GUI dedicados podem ser finos em `tui/` e `gui/`.
 
-Comandos:
-
-```bash
-python3 -m venv .venv --prompt $(basename "$PWD")
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python -m <slug>
-python -m pytest -q
-```
-
-O entrypoint público é `python -m <slug>`.
-
-Quando TUI ou GUI forem aplicações dedicadas, prefira launchers top-level finos em `tui/__main__.py` e `gui/__main__.py`, executados com `python -m tui` e `python -m gui`. Esses launchers apenas delegam para a implementação em `<slug>/interfaces/`; não exponha novos comandos públicos como `python -m <slug>.tui` ou `python -m <slug>.gui`.
+Versões e comandos exatos estão no [catálogo](../catalog.json) e na [documentação gerada](../../../docs/runtime-catalog.md). A existência deste scaffold não favorece a escolha da linguagem. O baseline usa `deploy.target: none`, salvo preset com operação HTTP local explícita.

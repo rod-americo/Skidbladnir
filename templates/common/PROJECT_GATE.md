@@ -1,5 +1,7 @@
 # PROJECT GATE
 
+<!-- skidbladnir:gate:2 -->
+
 Preencha este arquivo antes de consolidar um novo repositório.
 
 Respostas vagas como `a definir`, `não sei`, `talvez`, `N/A` ou frases curtas demais fazem o gate falhar quando o repositório nasce com enforcement ativo.
@@ -42,12 +44,15 @@ Se a resposta for "quase tudo", provavelmente isso ainda não deveria nascer com
 
 ## 6. Por que este runtime foi escolhido?
 
-Não responda com preferência pessoal. Se nenhuma restrição determinar outra linguagem, registre explicitamente que Python foi adotado como default do kit.
+Compare alternativas viáveis por manutenção, prevenção de regressões, verificabilidade, bibliotecas, suporte, distribuição e operação. Nenhuma linguagem é default; a disponibilidade de scaffold não é critério de preferência. Preserve um runtime existente adequado e contabilize custo e risco de qualquer migração. Registre hipóteses e como serão verificadas; “escalável” sem medida não é evidência.
 
 - restrições determinantes do runtime:
 - runtime escolhido: `{{RUNTIME_ID}}`
 - alternativa principal considerada:
 - justificativa operacional:
+- riscos e mitigações do runtime:
+- evidências para a escolha:
+- critérios mensuráveis de escala:
 
 ## 7. Condição de saída
 

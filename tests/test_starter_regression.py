@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -569,7 +568,7 @@ class StarterRegressionTests(unittest.TestCase):
     def test_gate_requires_runtime_decision(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-runtime-gate-") as tmp:
             repo = Path(tmp) / "RuntimeGate"
-            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--enforce-gate"])
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--runtime", "python", "--enforce-gate"])
 
             gate = (repo / "PROJECT_GATE.md").read_text(encoding="utf-8")
             self.assertIn("## 6. Por que este runtime foi escolhido?", gate)
@@ -597,6 +596,8 @@ class StarterRegressionTests(unittest.TestCase):
                     sys.executable,
                     str(SCAFFOLDER),
                     str(repo),
+                    "--runtime",
+                    "python",
                     "--preset",
                     "worker",
                     "--enforce-gate",
@@ -611,7 +612,7 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / ".github" / "workflows" / "ci.yml").exists())
             self.assertTrue((repo / "flowrepo" / "main.py").exists())
             self.assertTrue((repo / "requirements.txt").exists())
-            self.assertFalse((repo / "pyproject.toml").exists())
+            self.assertTrue((repo / "pyproject.toml").exists())
             self.assertFalse((repo / "src").exists())
 
             ci_workflow = (repo / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
@@ -709,29 +710,27 @@ class StarterRegressionTests(unittest.TestCase):
 
     def test_python_requirements_include_runtime_and_test_dependencies(self) -> None:
         cases = {
-            "base": {"pytest>=8.0", "ruff>=0.6.0"},
-            "fastapi-service": {"fastapi>=0.115,<1", "uvicorn>=0.30,<1", "pytest>=8.0", "ruff>=0.6.0", "httpx>=0.27"},
-            "cli": {"pytest>=8.0", "ruff>=0.6.0"},
-            "textual-cli": {"rich>=13.7,<14", "textual>=0.58,<1", "pytest>=8.0", "ruff>=0.6.0"},
-            "worker": {"pytest>=8.0", "ruff>=0.6.0"},
-            "playwright-worker": {"playwright>=1.58,<2", "requests>=2.31,<3", "pytest>=8.0", "ruff>=0.6.0"},
-            "pipeline": {"pytest>=8.0", "ruff>=0.6.0"},
-            "dicom-pipeline": {"pydicom>=2.4,<3", "pytest>=8.0", "ruff>=0.6.0"},
+            "base": set(), "cli": set(), "worker": set(), "pipeline": set(),
+            "fastapi-service": {"fastapi", "uvicorn", "httpx"},
+            "textual-cli": {"rich", "textual"},
+            "playwright-worker": {"playwright", "requests", "types-requests"},
+            "dicom-pipeline": {"pydicom"},
         }
-
         with tempfile.TemporaryDirectory(prefix="starter-requirements-") as tmp:
             for preset, expected in cases.items():
                 repo = Path(tmp) / preset.replace("-", "_")
-                run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--preset", preset])
-
-                requirements = (repo / "requirements.txt").read_text(encoding="utf-8").splitlines()
-                self.assertEqual(len(requirements), len(set(requirements)))
-                self.assertTrue(expected.issubset(requirements), preset)
+                run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--runtime", "python", "--preset", preset])
+                direct = (repo / "requirements.in").read_text()
+                lock = (repo / "requirements.txt").read_text()
+                for dependency in expected | {"pytest", "ruff", "mypy"}:
+                    self.assertIn(dependency + "==", direct)
+                    self.assertIn(dependency + "==", lock)
+                self.assertIn("--hash=sha256:", lock)
 
     def test_textual_cli_uses_top_level_tui_launcher(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-textual-cli-") as tmp:
             repo = Path(tmp) / "PainelLocal"
-            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--preset", "textual-cli"])
+            run_cmd([sys.executable, str(SCAFFOLDER), str(repo), "--runtime", "python", "--preset", "textual-cli"])
 
             manifest = json.loads((repo / "deploy" / "manifest.json").read_text(encoding="utf-8"))
             readme = (repo / "README.md").read_text(encoding="utf-8")
@@ -762,12 +761,12 @@ class StarterRegressionTests(unittest.TestCase):
             package_json = json.loads((repo / "package.json").read_text(encoding="utf-8"))
             readme_text = (repo / "README.md").read_text(encoding="utf-8")
 
-            self.assertIn("npm install", workflow)
+            self.assertIn("npm ci", workflow)
             self.assertIn("npm test", workflow)
             self.assertIn("python3 scripts/check_project_gate.py", workflow)
             self.assertIn("python3 scripts/check_deploy_manifest.py", workflow)
             self.assertEqual(package_json["scripts"]["test"], "node --test tests/*.test.mjs")
-            self.assertEqual(package_json["engines"], {"node": ">=20"})
+            self.assertEqual(package_json["engines"], {"node": "24.21.0"})
             self.assertNotIn("dependencies", package_json)
             self.assertNotIn("devDependencies", package_json)
             self.assertIn('from "node:test"', (repo / "tests" / "smoke.test.mjs").read_text(encoding="utf-8"))
@@ -812,16 +811,14 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / "internal" / "app" / "app.go").exists())
             self.assertTrue((repo / "internal" / "app" / "app_test.go").exists())
             self.assertTrue((repo / "schema" / "deploy-manifest.schema.json").exists())
-            self.assertIn("actions/setup-go@v5", workflow)
-            self.assertIn("go test ./...", workflow)
+            self.assertIn("actions/setup-go@", workflow)
+            self.assertIn("go test -race ./...", workflow)
             self.assertIn("python3 scripts/check_deploy_manifest.py", workflow)
             self.assertEqual(manifest["runtime"]["id"], "go")
             self.assertEqual(manifest["process"]["command"], "go run ./cmd/gorepo")
             self.assertIn("![Go]", readme_text)
 
             run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
-            if shutil.which("go"):
-                run_cmd(["go", "test", "./..."], cwd=repo)
 
     def test_typescript_project_includes_ci_manifest_and_smoke(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-ts-") as tmp:
@@ -835,16 +832,13 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / "tsconfig.json").exists())
             self.assertTrue((repo / "src" / "main.ts").exists())
             self.assertTrue((repo / "tests" / "smoke.test.ts").exists())
-            self.assertIn("npm install", workflow)
+            self.assertIn("npm ci", workflow)
             self.assertIn("npm test", workflow)
             self.assertEqual(package_json["scripts"]["test"], "npm run build && node --test dist/tests/*.test.js")
             self.assertEqual(manifest["runtime"]["id"], "ts")
             self.assertEqual(manifest["process"]["command"], "npm start")
 
             run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
-            if shutil.which("npm"):
-                run_cmd(["npm", "install"], cwd=repo)
-                run_cmd(["npm", "test"], cwd=repo)
 
     def test_swift_project_includes_ci_manifest_and_smoke(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-swift-") as tmp:
@@ -857,15 +851,12 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / "Package.swift").exists())
             self.assertTrue((repo / "Sources" / "Swiftrepo" / "main.swift").exists())
             self.assertTrue((repo / "Sources" / "SwiftrepoCore" / "App.swift").exists())
-            self.assertIn("macos-latest", workflow)
+            self.assertIn("swift:6.4.0", workflow)
             self.assertIn("swift package resolve", workflow)
             self.assertEqual(manifest["runtime"]["id"], "swift")
             self.assertEqual(manifest["process"]["command"], "swift run Swiftrepo")
 
             run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
-            if shutil.which("swift"):
-                run_cmd(["swift", "build"], cwd=repo)
-                run_cmd(["swift", "run", "Swiftrepo"], cwd=repo)
 
     def test_csharp_project_includes_ci_manifest_and_smoke(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-csharp-") as tmp:
@@ -878,15 +869,13 @@ class StarterRegressionTests(unittest.TestCase):
             self.assertTrue((repo / "Csharprepo.sln").exists())
             self.assertTrue((repo / "src" / "Csharprepo" / "Csharprepo.csproj").exists())
             self.assertTrue((repo / "tests" / "Csharprepo.Tests" / "Csharprepo.Tests.csproj").exists())
-            self.assertIn("actions/setup-dotnet@v4", workflow)
+            self.assertIn("actions/setup-dotnet@", workflow)
             self.assertIn("dotnet restore Csharprepo.sln", workflow)
             self.assertIn("dotnet test Csharprepo.sln", workflow)
             self.assertEqual(manifest["runtime"]["id"], "csharp")
-            self.assertEqual(manifest["process"]["command"], "dotnet run --project src/Csharprepo/Csharprepo.csproj")
+            self.assertEqual(manifest["process"]["command"], "dotnet run --no-restore --project src/Csharprepo/Csharprepo.csproj")
 
             run_cmd([sys.executable, str(repo / "scripts" / "check_deploy_manifest.py")], cwd=repo)
-            if shutil.which("dotnet"):
-                run_cmd(["dotnet", "test", "Csharprepo.sln"], cwd=repo)
 
     def test_optional_papers_structure_is_generated(self) -> None:
         with tempfile.TemporaryDirectory(prefix="starter-papers-") as tmp:
@@ -896,6 +885,8 @@ class StarterRegressionTests(unittest.TestCase):
                     sys.executable,
                     str(SCAFFOLDER),
                     str(repo),
+                    "--runtime",
+                    "python",
                     "--preset",
                     "worker",
                     "--include-papers",

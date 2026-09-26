@@ -23,7 +23,7 @@ Use este checklist antes do primeiro push de um projeto novo.
 ## 2. Estrutura
 
 - raiz enxuta e intencional
-- camadas `domain / application / infrastructure / interfaces` visíveis
+- arquitetura proporcional e layout do ecossistema; quatro camadas somente se justificadas
 - `tests/` criado
 - `config/` criado com exemplos versionados
 - `runtime/` definido e ignorado no git, se aplicável
@@ -31,11 +31,11 @@ Use este checklist antes do primeiro push de um projeto novo.
 ## 3. Configuração e runtime
 
 - runtime escolhido por restrições técnicas e operacionais, não por preferência de linguagem
-- restrições, alternativa principal e justificativa do runtime registradas no `PROJECT_GATE.md`
+- nenhuma linguagem default; restrições, alternativas, justificativa, riscos, evidências e critérios de escala registrados no `PROJECT_GATE.md`
 - segredos não entram no git
 - existe `settings.example.*` ou equivalente
 - runtime state, bancos locais e sessões estão fora do versionamento
-- caminho de logs definido
+- somente estado e destinos de logs usados pelo código; stdout não é um arquivo
 - entrypoint principal documentado
 - manifesto de deploy validado por `python3 scripts/check_deploy_manifest.py`
 
@@ -61,7 +61,10 @@ Use este checklist antes do primeiro push de um projeto novo.
 
 ## 6. Disciplina de crescimento
 
-- regra de branch definida
+- tarefa por branch/worktree ou checkout isolado, responsabilidades e integrador definidos
+- passagem de contexto em `docs/TASK_TEMPLATE.md`
+- checks, revisão independente e validação combinada exigidos para integração
+- decisão humana em fronteiras sensíveis ou risco não esclarecido
 - regra de commit definida
 - idioma da documentação definido
 - política de logs definida

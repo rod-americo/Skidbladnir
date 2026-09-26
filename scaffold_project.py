@@ -12,6 +12,8 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATE_DIR = BASE_DIR / "templates"
+CATALOG = json.loads((TEMPLATE_DIR / "runtimes" / "catalog.json").read_text(encoding="utf-8"))
+RUNTIMES = CATALOG["runtimes"]
 COMMON_TEMPLATE_DIR = TEMPLATE_DIR / "common"
 STARTER_VERSION_FILE = BASE_DIR / "VERSION"
 STARTER_VERSION = STARTER_VERSION_FILE.read_text(encoding="utf-8").strip() if STARTER_VERSION_FILE.exists() else "0.0.0"
@@ -24,6 +26,7 @@ TEMPLATE_FILES = {
     "docs/CONTRACTS.md": COMMON_TEMPLATE_DIR / "docs" / "CONTRACTS.md",
     "docs/OPERATIONS.md": COMMON_TEMPLATE_DIR / "docs" / "OPERATIONS.md",
     "docs/DECISIONS.md": COMMON_TEMPLATE_DIR / "docs" / "DECISIONS.md",
+    "docs/TASK_TEMPLATE.md": COMMON_TEMPLATE_DIR / "docs" / "TASK_TEMPLATE.md",
 }
 OPTIONAL_TEMPLATE_FILES = {
     "START_CHECKLIST.md": COMMON_TEMPLATE_DIR / "START_CHECKLIST.md",
@@ -38,6 +41,9 @@ WORKFLOW_TEMPLATE_FILES = {
     "ts": TEMPLATE_DIR / ".github" / "workflows" / "ci-node.yml",
     "swift": TEMPLATE_DIR / ".github" / "workflows" / "ci-swift.yml",
     "csharp": TEMPLATE_DIR / ".github" / "workflows" / "ci-csharp.yml",
+    "java": TEMPLATE_DIR / ".github" / "workflows" / "ci-java.yml",
+    "generic": TEMPLATE_DIR / ".github" / "workflows" / "ci-generic.yml",
+    "rust": TEMPLATE_DIR / ".github" / "workflows" / "ci-rust.yml",
 }
 SCRIPT_TEMPLATE_FILES = {
     "scripts/check_project_gate.py": TEMPLATE_DIR / "scripts" / "check_project_gate.py",
@@ -75,7 +81,7 @@ PRESET_ALIASES = {
     "dicom-pipeline": "dicom_pipeline",
 }
 PRESET_SUMMARIES = {
-    "base": "baseline neutro com camadas e documentacao minima",
+    "base": "baseline mínimo com layout convencional e núcleo testável",
     "fastapi": "servico HTTP pequeno com FastAPI, uvicorn e /health",
     "fastapi-service": "alias de fastapi com nome mais explicito para servicos",
     "cli": "CLI minima com subcomando doctor",
@@ -122,6 +128,9 @@ def canonicalize_preset(value: str) -> str:
 
 
 def print_available_presets() -> None:
+    print("Runtimes e combinações disponíveis (nenhum runtime é default):")
+    for runtime, profile in RUNTIMES.items():
+        print(f"- {runtime}: {', '.join(item.replace('_', '-') for item in profile['presets'])}")
     print("Presets disponiveis:")
     for preset in PRESET_CHOICES:
         print(f"- {preset}: {PRESET_SUMMARIES[preset]}")
@@ -156,18 +165,9 @@ def default_readme_badges(runtime: str, repo_url: str) -> str:
         workflow_url = f"https://github.com/{repo_slug}/actions/workflows/ci.yml"
         badges.append(f"[![CI]({workflow_url}/badge.svg)]({workflow_url})")
 
-    if runtime == "python":
-        badges.append("![Python](https://img.shields.io/badge/python-3.9%2B-blue)")
-    elif runtime == "node":
-        badges.append("![Node](https://img.shields.io/badge/node-20%2B-5fa04e)")
-    elif runtime == "go":
-        badges.append("![Go](https://img.shields.io/badge/go-1.22%2B-00ADD8)")
-    elif runtime == "ts":
-        badges.append("![TypeScript](https://img.shields.io/badge/typescript-5%2B-3178c6)")
-    elif runtime == "swift":
-        badges.append("![Swift](https://img.shields.io/badge/swift-5.9%2B-f05138)")
-    elif runtime == "csharp":
-        badges.append("![.NET](https://img.shields.io/badge/.NET-8.0%2B-512bd4)")
+    profile = RUNTIMES[runtime]
+    if runtime != "generic":
+        badges.append(f"![{profile['name']}](https://img.shields.io/badge/{runtime}-{profile['version']}-blue)")
 
     return "\n".join(badges)
 
@@ -181,7 +181,6 @@ def runtime_defaults(
     gate_enforced: bool,
 ) -> dict[str, str]:
     env_prefix = project_slug.upper()
-    dist_name = kebabify(project_name)
 
     common = {
         "PROJECT_NAME": project_name,
@@ -191,11 +190,9 @@ def runtime_defaults(
         "README_BADGES": default_readme_badges(runtime, repo_url),
         "OPTIONAL_RESEARCH_STRUCTURE": "",
         "OPTIONAL_RESEARCH_DOCS": "",
-        "DEPENDENCY_FILE": "requirements.txt / package.json",
         "RUNTIME_STRUCTURE": textwrap.dedent(
             f"""
             ├── {project_slug}/
-            │   ├── domain/
             │   ├── application/
             │   ├── infrastructure/
             │   ├── interfaces/
@@ -206,12 +203,8 @@ def runtime_defaults(
         "DEPENDENCIA_EXTERNA": "preencher dependencia externa principal",
         "HOST_PRINCIPAL": "preencher host principal ou ambiente de referencia",
         "TIPO_DE_DADO_SENSIVEL": "credenciais, configuracao host-local e payloads operacionais",
-        "VALIDACAO_MINIMA": "preencher comando minimo de validacao",
         "RESTART_POLICY": "preencher regra de restart por tipo de mudanca",
-        "PRIMARY_RUNTIME": "preencher runtime principal",
         "RUNTIME_ID": runtime,
-        "ENV_OR_SETTING_1": f"{env_prefix}_CONFIG_FILE",
-        "ENV_OR_SETTING_2": "LOG_LEVEL",
         "host | local | CI": "host",
         "valor_exemplo": "preencher",
         "API / host / banco / fila / worker / PACS / browser / etc": "preencher dependencia principal",
@@ -227,8 +220,6 @@ def runtime_defaults(
         "integracoes ou comportamentos que nao devem nascer aqui": "funcionalidades que pertencem a outro sistema ou repositorio",
         "entrypoint_1": "preencher entrypoint principal",
         "entrypoint_2": "preencher entrypoint secundario",
-        "SETUP_COMMANDS": "preencher setup",
-        "OPTIONAL_ENV_SETUP": "# opcional: preencher ajuste de ambiente local",
         "RUN_COMMAND": "preencher comando de execucao",
         "risco_tecnico_principal": "preencher risco tecnico principal",
         "dependencia_mais_fragil": "preencher dependencia mais fragil",
@@ -296,25 +287,11 @@ def runtime_defaults(
         "assuncao_1": "preencher assuncao nao validada",
         "assuncao_2": "preencher assuncao nao validada",
         "descricao_curta_da_quebra": "preencher quebra de contrato",
-        "LOCAL_BOOT_COMMANDS": "preencher boot local",
         "PRIMARY_RUN_COMMAND": "preencher comando principal",
         "config_local": "preencher arquivo local",
-        "ENV_1": "preencher env critica",
-        "ENV_2": "preencher env critica",
-        "runtime": "preencher runtime",
         "obs": "preencher observacao",
-        "runtime_path": "runtime/",
-        "logs_path": "runtime/logs/",
-        "SMOKE_TEST_COMMAND": "preencher smoke test",
         "CI_GATE_STEP": "",
         "CI_DEPLOY_STEP": "      - name: Check deploy manifest\n        run: python3 scripts/check_deploy_manifest.py",
-        "CI_STATIC_CHECK_COMMAND": "preencher checagem sintatica",
-        "CI_VALIDATE_COMMAND": "preencher validacao de CI",
-        "PYTHON_VERSION": "3.9",
-        "NODE_VERSION": "20",
-        "GO_VERSION": "1.22",
-        "DOTNET_VERSION": "8.0.x",
-        "DOTNET_RESTORE_COMMAND": "dotnet restore",
         "logger": "preencher logger principal",
         "json / key-value / outro": "json",
         "arquivo_ou_journal": "preencher local dos logs",
@@ -348,36 +325,10 @@ def runtime_defaults(
     if runtime == "python":
         common.update(
             {
-                "PRIMARY_RUNTIME": "python3.9+",
-                "DEPENDENCY_FILE": "requirements.txt",
-                "SETUP_COMMANDS": textwrap.dedent(
-                    """
-                    python3 -m venv .venv --prompt $(basename "$PWD")
-                    source .venv/bin/activate
-                    python -m pip install --upgrade pip
-                    python -m pip install -r requirements.txt
-                    """
-                ).strip(),
-                "OPTIONAL_ENV_SETUP": "export APP_ENV=dev",
                 "RUN_COMMAND": f"python -m {project_slug}",
-                "VALIDACAO_MINIMA": "python -m pytest -q",
                 "RESTART_POLICY": "mudancas de codigo Python exigem restart do processo; docs isoladas nao exigem restart",
-                "runtime": "python3.9+",
-                "ENV_1": f"{env_prefix}_CONFIG_FILE",
-                "ENV_2": "APP_ENV",
-                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
-                    f"""
-                    python3 -m venv .venv --prompt $(basename "$PWD")
-                    source .venv/bin/activate
-                    python -m pip install -r requirements.txt
-                    cp config/settings.example.json config/settings.local.json
-                    """
-                ).strip(),
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug}",
                 "config_local": "config/settings.local.json",
-                "SMOKE_TEST_COMMAND": "python -m pytest -q",
-                "CI_STATIC_CHECK_COMMAND": f"python -m compileall -q {project_slug} scripts tests",
-                "CI_VALIDATE_COMMAND": "python -m pytest -q",
                 "logger": f"{project_slug}.infrastructure.logging",
                 "storage": "filesystem local ou banco definido pelo projeto",
             }
@@ -385,26 +336,10 @@ def runtime_defaults(
     elif runtime == "node":
         common.update(
             {
-                "PRIMARY_RUNTIME": "node20+",
-                "DEPENDENCY_FILE": "package.json",
-                "SETUP_COMMANDS": "npm install",
-                "OPTIONAL_ENV_SETUP": "export NODE_ENV=development",
                 "RUN_COMMAND": "npm start",
-                "VALIDACAO_MINIMA": "npm test",
                 "RESTART_POLICY": "mudancas em codigo Node exigem restart do processo; docs isoladas nao exigem restart",
-                "runtime": "node20+",
-                "ENV_1": f"{env_prefix}_CONFIG_FILE",
-                "ENV_2": "NODE_ENV",
-                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
-                    """
-                    npm install
-                    cp config/settings.example.json config/settings.local.json
-                    """
-                ).strip(),
                 "PRIMARY_RUN_COMMAND": "npm start",
                 "config_local": "config/settings.local.json",
-                "SMOKE_TEST_COMMAND": "npm test",
-                "CI_VALIDATE_COMMAND": "npm test",
                 "logger": f"{project_slug}/infrastructure/logger.mjs",
                 "storage": "filesystem local ou banco definido pelo projeto",
             }
@@ -412,28 +347,11 @@ def runtime_defaults(
     elif runtime == "go":
         common.update(
             {
-                "PRIMARY_RUNTIME": "go1.22+",
-                "DEPENDENCY_FILE": "go.mod",
-                "SETUP_COMMANDS": "go mod download",
-                "OPTIONAL_ENV_SETUP": "export APP_ENV=development",
                 "RUN_COMMAND": f"go run ./cmd/{project_slug}",
-                "VALIDACAO_MINIMA": "go test ./...",
                 "RESTART_POLICY": "mudancas em codigo Go exigem rebuild/restart do processo; docs isoladas nao exigem restart",
-                "runtime": "go1.22+",
-                "ENV_1": f"{env_prefix}_CONFIG_FILE",
-                "ENV_2": "APP_ENV",
-                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
-                    """
-                    go mod download
-                    cp config/settings.example.json config/settings.local.json
-                    """
-                ).strip(),
                 "PRIMARY_RUN_COMMAND": f"go run ./cmd/{project_slug}",
                 "config_local": "config/settings.local.json",
-                "SMOKE_TEST_COMMAND": "go test ./...",
-                "CI_STATIC_CHECK_COMMAND": "go test ./...",
-                "CI_VALIDATE_COMMAND": "go test ./...",
-                "logger": f"{project_slug}/internal/logging",
+                "logger": "JSON em stdout; implementação em internal/app",
                 "storage": "filesystem local ou banco definido pelo projeto",
                 "entrypoint_1": f"go run ./cmd/{project_slug}",
                 "entrypoint_2": "go test ./...",
@@ -453,26 +371,10 @@ def runtime_defaults(
     elif runtime == "ts":
         common.update(
             {
-                "PRIMARY_RUNTIME": "node20+ / typescript5+",
-                "DEPENDENCY_FILE": "package.json / tsconfig.json",
-                "SETUP_COMMANDS": "npm install",
-                "OPTIONAL_ENV_SETUP": "export NODE_ENV=development",
                 "RUN_COMMAND": "npm start",
-                "VALIDACAO_MINIMA": "npm test",
                 "RESTART_POLICY": "mudancas em TypeScript exigem rebuild e restart do processo; docs isoladas nao exigem restart",
-                "runtime": "node20+ / typescript5+",
-                "ENV_1": f"{env_prefix}_CONFIG_FILE",
-                "ENV_2": "NODE_ENV",
-                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
-                    """
-                    npm install
-                    cp config/settings.example.json config/settings.local.json
-                    """
-                ).strip(),
                 "PRIMARY_RUN_COMMAND": "npm start",
                 "config_local": "config/settings.local.json",
-                "SMOKE_TEST_COMMAND": "npm test",
-                "CI_VALIDATE_COMMAND": "npm test",
                 "logger": "src/infrastructure/logger.ts",
                 "storage": "filesystem local ou banco definido pelo projeto",
                 "entrypoint_1": "npm start",
@@ -503,26 +405,10 @@ def runtime_defaults(
         swift_module = pascalize(project_slug)
         common.update(
             {
-                "PRIMARY_RUNTIME": "swift5.9+",
-                "DEPENDENCY_FILE": "Package.swift",
-                "SETUP_COMMANDS": "swift package resolve",
-                "OPTIONAL_ENV_SETUP": "export APP_ENV=development",
                 "RUN_COMMAND": f"swift run {swift_module}",
-                "VALIDACAO_MINIMA": f"swift build && swift run {swift_module}",
                 "RESTART_POLICY": "mudancas em Swift exigem rebuild/restart do binario; docs isoladas nao exigem restart",
-                "runtime": "swift5.9+",
-                "ENV_1": f"{env_prefix}_CONFIG_FILE",
-                "ENV_2": "APP_ENV",
-                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
-                    """
-                    swift package resolve
-                    cp config/settings.example.json config/settings.local.json
-                    """
-                ).strip(),
                 "PRIMARY_RUN_COMMAND": f"swift run {swift_module}",
                 "config_local": "config/settings.local.json",
-                "SMOKE_TEST_COMMAND": f"swift build && swift run {swift_module}",
-                "CI_VALIDATE_COMMAND": f"swift build && swift run {swift_module}",
                 "logger": f"Sources/{swift_module}Core",
                 "storage": "filesystem local ou banco definido pelo projeto",
                 "entrypoint_1": f"swift run {swift_module}",
@@ -554,22 +440,10 @@ def runtime_defaults(
         csharp_project_file = f"src/{csharp_project}/{csharp_project}.csproj"
         common.update(
             {
-                "PRIMARY_RUNTIME": "dotnet8+",
-                "DEPENDENCY_FILE": f"{csharp_project}.sln / *.csproj",
-                "SETUP_COMMANDS": f"dotnet restore {csharp_solution}",
-                "OPTIONAL_ENV_SETUP": "export DOTNET_ENVIRONMENT=Development",
                 "RUN_COMMAND": f"dotnet run --project {csharp_project_file}",
-                "VALIDACAO_MINIMA": f"dotnet test {csharp_solution}",
                 "RESTART_POLICY": "mudancas em C# exigem rebuild/restart do processo; docs isoladas nao exigem restart",
-                "runtime": "dotnet8+",
-                "ENV_1": f"{env_prefix}_CONFIG_FILE",
-                "ENV_2": "DOTNET_ENVIRONMENT",
-                "LOCAL_BOOT_COMMANDS": f"dotnet restore {csharp_solution}\ncp config/settings.example.json config/settings.local.json",
                 "PRIMARY_RUN_COMMAND": f"dotnet run --project {csharp_project_file}",
                 "config_local": "config/settings.local.json",
-                "SMOKE_TEST_COMMAND": f"dotnet test {csharp_solution}",
-                "CI_VALIDATE_COMMAND": f"dotnet test {csharp_solution}",
-                "DOTNET_RESTORE_COMMAND": f"dotnet restore {csharp_solution}",
                 "logger": f"src/{csharp_project}",
                 "storage": "filesystem local ou banco definido pelo projeto",
                 "entrypoint_1": f"dotnet run --project {csharp_project_file}",
@@ -599,16 +473,9 @@ def runtime_defaults(
     else:
         common.update(
             {
-                "PRIMARY_RUNTIME": "preencher runtime principal",
-                "SETUP_COMMANDS": "preencher setup do projeto",
                 "RUN_COMMAND": "preencher comando de execucao",
-                "VALIDACAO_MINIMA": "preencher validacao minima",
-                "LOCAL_BOOT_COMMANDS": "preencher boot local",
                 "PRIMARY_RUN_COMMAND": "preencher comando principal",
                 "config_local": "config/settings.local.json",
-                "SMOKE_TEST_COMMAND": "preencher smoke test",
-                "CI_STATIC_CHECK_COMMAND": "preencher checagem sintatica",
-                "CI_VALIDATE_COMMAND": "preencher validacao de CI",
                 "logger": "preencher logger principal",
                 "storage": "preencher storage principal",
             }
@@ -640,17 +507,8 @@ def runtime_defaults(
                 "passo_3": "registrar restart policy e smoke test HTTP em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "contratos HTTP, payloads e fronteira da API",
                 "RUN_COMMAND": f"python -m {project_slug}",
-                "VALIDACAO_MINIMA": "python -m pytest -q",
                 "RESTART_POLICY": "mudancas na API exigem restart do processo HTTP; docs isoladas nao exigem restart",
-                "OPTIONAL_ENV_SETUP": textwrap.dedent(
-                    """
-                    export APP_ENV=dev
-                    export SERVER_HOST=127.0.0.1
-                    export SERVER_PORT=8000
-                    """
-                ).strip(),
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug}",
-                "SMOKE_TEST_COMMAND": "python -m pytest -q",
             }
         )
     elif preset == "textual_cli":
@@ -670,11 +528,8 @@ def runtime_defaults(
                 "passo_3": "registrar fallback operacional sem TUI em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "estado operacional visivel, comandos de triagem e leitura consistente",
                 "RUN_COMMAND": "python -m tui",
-                "VALIDACAO_MINIMA": f"python -m {project_slug} doctor",
                 "RESTART_POLICY": "mudancas na TUI exigem nova execucao da interface; nao ha processo residente obrigatorio",
                 "PRIMARY_RUN_COMMAND": "python -m tui",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug} doctor",
-                "CI_STATIC_CHECK_COMMAND": f"python -m compileall -q {project_slug} tui scripts tests",
             }
         )
     elif preset == "cli":
@@ -694,10 +549,8 @@ def runtime_defaults(
                 "passo_3": "garantir smoke test dos comandos principais",
                 "DOMINIO_CRITICO": "contrato da CLI e estabilidade de comandos",
                 "RUN_COMMAND": f"python -m {project_slug} doctor",
-                "VALIDACAO_MINIMA": f"python -m {project_slug} doctor",
                 "RESTART_POLICY": "mudancas na CLI nao exigem restart; exigem nova execucao do comando",
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug} doctor",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug} doctor",
             }
         )
     elif preset == "playwright_worker":
@@ -717,25 +570,8 @@ def runtime_defaults(
                 "passo_3": "registrar bootstrap do browser e instalacao do chromium em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "sessao autenticada, cookies e fronteira entre browser e worker",
                 "RUN_COMMAND": f"python -m {project_slug} --interval 30 --dry-run",
-                "VALIDACAO_MINIMA": f"python -m {project_slug} --once --dry-run",
                 "RESTART_POLICY": "mudancas no worker ou no fluxo de browser exigem restart do processo residente",
-                "OPTIONAL_ENV_SETUP": textwrap.dedent(
-                    """
-                    export APP_ENV=dev
-                    python -m playwright install chromium
-                    """
-                ).strip(),
-                "LOCAL_BOOT_COMMANDS": textwrap.dedent(
-                    f"""
-                    python3 -m venv .venv --prompt $(basename "$PWD")
-                    source .venv/bin/activate
-                    python -m pip install -r requirements.txt
-                    python -m playwright install chromium
-                    cp config/settings.example.json config/settings.local.json
-                    """
-                ).strip(),
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --interval 30 --dry-run",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug} --once --dry-run",
             }
         )
     elif preset == "worker":
@@ -755,10 +591,8 @@ def runtime_defaults(
                 "passo_3": "registrar restart e sinais de falha no OPERATIONS.md",
                 "DOMINIO_CRITICO": "unidade de trabalho, idempotencia e retry",
                 "RUN_COMMAND": f"python -m {project_slug} --interval 30",
-                "VALIDACAO_MINIMA": f"python -m {project_slug} --once",
                 "RESTART_POLICY": "mudancas de codigo do worker exigem restart do processo residente",
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --interval 30",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug} --once",
             }
         )
     elif preset == "dicom_pipeline":
@@ -778,10 +612,8 @@ def runtime_defaults(
                 "passo_3": "registrar politicas de staging, limpeza e reprocessamento em docs/OPERATIONS.md",
                 "DOMINIO_CRITICO": "StudyInstanceUID, identificadores canonicos e staging do pipeline",
                 "RUN_COMMAND": f"python -m {project_slug} --inbox runtime/inbox --outbox runtime/outbox",
-                "VALIDACAO_MINIMA": f"python -m {project_slug} --sample",
                 "RESTART_POLICY": "mudancas de etapa exigem nova execucao do pipeline e revisao do staging local",
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --inbox runtime/inbox --outbox runtime/outbox",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug} --sample",
             }
         )
     elif preset == "pipeline":
@@ -801,19 +633,67 @@ def runtime_defaults(
                 "passo_3": "documentar pipeline end-to-end e paths de runtime",
                 "DOMINIO_CRITICO": "contratos de pipeline, staging e materializacao",
                 "RUN_COMMAND": f"python -m {project_slug} --item-id demo-001",
-                "VALIDACAO_MINIMA": f"python -m {project_slug} --item-id demo-001",
                 "RESTART_POLICY": "mudancas de etapa exigem restart da execucao; dados em runtime nao podem ser sobrescritos sem intencao explicita",
                 "PRIMARY_RUN_COMMAND": f"python -m {project_slug} --item-id demo-001",
-                "SMOKE_TEST_COMMAND": f"python -m {project_slug} --item-id demo-001",
             }
         )
 
-    common["VALIDACAO_MINIMA"] = prepend_gate_check(common["VALIDACAO_MINIMA"], gate_enforced)
+    commands = runtime_commands(runtime, project_slug, preset)
+    profile = RUNTIMES[runtime]
+    common.update({
+        "PRIMARY_RUNTIME": f"{profile['name']} {profile['version']}",
+        "runtime": f"{profile['name']} {profile['version']}",
+        "PRIMARY_RUNTIME_VERSION": profile["version"],
+        "DEPENDENCY_FILE": profile["dependency_file"].format(module=pascalize(project_slug)),
+        "SETUP_COMMANDS": commands["setup"],
+        "LOCAL_BOOT_COMMANDS": commands["setup"] + "\ncp config/settings.example.json config/settings.local.json",
+        "VALIDACAO_MINIMA": commands["test"],
+        "TEST_COMMAND": commands["test"],
+        "CI_VALIDATE_COMMAND": commands["test"],
+        "CI_STATIC_CHECK_COMMAND": commands["build"],
+        "SMOKE_TEST_COMMAND": commands["smoke"],
+        "HEALTHCHECK_DESCRIPTION": "nenhum probe configurado; implantação ainda não declarada",
+        "PYTHON_VERSION": RUNTIMES["python"]["version"],
+        "NODE_VERSION": RUNTIMES["node"]["version"],
+        "GO_VERSION": RUNTIMES["go"]["version"],
+        "DOTNET_VERSION": RUNTIMES["csharp"]["version"],
+        "JAVA_VERSION": RUNTIMES["java"]["version"],
+        "RUST_VERSION": RUNTIMES["rust"]["version"],
+        "SWIFT_VERSION": RUNTIMES["swift"]["version"],
+        "SWIFT_CONTAINER": RUNTIMES["swift"]["container"],
+        "DOTNET_RESTORE_COMMAND": runtime_commands("csharp", project_slug)["setup"],
+        "CI_SETUP_PYTHON": "      - name: Set up validation Python\n        uses: " + CATALOG["actions"]["python"] + "\n        with:\n          python-version: \"" + CATALOG["validation_python"] + "\"",
+        "CONFIG_DESCRIPTION": "O baseline lê settings.local.json ou settings.example.json; a variável " + env_prefix + "_CONFIG_FILE seleciona outro arquivo." if uses_config(runtime, preset) else "Exemplo de configuração para adaptação; este baseline ainda não lê esse arquivo.",
+        "OPTIONAL_ENV_SETUP": "# Ajuste somente as entradas documentadas em OPERATIONS.md.",
+        "ENV_1": env_prefix + "_CONFIG_FILE" if uses_config(runtime, preset) else "nenhuma variável consumida pelo baseline",
+        "ENV_2": "nenhuma outra variável obrigatória no baseline",
+        "runtime_path": "sem estado persistente no baseline",
+        "logs_path": "stdout; nenhum arquivo de log criado pelo baseline",
+    })
+    common.update({"ACTION_" + key.upper(): value for key, value in CATALOG["actions"].items()})
+    if preset == "base":
+        common.update({"RUN_COMMAND": commands["run"], "PRIMARY_RUN_COMMAND": commands["run"], "entrypoint_1": commands["run"], "entrypoint_2": commands["test"]})
+    if runtime == "generic":
+        common["RUNTIME_STRUCTURE"] = "├── src/ (adapte somente se houver código)"
+    if runtime in {"python", "node"} and preset == "base":
+        common["RUNTIME_STRUCTURE"] = f"├── {project_slug}/\n│   └── entrypoint e configuração do programa"
+    if runtime in {"java", "rust"}:
+        common.update({
+            "RUNTIME_STRUCTURE": "├── src/\n│   └── código e testes conforme convenção do runtime",
+            "config_local": "config/settings.local.json",
+            "logger": "logger JSON em stdout",
+            "RESTART_POLICY": "recompilar após mudanças; o baseline é um comando local finito",
+        })
+    if preset == "fastapi":
+        common["HEALTHCHECK_DESCRIPTION"] = "HTTP GET http://127.0.0.1:8000/health (ajuste junto de SERVER_HOST e SERVER_PORT)"
+    if preset in {"pipeline", "dicom_pipeline", "playwright_worker"}:
+        common["runtime_path"] = ", ".join(default_deploy_manifest(runtime, project_name, project_slug, preset)["runtime_state"]["paths"])
     if gate_enforced:
         common["CI_GATE_STEP"] = (
             "      - name: Check project gate\n"
             "        run: python3 scripts/check_project_gate.py"
         )
+
     return common
 
 
@@ -841,118 +721,51 @@ def write_text(path: Path, content: str) -> None:
         path.chmod(path.stat().st_mode | 0o755)
 
 
+def uses_config(runtime: str, preset: str) -> bool:
+    return runtime in {"node", "ts", "go", "java", "rust"} or (runtime == "python" and preset in {"base", "fastapi", "playwright_worker"})
+
+
+def runtime_commands(runtime: str, project_slug: str, preset: str = "base") -> dict[str, str]:
+    values = {"slug": project_slug, "dist": project_slug.replace("_", "-"), "module": pascalize(project_slug), "sources": project_slug + (" tui" if preset == "textual_cli" else "")}
+    return {key: str(RUNTIMES[runtime][key]).format(**values) for key in ("setup", "run", "test", "build", "smoke")}
+
+
 def runtime_process_defaults(runtime: str, project_slug: str, preset: str) -> tuple[str, str, str]:
+    commands = runtime_commands(runtime, project_slug, preset)
+    run = commands["run"]
     if runtime == "python":
-        process_command = f"python -m {project_slug}"
-        healthcheck_command = "python -m pytest -q"
-        runtime_version = "3.9+"
-        if preset == "cli":
-            process_command = f"python -m {project_slug} doctor"
-            healthcheck_command = f"python -m {project_slug} doctor"
-        elif preset == "textual_cli":
-            process_command = "python -m tui"
-            healthcheck_command = f"python -m {project_slug} doctor"
-        elif preset == "worker":
-            process_command = f"python -m {project_slug} --interval 30"
-            healthcheck_command = f"python -m {project_slug} --once"
-        elif preset == "playwright_worker":
-            process_command = f"python -m {project_slug} --interval 30 --dry-run"
-            healthcheck_command = f"python -m {project_slug} --once --dry-run"
-        elif preset == "pipeline":
-            process_command = f"python -m {project_slug} --item-id demo-001"
-            healthcheck_command = f"python -m {project_slug} --item-id demo-001"
-        elif preset == "dicom_pipeline":
-            process_command = f"python -m {project_slug} --inbox runtime/inbox --outbox runtime/outbox"
-            healthcheck_command = f"python -m {project_slug} --sample"
-        return process_command, healthcheck_command, runtime_version
-
-    if runtime == "node":
-        return "npm start", "npm test", "20+"
-
-    if runtime == "go":
-        return f"go run ./cmd/{project_slug}", "go test ./...", "1.22+"
-
-    if runtime == "ts":
-        return "npm start", "npm test", "node20+ / typescript5+"
-
-    if runtime == "swift":
-        module_name = pascalize(project_slug)
-        return f"swift run {module_name}", f"swift build && swift run {module_name}", "5.9+"
-
-    if runtime == "csharp":
-        project_name = pascalize(project_slug)
-        return f"dotnet run --project src/{project_name}/{project_name}.csproj", f"dotnet test {project_name}.sln", "8.0+"
-
-    return "definido pelo projeto", "definido pelo projeto", "not-applicable"
+        suffixes = {"cli": " doctor", "worker": " --interval 30", "playwright_worker": " --interval 30 --dry-run", "pipeline": " --item-id demo-001", "dicom_pipeline": " --inbox runtime/inbox --outbox runtime/outbox"}
+        run += suffixes.get(preset, "")
+        if preset == "textual_cli":
+            run = "python -m tui"
+    return run, commands["smoke"], RUNTIMES[runtime]["version"]
 
 
-def default_deploy_manifest(
-    runtime: str,
-    project_name: str,
-    project_slug: str,
-    preset: str,
-) -> dict[str, object]:
-    process_command, healthcheck_command, runtime_version = runtime_process_defaults(
-        runtime,
-        project_slug,
-        preset,
-    )
-    optional_env = {
-        "python": "APP_ENV",
-        "node": "NODE_ENV",
-        "ts": "NODE_ENV",
-        "go": "APP_ENV",
-        "swift": "APP_ENV",
-        "csharp": "DOTNET_ENVIRONMENT",
-    }.get(runtime)
-
-    return {
-        "version": 1,
-        "project": {
-            "name": project_name,
-            "slug": project_slug,
-        },
-        "runtime": {
-            "id": runtime,
-            "version": runtime_version,
-        },
-        "deploy": {
-            "target": "local",
-            "reason": "baseline local gerada pelo Skidbladnir; ajuste antes de publicar ou operar em outro ambiente",
-        },
-        "process": {
-            "command": process_command,
-            "working_directory": ".",
-            "user": "local operator",
-        },
-        "healthcheck": {
-            "command": healthcheck_command,
-            "timeout_seconds": 30,
-        },
-        "ports": [],
-        "environment": {
-            "required": [],
-            "optional": [optional_env] if optional_env else [],
-        },
-        "secrets": {
-            "required": [],
-        },
-        "runtime_state": {
-            "paths": ["runtime/"],
-        },
-        "logs": {
-            "paths": ["runtime/logs/"],
-        },
-        "restart": {
-            "policy": "restart do processo quando codigo, configuracao ou manifesto de deploy mudar",
-        },
-        "backup": {
-            "policy": "revisar runtime state antes de operar fora do ambiente local",
-        },
-        "rollback": {
-            "strategy": "voltar para ultimo commit validado e reaplicar configuracao host-local preservada",
-        },
-    }
+def default_deploy_manifest(runtime: str, project_name: str, project_slug: str, preset: str) -> dict[str, object]:
+    command, _, version = runtime_process_defaults(runtime, project_slug, preset)
+    http = runtime == "python" and preset == "fastapi"
+    paths = {"playwright_worker": ["runtime/browser/session.json"], "pipeline": ["runtime/outbox/"], "dicom_pipeline": ["runtime/inbox/", "runtime/outbox/"]}.get(preset, [])
+    reason = "serviço HTTP local de exemplo; reveja o contrato antes de implantar"
+    if not http:
+        reason = "baseline sem implantação configurada; comando local documentado"
+        if preset in {"worker", "playwright_worker"}:
+            reason = "worker de exemplo sem supervisão ou probe seguro; configure antes de implantar"
+    manifest = json.loads((TEMPLATE_DIR / "deploy/manifest.json").read_text(encoding="utf-8"))
+    manifest.update({
+        "project": {"name": project_name, "slug": project_slug},
+        "runtime": {"id": runtime, "version": version},
+        "deploy": {"target": "local" if http else "none", "reason": reason},
+        "process": {"command": command, "working_directory": "."} if runtime != "generic" else {},
+        "healthcheck": {"http": {"url": "http://127.0.0.1:8000/health"}, "timeout_seconds": 5} if http else {},
+        "ports": [8000] if http else [],
+        "environment": {"required": [], "optional": ([project_slug.upper() + "_CONFIG_FILE"] if uses_config(runtime, preset) else []) + (["SERVER_HOST", "SERVER_PORT"] if http else [])},
+        "runtime_state": {"paths": paths},
+    })
+    if http:
+        manifest["restart"]["policy"] = "reiniciar processo após alteração de código ou configuração"
+    if paths:
+        manifest["backup"]["policy"] = "preservar os artefatos nos caminhos de estado antes de reprocessar"
+    return manifest
 
 
 def default_logging_config() -> dict[str, object]:
@@ -1006,9 +819,7 @@ def default_app_config(runtime: str, project_name: str, preset: str) -> tuple[st
         }
     }
 
-    if preset == "fastapi":
-        config_payload["server"] = {"host": "127.0.0.1", "port": 8000}
-    elif preset == "textual_cli":
+    if preset == "textual_cli":
         config_payload["tui"] = {"refresh_seconds": 2, "title": project_name}
     elif preset == "playwright_worker":
         config_payload["browser"] = {
@@ -1054,6 +865,7 @@ def common_generated_files(
             *.py[cod]
             .pytest_cache/
             .ruff_cache/
+            .mypy_cache/
             htmlcov/
             .coverage*
 
@@ -1067,6 +879,9 @@ def common_generated_files(
             # Build artifacts
             build/
             dist/
+            target/
+            .build/
+            obj/
 
             # Editor / OS noise
             .DS_Store
@@ -1090,1239 +905,6 @@ def common_generated_files(
     return files
 
 
-def python_generated_files(
-    project_name: str,
-    project_slug: str,
-    preset: str,
-    gate_enforced: bool,
-) -> dict[str, str]:
-    package_dir = project_slug
-    dependencies: list[str] = []
-    dev_dependencies = [
-        "pytest>=8.0",
-        "ruff>=0.6.0",
-    ]
-
-    if preset == "fastapi":
-        dependencies.extend(
-            [
-                "fastapi>=0.115,<1",
-                "uvicorn>=0.30,<1",
-            ]
-        )
-        dev_dependencies.append("httpx>=0.27")
-    elif preset == "textual_cli":
-        dependencies.extend(
-            [
-                "rich>=13.7,<14",
-                "textual>=0.58,<1",
-            ]
-        )
-    elif preset == "playwright_worker":
-        dependencies.extend(
-            [
-                "playwright>=1.58,<2",
-                "requests>=2.31,<3",
-            ]
-        )
-    elif preset == "dicom_pipeline":
-        dependencies.append("pydicom>=2.4,<3")
-
-    requirements_lines = dependencies + dev_dependencies
-
-    files = {
-        "requirements.txt": "\n".join(requirements_lines) + "\n",
-        f"{package_dir}/__init__.py": textwrap.dedent(
-            f'''
-            """Pacote principal de {project_name}."""
-            '''
-        ),
-        f"{package_dir}/__main__.py": textwrap.dedent(
-            f"""
-            import sys
-
-            from {project_slug}.main import main
-
-
-            if __name__ == "__main__":
-                raise SystemExit(main(sys.argv[1:]))
-            """
-        ),
-        f"{package_dir}/main.py": textwrap.dedent(
-            f"""
-            from __future__ import annotations
-
-            import argparse
-
-            from {project_slug}.infrastructure.config import load_settings
-            from {project_slug}.infrastructure.logging import build_logger
-
-
-            def main(argv: list[str] | None = None) -> int:
-                parser = argparse.ArgumentParser(description="Entrypoint principal do projeto")
-                parser.parse_args([] if argv is None else argv)
-                settings = load_settings()
-                logger = build_logger(settings.app.name, settings.app.log_level)
-                logger.info("servico inicializado", extra={{"evt": "startup"}})
-                return 0
-            """
-        ),
-        f"{package_dir}/domain/__init__.py": '"""Camada de dominio."""\n',
-        f"{package_dir}/application/__init__.py": '"""Casos de uso e orquestracao."""\n',
-        f"{package_dir}/interfaces/__init__.py": '"""Interfaces externas do sistema."""\n',
-        f"{package_dir}/infrastructure/__init__.py": '"""Infraestrutura e IO."""\n',
-        f"{package_dir}/infrastructure/config.py": textwrap.dedent(
-            f"""
-            from __future__ import annotations
-
-            import json
-            import os
-            from dataclasses import dataclass
-            from pathlib import Path
-
-
-            @dataclass
-            class AppSettings:
-                name: str
-                env: str
-                log_level: str
-
-
-            @dataclass
-            class Settings:
-                app: AppSettings
-                config_path: Path
-                raw: dict[str, object]
-
-
-            def _candidate_paths() -> list[Path]:
-                env_path = os.getenv("{project_slug.upper()}_CONFIG_FILE")
-                paths: list[Path] = []
-                if env_path:
-                    paths.append(Path(env_path))
-                paths.append(Path("config/settings.local.json"))
-                paths.append(Path("config/settings.example.json"))
-                return paths
-
-
-            def load_settings() -> Settings:
-                for path in _candidate_paths():
-                    if not path.exists():
-                        continue
-
-                    data = json.loads(path.read_text(encoding="utf-8"))
-                    app_data = data.get("app", {{}})
-                    return Settings(
-                        app=AppSettings(
-                            name=str(app_data.get("name", "{project_name}")),
-                            env=str(app_data.get("env", "dev")),
-                            log_level=str(app_data.get("log_level", "INFO")),
-                        ),
-                        config_path=path,
-                        raw=data,
-                    )
-
-                return Settings(
-                    app=AppSettings(
-                        name="{project_name}",
-                        env="dev",
-                        log_level="INFO",
-                    ),
-                    config_path=Path("config/settings.example.json"),
-                    raw={{}},
-                )
-            """
-        ),
-        f"{package_dir}/infrastructure/logging.py": textwrap.dedent(
-            """
-            from __future__ import annotations
-
-            from datetime import datetime, timezone
-            import json
-            import logging
-            import sys
-
-
-            class JsonFormatter(logging.Formatter):
-                def __init__(self, service_name: str) -> None:
-                    super().__init__()
-                    self.service_name = service_name
-
-                def format(self, record: logging.LogRecord) -> str:
-                    payload = {
-                        "ts": datetime.now(timezone.utc).isoformat(),
-                        "lvl": record.levelname,
-                        "svc": self.service_name,
-                        "mod": record.name,
-                        "evt": getattr(record, "evt", "log"),
-                        "msg": record.getMessage(),
-                    }
-                    return json.dumps(payload, ensure_ascii=True)
-
-
-            def build_logger(service_name: str, level: str = "INFO") -> logging.Logger:
-                logger = logging.getLogger(service_name)
-                logger.setLevel(getattr(logging, level.upper(), logging.INFO))
-
-                if logger.handlers:
-                    return logger
-
-                handler = logging.StreamHandler(sys.stdout)
-                handler.setFormatter(JsonFormatter(service_name))
-                logger.addHandler(handler)
-                logger.propagate = False
-                return logger
-            """
-        ),
-        "tests/test_smoke.py": textwrap.dedent(
-            f"""
-            from {project_slug}.main import main
-
-
-            def test_main_returns_zero() -> None:
-                assert main() == 0
-            """
-        ),
-    }
-
-    if gate_enforced:
-        files["tests/test_project_gate.py"] = textwrap.dedent(
-            """
-            import subprocess
-            import sys
-            from pathlib import Path
-
-
-            def test_project_gate_is_filled() -> None:
-                root = Path(__file__).resolve().parents[1]
-                result = subprocess.run(
-                    [sys.executable, str(root / "scripts" / "check_project_gate.py")],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                )
-                assert result.returncode == 0, result.stdout + result.stderr
-            """
-        )
-
-    return files
-
-
-def preset_python_files(project_name: str, project_slug: str, preset: str) -> dict[str, str]:
-    package_dir = project_slug
-
-    if preset == "fastapi":
-        return {
-            f"{package_dir}/main.py": textwrap.dedent(
-                f"""
-                from __future__ import annotations
-
-                import argparse
-                import os
-                import sys
-
-
-                def main(argv: list[str] | None = None) -> int:
-                    parser = argparse.ArgumentParser(description="Executa o servico HTTP")
-                    parser.add_argument("--host", default=os.getenv("SERVER_HOST", "127.0.0.1"))
-                    parser.add_argument("--port", type=int, default=int(os.getenv("SERVER_PORT", "8000")))
-                    args = parser.parse_args([] if argv is None else argv)
-
-                    import uvicorn
-
-                    uvicorn.run(
-                        "{project_slug}.interfaces.http.app:create_app",
-                        factory=True,
-                        host=args.host,
-                        port=args.port,
-                        reload=False,
-                    )
-                    return 0
-
-
-                if __name__ == "__main__":
-                    raise SystemExit(main(sys.argv[1:]))
-                """
-            ),
-            f"{package_dir}/interfaces/http/__init__.py": '"""Interface HTTP do servico."""\n',
-            f"{package_dir}/interfaces/http/app.py": textwrap.dedent(
-                f"""
-                from fastapi import FastAPI
-
-                from {project_slug}.interfaces.http.routers.health import router as health_router
-
-
-                def create_app() -> FastAPI:
-                    app = FastAPI(title="{project_name}")
-                    app.include_router(health_router)
-                    return app
-                """
-            ),
-            f"{package_dir}/interfaces/http/routers/__init__.py": '"""Routers HTTP do servico."""\n',
-            f"{package_dir}/interfaces/http/routers/health.py": textwrap.dedent(
-                """
-                from fastapi import APIRouter
-
-
-                router = APIRouter(tags=["health"])
-
-
-                @router.get("/health")
-                def health() -> dict[str, str]:
-                    return {"status": "ok"}
-                """
-            ),
-            "tests/test_http_health.py": textwrap.dedent(
-                f"""
-                from fastapi.testclient import TestClient
-
-                from {project_slug}.interfaces.http.app import create_app
-
-
-                def test_health_route() -> None:
-                    client = TestClient(create_app())
-                    response = client.get("/health")
-                    assert response.status_code == 200
-                    assert response.json() == {{"status": "ok"}}
-                """
-            ),
-            "tests/test_smoke.py": textwrap.dedent(
-                f"""
-                from {project_slug}.interfaces.http.app import create_app
-
-
-                def test_create_app() -> None:
-                    app = create_app()
-                    assert app.title == "{project_name}"
-                """
-            ),
-        }
-
-    if preset == "cli":
-        return {
-            f"{package_dir}/application/commands.py": textwrap.dedent(
-                """
-                def doctor() -> str:
-                    return "ok"
-                """
-            ),
-            f"{package_dir}/interfaces/cli/__init__.py": '"""CLI do sistema."""\n',
-            f"{package_dir}/interfaces/cli/parser.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import argparse
-
-
-                def build_parser() -> argparse.ArgumentParser:
-                    parser = argparse.ArgumentParser(description="CLI do projeto")
-                    subparsers = parser.add_subparsers(dest="command", required=True)
-
-                    doctor = subparsers.add_parser("doctor", help="valida baseline minima")
-                    doctor.set_defaults(command="doctor")
-                    return parser
-                """
-            ),
-            f"{package_dir}/main.py": textwrap.dedent(
-                f"""
-                from __future__ import annotations
-
-                import sys
-
-                from {project_slug}.application.commands import doctor
-                from {project_slug}.interfaces.cli.parser import build_parser
-
-
-                def main(argv: list[str] | None = None) -> int:
-                    parser = build_parser()
-                    args = parser.parse_args([] if argv is None else argv)
-
-                    if args.command == "doctor":
-                        print(doctor())
-                        return 0
-
-                    parser.error("comando nao suportado")
-                    return 2
-
-
-                if __name__ == "__main__":
-                    raise SystemExit(main(sys.argv[1:]))
-                """
-            ),
-            "tests/test_cli_doctor.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_doctor_command() -> None:
-                    assert main(["doctor"]) == 0
-                """
-            ),
-            "tests/test_smoke.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_smoke_doctor() -> None:
-                    assert main(["doctor"]) == 0
-                """
-            ),
-        }
-
-    if preset == "textual_cli":
-        return {
-            "tui/__init__.py": '"""Launcher publico da TUI."""\n',
-            "tui/__main__.py": textwrap.dedent(
-                f"""
-                from {project_slug}.interfaces.tui.app import build_app
-
-
-                def main() -> int:
-                    build_app().run()
-                    return 0
-
-
-                if __name__ == "__main__":
-                    raise SystemExit(main())
-                """
-            ),
-            f"{package_dir}/application/commands.py": textwrap.dedent(
-                """
-                def doctor() -> str:
-                    return "ok"
-                """
-            ),
-            f"{package_dir}/interfaces/cli/__init__.py": '"""CLI do cockpit textual."""\n',
-            f"{package_dir}/interfaces/cli/parser.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import argparse
-
-
-                def build_parser() -> argparse.ArgumentParser:
-                    parser = argparse.ArgumentParser(description="CLI com cockpit Textual")
-                    subparsers = parser.add_subparsers(dest="command", required=True)
-
-                    doctor = subparsers.add_parser("doctor", help="valida baseline minima")
-                    doctor.set_defaults(command="doctor")
-
-                    tui = subparsers.add_parser("tui", help="abre a interface textual")
-                    tui.set_defaults(command="tui")
-                    return parser
-                """
-            ),
-            f"{package_dir}/interfaces/tui/__init__.py": '"""TUI do sistema."""\n',
-            f"{package_dir}/interfaces/tui/app.py": textwrap.dedent(
-                f"""
-                from textual.app import App, ComposeResult
-                from textual.binding import Binding
-                from textual.widgets import Footer, Header, Static
-
-
-                class DashboardApp(App[None]):
-                    TITLE = "{project_name}"
-                    SUB_TITLE = "Textual cockpit baseline"
-                    BINDINGS = [
-                        Binding("q", "quit", "Sair"),
-                        Binding("r", "notify_refresh", "Refresh"),
-                    ]
-                    CSS = \"\"\"
-                    Screen {{
-                        align: center middle;
-                        background: #132726;
-                    }}
-
-                    #hero {{
-                        width: 72;
-                        padding: 1 2;
-                        border: round #4fd3d0;
-                        background: #1a2f2e;
-                        color: #edf4ef;
-                    }}
-                    \"\"\"
-
-                    def compose(self) -> ComposeResult:
-                        yield Header(show_clock=True)
-                        yield Static(
-                            "Preencha a fonte de dados operacional antes de crescer a TUI.\\n"
-                            "Use doctor para smoke e mantenha a regra de negocio fora da interface.",
-                            id="hero",
-                        )
-                        yield Footer()
-
-                    def action_notify_refresh(self) -> None:
-                        self.notify("refresh manual", timeout=1.5)
-
-
-                def build_app() -> DashboardApp:
-                    return DashboardApp()
-                """
-            ),
-            f"{package_dir}/main.py": textwrap.dedent(
-                f"""
-                from __future__ import annotations
-
-                import sys
-
-                from {project_slug}.application.commands import doctor
-                from {project_slug}.interfaces.cli.parser import build_parser
-
-                def main(argv: list[str] | None = None) -> int:
-                    parser = build_parser()
-                    args = parser.parse_args([] if argv is None else argv)
-
-                    if args.command == "doctor":
-                        print(doctor())
-                        return 0
-
-                    if args.command == "tui":
-                        from {project_slug}.interfaces.tui.app import build_app
-
-                        build_app().run()
-                        return 0
-
-                    parser.error("comando nao suportado")
-                    return 2
-
-
-                if __name__ == "__main__":
-                    raise SystemExit(main(sys.argv[1:]))
-                """
-            ),
-            "tests/test_textual_cli.py": textwrap.dedent(
-                f"""
-                from {project_slug}.interfaces.tui.app import build_app
-                from {project_slug}.main import main
-
-
-                def test_doctor_command() -> None:
-                    assert main(["doctor"]) == 0
-
-
-                def test_build_app() -> None:
-                    app = build_app()
-                    assert app.__class__.__name__ == "DashboardApp"
-                """
-            ),
-            "tests/test_smoke.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_smoke_doctor() -> None:
-                    assert main(["doctor"]) == 0
-                """
-            ),
-        }
-
-    if preset == "playwright_worker":
-        return {
-            f"{package_dir}/application/contracts.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                from dataclasses import asdict, dataclass
-
-
-                @dataclass
-                class BrowserCookie:
-                    name: str
-                    value: str
-                    domain: str = ""
-                    path: str = "/"
-
-                    @classmethod
-                    def from_playwright_dict(cls, payload: dict[str, object]) -> "BrowserCookie":
-                        return cls(
-                            name=str(payload.get("name", "")),
-                            value=str(payload.get("value", "")),
-                            domain=str(payload.get("domain", "")),
-                            path=str(payload.get("path", "/")),
-                        )
-
-                    def to_dict(self) -> dict[str, str]:
-                        return asdict(self)
-
-
-                @dataclass
-                class SessionArtifacts:
-                    cookies: list[BrowserCookie]
-                    created_at_epoch: float
-                    base_url: str = ""
-                    notes: str = ""
-
-                    def to_dict(self) -> dict[str, object]:
-                        return {
-                            "cookies": [cookie.to_dict() for cookie in self.cookies],
-                            "created_at_epoch": self.created_at_epoch,
-                            "base_url": self.base_url,
-                            "notes": self.notes,
-                        }
-
-                    @classmethod
-                    def from_dict(cls, payload: dict[str, object]) -> "SessionArtifacts":
-                        raw_cookies = payload.get("cookies", [])
-                        cookies = []
-                        if isinstance(raw_cookies, list):
-                            for item in raw_cookies:
-                                if isinstance(item, dict):
-                                    cookies.append(BrowserCookie.from_playwright_dict(item))
-                        return cls(
-                            cookies=cookies,
-                            created_at_epoch=float(payload.get("created_at_epoch", 0.0) or 0.0),
-                            base_url=str(payload.get("base_url", "")),
-                            notes=str(payload.get("notes", "")),
-                        )
-                """
-            ),
-            f"{package_dir}/application/session.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import json
-                import time
-                from pathlib import Path
-
-                from .contracts import BrowserCookie, SessionArtifacts
-
-
-                def save_session_artifacts(path: str | Path, artifacts: SessionArtifacts) -> Path:
-                    destination = Path(path).expanduser().resolve()
-                    destination.parent.mkdir(parents=True, exist_ok=True)
-                    destination.write_text(
-                        json.dumps(artifacts.to_dict(), ensure_ascii=True, indent=2) + "\\n",
-                        encoding="utf-8",
-                    )
-                    return destination
-
-
-                def load_session_artifacts(path: str | Path) -> SessionArtifacts:
-                    source = Path(path).expanduser().resolve()
-                    payload = json.loads(source.read_text(encoding="utf-8"))
-                    return SessionArtifacts.from_dict(payload)
-
-
-                def build_placeholder_session(base_url: str = "") -> SessionArtifacts:
-                    return SessionArtifacts(
-                        cookies=[
-                            BrowserCookie(
-                                name="session",
-                                value="placeholder",
-                                domain="example.invalid",
-                                path="/",
-                            )
-                        ],
-                        created_at_epoch=time.time(),
-                        base_url=base_url,
-                        notes="TODO: substituir bootstrap placeholder por login real",
-                    )
-                """
-            ),
-            f"{package_dir}/application/worker.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import logging
-                import time
-                from pathlib import Path
-
-                from .contracts import BrowserCookie, SessionArtifacts
-                from .session import build_placeholder_session, save_session_artifacts
-
-
-                def refresh_session(
-                    logger: logging.Logger,
-                    storage_path: Path,
-                    *,
-                    dry_run: bool = False,
-                    show_browser: bool = False,
-                    login_url: str = "",
-                ) -> int:
-                    if dry_run:
-                        artifacts = build_placeholder_session(login_url)
-                        save_session_artifacts(storage_path, artifacts)
-                        logger.info("sessao de browser simulada", extra={"evt": "browser_session_dry_run"})
-                        return 1
-
-                    try:
-                        from playwright.sync_api import sync_playwright
-                    except ModuleNotFoundError as exc:
-                        raise RuntimeError(
-                            "playwright nao esta instalado; rode `python -m playwright install chromium`"
-                        ) from exc
-
-                    with sync_playwright() as playwright:
-                        browser = playwright.chromium.launch(headless=not show_browser)
-                        context = browser.new_context()
-                        page = context.new_page()
-                        if login_url:
-                            page.goto(login_url, wait_until="domcontentloaded", timeout=30000)
-                        cookies = [
-                            BrowserCookie.from_playwright_dict(item)
-                            for item in context.cookies()
-                        ]
-                        browser.close()
-
-                    artifacts = SessionArtifacts(
-                        cookies=cookies,
-                        created_at_epoch=time.time(),
-                        base_url=login_url,
-                        notes="TODO: inserir login real e validacao de sessao",
-                    )
-                    save_session_artifacts(storage_path, artifacts)
-                    logger.info("sessao de browser atualizada", extra={"evt": "browser_session_refreshed"})
-                    return 1
-
-
-                def run_once(
-                    logger: logging.Logger,
-                    storage_path: Path,
-                    *,
-                    dry_run: bool = False,
-                    show_browser: bool = False,
-                    login_url: str = "",
-                ) -> int:
-                    return refresh_session(
-                        logger,
-                        storage_path,
-                        dry_run=dry_run,
-                        show_browser=show_browser,
-                        login_url=login_url,
-                    )
-
-
-                def run_loop(
-                    logger: logging.Logger,
-                    interval_seconds: int,
-                    storage_path: Path,
-                    *,
-                    once: bool = False,
-                    dry_run: bool = False,
-                    show_browser: bool = False,
-                    login_url: str = "",
-                ) -> int:
-                    processed = run_once(
-                        logger,
-                        storage_path,
-                        dry_run=dry_run,
-                        show_browser=show_browser,
-                        login_url=login_url,
-                    )
-                    if once:
-                        return processed
-
-                    while True:
-                        time.sleep(interval_seconds)
-                        run_once(
-                            logger,
-                            storage_path,
-                            dry_run=dry_run,
-                            show_browser=show_browser,
-                            login_url=login_url,
-                        )
-                """
-            ),
-            f"{package_dir}/interfaces/cli/__init__.py": '"""CLI do worker Playwright."""\n',
-            f"{package_dir}/interfaces/cli/parser.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import argparse
-
-
-                def build_parser() -> argparse.ArgumentParser:
-                    parser = argparse.ArgumentParser(description="Worker com sessao de browser")
-                    parser.add_argument("--once", action="store_true", help="executa um ciclo e sai")
-                    parser.add_argument("--interval", type=int, default=30, help="intervalo entre ciclos")
-                    parser.add_argument(
-                        "--refresh-session",
-                        action="store_true",
-                        help="faz apenas o bootstrap/refresh dos artefatos de sessao",
-                    )
-                    parser.add_argument("--dry-run", action="store_true", help="gera artefatos placeholder sem abrir browser")
-                    parser.add_argument("--show-browser", action="store_true", help="abre browser visivel no refresh real")
-                    parser.add_argument("--login-url", default="", help="URL inicial para bootstrap de sessao")
-                    return parser
-                """
-            ),
-            f"{package_dir}/main.py": textwrap.dedent(
-                f"""
-                from __future__ import annotations
-
-                import sys
-                from pathlib import Path
-
-                from {project_slug}.application.worker import refresh_session, run_loop
-                from {project_slug}.infrastructure.config import load_settings
-                from {project_slug}.infrastructure.logging import build_logger
-                from {project_slug}.interfaces.cli.parser import build_parser
-
-
-                def _browser_storage_path(settings) -> Path:
-                    browser = settings.raw.get("browser", {{}})
-                    if isinstance(browser, dict):
-                        configured = browser.get("storage_path")
-                        if configured:
-                            return Path(str(configured))
-                    return Path("runtime/browser/session.json")
-
-
-                def _login_url(settings, cli_value: str) -> str:
-                    if cli_value:
-                        return cli_value
-                    browser = settings.raw.get("browser", {{}})
-                    if isinstance(browser, dict):
-                        return str(browser.get("login_url", "") or "")
-                    return ""
-
-
-                def main(argv: list[str] | None = None) -> int:
-                    parser = build_parser()
-                    args = parser.parse_args([] if argv is None else argv)
-                    settings = load_settings()
-                    logger = build_logger(settings.app.name, settings.app.log_level)
-                    storage_path = _browser_storage_path(settings)
-                    login_url = _login_url(settings, args.login_url)
-
-                    if args.refresh_session:
-                        return refresh_session(
-                            logger,
-                            storage_path,
-                            dry_run=args.dry_run,
-                            show_browser=args.show_browser,
-                            login_url=login_url,
-                        )
-
-                    return run_loop(
-                        logger,
-                        args.interval,
-                        storage_path,
-                        once=args.once,
-                        dry_run=args.dry_run,
-                        show_browser=args.show_browser,
-                        login_url=login_url,
-                    )
-
-
-                if __name__ == "__main__":
-                    raise SystemExit(main(sys.argv[1:]))
-                """
-            ),
-            "tests/test_playwright_worker.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_worker_dry_run_creates_session_artifact(tmp_path, monkeypatch) -> None:
-                    monkeypatch.chdir(tmp_path)
-                    assert main(["--once", "--dry-run"]) == 1
-                    assert (tmp_path / "runtime" / "browser" / "session.json").exists()
-                """
-            ),
-            "tests/test_smoke.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_smoke_dry_run(tmp_path, monkeypatch) -> None:
-                    monkeypatch.chdir(tmp_path)
-                    assert main(["--once", "--dry-run"]) == 1
-                """
-            ),
-        }
-
-    if preset == "worker":
-        return {
-            f"{package_dir}/application/worker.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import logging
-                import time
-
-
-                def run_once(logger: logging.Logger) -> int:
-                    logger.info("ciclo executado", extra={"evt": "worker_cycle"})
-                    return 1
-
-
-                def run_loop(logger: logging.Logger, interval_seconds: int, *, once: bool = False) -> int:
-                    processed = run_once(logger)
-                    if once:
-                        return processed
-
-                    while True:
-                        time.sleep(interval_seconds)
-                        run_once(logger)
-                """
-            ),
-            f"{package_dir}/interfaces/cli/__init__.py": '"""CLI do worker."""\n',
-            f"{package_dir}/interfaces/cli/parser.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import argparse
-
-
-                def build_parser() -> argparse.ArgumentParser:
-                    parser = argparse.ArgumentParser(description="Worker residente")
-                    parser.add_argument("--once", action="store_true", help="executa um ciclo e sai")
-                    parser.add_argument("--interval", type=int, default=30, help="intervalo entre ciclos")
-                    return parser
-                """
-            ),
-            f"{package_dir}/main.py": textwrap.dedent(
-                f"""
-                from __future__ import annotations
-
-                import sys
-
-                from {project_slug}.application.worker import run_loop
-                from {project_slug}.infrastructure.logging import build_logger
-                from {project_slug}.interfaces.cli.parser import build_parser
-
-
-                def main(argv: list[str] | None = None) -> int:
-                    parser = build_parser()
-                    args = parser.parse_args([] if argv is None else argv)
-                    logger = build_logger("{project_name}")
-                    return run_loop(logger, args.interval, once=args.once)
-
-
-                if __name__ == "__main__":
-                    raise SystemExit(main(sys.argv[1:]))
-                """
-            ),
-            "tests/test_worker_once.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_worker_once() -> None:
-                    assert main(["--once"]) == 1
-                """
-            ),
-            "tests/test_smoke.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_smoke_once() -> None:
-                    assert main(["--once"]) == 1
-                """
-            ),
-        }
-
-    if preset == "dicom_pipeline":
-        return {
-            f"{package_dir}/application/contracts.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                from dataclasses import asdict, dataclass
-
-
-                @dataclass
-                class StudyManifest:
-                    study_instance_uid: str
-                    accession_number: str
-                    patient_name: str
-                    file_count: int
-                    files: list[str]
-
-                    def to_dict(self) -> dict[str, object]:
-                        return asdict(self)
-                """
-            ),
-            f"{package_dir}/application/pipeline.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import json
-                from pathlib import Path
-
-                import pydicom
-                from pydicom.dataset import FileDataset, FileMetaDataset
-                from pydicom.uid import ExplicitVRLittleEndian, SecondaryCaptureImageStorage, generate_uid
-
-                from .contracts import StudyManifest
-
-
-                def iter_dicom_files(inbox: Path) -> list[Path]:
-                    accepted = {".dcm", ".dicom"}
-                    return sorted(path for path in inbox.rglob("*") if path.is_file() and path.suffix.lower() in accepted)
-
-
-                def build_study_manifests(inbox: Path) -> list[StudyManifest]:
-                    grouped: dict[str, dict[str, object]] = {}
-
-                    for dicom_path in iter_dicom_files(inbox):
-                        dataset = pydicom.dcmread(str(dicom_path), stop_before_pixels=True, force=True)
-                        study_uid = str(getattr(dataset, "StudyInstanceUID", "") or "unknown-study")
-                        patient_name = str(getattr(dataset, "PatientName", "") or "").strip()
-                        accession_number = str(getattr(dataset, "AccessionNumber", "") or "").strip()
-                        state = grouped.setdefault(
-                            study_uid,
-                            {
-                                "study_instance_uid": study_uid,
-                                "accession_number": accession_number,
-                                "patient_name": patient_name,
-                                "files": [],
-                            },
-                        )
-                        state["files"].append(str(dicom_path))
-                        if not state["accession_number"] and accession_number:
-                            state["accession_number"] = accession_number
-                        if not state["patient_name"] and patient_name:
-                            state["patient_name"] = patient_name
-
-                    manifests = []
-                    for state in grouped.values():
-                        files = [str(item) for item in state["files"]]
-                        manifests.append(
-                            StudyManifest(
-                                study_instance_uid=str(state["study_instance_uid"]),
-                                accession_number=str(state["accession_number"]),
-                                patient_name=str(state["patient_name"]),
-                                file_count=len(files),
-                                files=files,
-                            )
-                        )
-                    return manifests
-
-
-                def write_manifests(manifests: list[StudyManifest], outbox: Path) -> list[Path]:
-                    outbox.mkdir(parents=True, exist_ok=True)
-                    written = []
-                    for manifest in manifests:
-                        destination = outbox / f"{manifest.study_instance_uid}.json"
-                        destination.write_text(
-                            json.dumps(manifest.to_dict(), ensure_ascii=True, indent=2) + "\\n",
-                            encoding="utf-8",
-                        )
-                        written.append(destination)
-                    return written
-
-
-                def run_pipeline(inbox: Path, outbox: Path) -> list[Path]:
-                    manifests = build_study_manifests(inbox)
-                    return write_manifests(manifests, outbox)
-
-
-                def write_sample_dicom(inbox: Path) -> Path:
-                    inbox.mkdir(parents=True, exist_ok=True)
-                    destination = inbox / "sample.dcm"
-
-                    file_meta = FileMetaDataset()
-                    file_meta.MediaStorageSOPClassUID = SecondaryCaptureImageStorage
-                    file_meta.MediaStorageSOPInstanceUID = generate_uid()
-                    file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
-
-                    dataset = FileDataset(str(destination), {}, file_meta=file_meta, preamble=b"\\0" * 128)
-                    dataset.PatientName = "SAMPLE^PATIENT"
-                    dataset.AccessionNumber = "ACC-001"
-                    dataset.StudyInstanceUID = generate_uid()
-                    dataset.SeriesInstanceUID = generate_uid()
-                    dataset.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
-                    dataset.Modality = "OT"
-                    dataset.is_little_endian = True
-                    dataset.is_implicit_VR = False
-                    dataset.save_as(str(destination), write_like_original=False)
-                    return destination
-                """
-            ),
-            f"{package_dir}/interfaces/cli/__init__.py": '"""CLI do pipeline DICOM."""\n',
-            f"{package_dir}/interfaces/cli/parser.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import argparse
-
-
-                def build_parser() -> argparse.ArgumentParser:
-                    parser = argparse.ArgumentParser(description="Executa pipeline DICOM local")
-                    parser.add_argument("--inbox", default="runtime/inbox", help="diretorio de entrada")
-                    parser.add_argument("--outbox", default="runtime/outbox", help="diretorio de saida")
-                    parser.add_argument("--sample", action="store_true", help="gera um DICOM de exemplo antes de processar")
-                    return parser
-                """
-            ),
-            f"{package_dir}/main.py": textwrap.dedent(
-                f"""
-                from __future__ import annotations
-
-                import sys
-                from pathlib import Path
-
-                from {project_slug}.application.pipeline import run_pipeline, write_sample_dicom
-                from {project_slug}.interfaces.cli.parser import build_parser
-
-
-                def main(argv: list[str] | None = None) -> int:
-                    parser = build_parser()
-                    args = parser.parse_args([] if argv is None else argv)
-                    inbox = Path(args.inbox)
-                    outbox = Path(args.outbox)
-
-                    if args.sample:
-                        write_sample_dicom(inbox)
-
-                    outputs = run_pipeline(inbox, outbox)
-                    for output in outputs:
-                        print(output)
-                    return 0
-
-
-                if __name__ == "__main__":
-                    raise SystemExit(main(sys.argv[1:]))
-                """
-            ),
-            "runtime/inbox/.gitignore": "*\n!.gitignore\n",
-            "runtime/outbox/.gitignore": "*\n!.gitignore\n",
-            "tests/test_dicom_pipeline.py": textwrap.dedent(
-                f"""
-                import json
-
-                from {project_slug}.application.pipeline import run_pipeline, write_sample_dicom
-
-
-                def test_dicom_pipeline_writes_manifest(tmp_path) -> None:
-                    inbox = tmp_path / "inbox"
-                    outbox = tmp_path / "outbox"
-                    write_sample_dicom(inbox)
-                    outputs = run_pipeline(inbox, outbox)
-                    assert len(outputs) == 1
-                    payload = json.loads(outputs[0].read_text(encoding="utf-8"))
-                    assert payload["file_count"] == 1
-                    assert payload["study_instance_uid"]
-                """
-            ),
-            "tests/test_smoke.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_smoke_sample(tmp_path, monkeypatch) -> None:
-                    monkeypatch.chdir(tmp_path)
-                    assert main(["--sample"]) == 0
-                """
-            ),
-        }
-
-    if preset == "pipeline":
-        return {
-            f"{package_dir}/application/contracts.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                from dataclasses import dataclass
-
-
-                @dataclass
-                class PipelineItem:
-                    item_id: str
-                    payload: dict
-                """
-            ),
-            f"{package_dir}/application/pipeline.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import json
-                from pathlib import Path
-
-                from .contracts import PipelineItem
-
-
-                def extract(item_id: str) -> PipelineItem:
-                    return PipelineItem(item_id=item_id, payload={"item_id": item_id, "status": "extracted"})
-
-
-                def transform(item: PipelineItem) -> PipelineItem:
-                    item.payload["status"] = "transformed"
-                    return item
-
-
-                def load(item: PipelineItem, output_dir: Path) -> Path:
-                    output_dir.mkdir(parents=True, exist_ok=True)
-                    destination = output_dir / f"{item.item_id}.json"
-                    destination.write_text(json.dumps(item.payload, ensure_ascii=True, indent=2), encoding="utf-8")
-                    return destination
-
-
-                def run_pipeline(item_id: str, output_dir: Path) -> Path:
-                    item = extract(item_id)
-                    item = transform(item)
-                    return load(item, output_dir)
-                """
-            ),
-            f"{package_dir}/interfaces/cli/__init__.py": '"""CLI do pipeline."""\n',
-            f"{package_dir}/interfaces/cli/parser.py": textwrap.dedent(
-                """
-                from __future__ import annotations
-
-                import argparse
-
-
-                def build_parser() -> argparse.ArgumentParser:
-                    parser = argparse.ArgumentParser(description="Executa pipeline em etapas")
-                    parser.add_argument("--item-id", default="demo-001", help="identificador do item")
-                    parser.add_argument("--once", action="store_true", help="mantido para compatibilidade operacional")
-                    return parser
-                """
-            ),
-            f"{package_dir}/main.py": textwrap.dedent(
-                f"""
-                from __future__ import annotations
-
-                import sys
-                from pathlib import Path
-
-                from {project_slug}.application.pipeline import run_pipeline
-                from {project_slug}.interfaces.cli.parser import build_parser
-
-
-                def main(argv: list[str] | None = None) -> int:
-                    parser = build_parser()
-                    args = parser.parse_args([] if argv is None else argv)
-                    output = run_pipeline(args.item_id, Path("runtime/outbox"))
-                    print(output)
-                    return 0
-
-
-                if __name__ == "__main__":
-                    raise SystemExit(main(sys.argv[1:]))
-                """
-            ),
-            "runtime/inbox/.gitignore": "*\n!.gitignore\n",
-            "runtime/outbox/.gitignore": "*\n!.gitignore\n",
-            "tests/test_pipeline_once.py": textwrap.dedent(
-                f"""
-                from pathlib import Path
-
-                from {project_slug}.application.pipeline import run_pipeline
-
-
-                def test_pipeline_writes_output(tmp_path: Path) -> None:
-                    output = run_pipeline("demo-001", tmp_path)
-                    assert output.exists()
-                """
-            ),
-            "tests/test_smoke.py": textwrap.dedent(
-                f"""
-                from {project_slug}.main import main
-
-
-                def test_smoke_pipeline() -> None:
-                    assert main(["--item-id", "demo-001"]) == 0
-                """
-            ),
-        }
-
-    return {}
-
-
 def node_generated_files(project_name: str, project_slug: str, preset: str) -> dict[str, str]:
     dist_name = project_slug.replace("_", "-")
     base_dir = project_slug
@@ -2337,38 +919,35 @@ def node_generated_files(project_name: str, project_slug: str, preset: str) -> d
                     "start": f"node {base_dir}/main.mjs",
                     "test": "node --test tests/*.test.mjs",
                 },
-                "engines": {"node": ">=20"},
+                "engines": {"node": RUNTIMES["node"]["version"]},
             },
             indent=2,
             ensure_ascii=True,
         ),
         f"{base_dir}/main.mjs": textwrap.dedent(
-            f"""
-            import {{ loadSettings }} from "./infrastructure/config.mjs";
-            import {{ logEvent }} from "./infrastructure/logger.mjs";
+            """
+            import { loadSettings } from "./infrastructure/config.mjs";
+            import { logEvent } from "./infrastructure/logger.mjs";
 
 
-            export function main() {{
+            export function main() {
               const settings = loadSettings();
-              logEvent({{
+              logEvent({
                 lvl: settings.app.logLevel,
                 svc: settings.app.name,
                 mod: "main",
                 evt: "startup",
                 msg: "service initialized"
-              }});
+              });
               return 0;
-            }}
+            }
 
 
-            if (import.meta.url === `file://${{process.argv[1]}}`) {{
+            if (import.meta.url === `file://${process.argv[1]}`) {
               process.exit(main());
-            }}
+            }
             """
         ),
-        f"{base_dir}/domain/.gitkeep": "",
-        f"{base_dir}/application/.gitkeep": "",
-        f"{base_dir}/interfaces/.gitkeep": "",
         f"{base_dir}/infrastructure/config.mjs": textwrap.dedent(
             f"""
             import fs from "node:fs";
@@ -2448,7 +1027,9 @@ def go_generated_files(project_name: str, project_slug: str, preset: str) -> dic
             f"""
             module {module_name}
 
-            go 1.22
+            go 1.27.0
+
+            toolchain go{RUNTIMES["go"]["version"]}
             """
         ),
         f"cmd/{project_slug}/main.go": textwrap.dedent(
@@ -2579,7 +1160,7 @@ def go_generated_files(project_name: str, project_slug: str, preset: str) -> dic
 
 
 def ts_generated_files(project_name: str, project_slug: str, preset: str) -> dict[str, str]:
-    dist_name = kebabify(project_name)
+    dist_name = project_slug.replace("_", "-")
     env_prefix = project_slug.upper()
     return {
         "package.json": json.dumps(
@@ -2593,10 +1174,10 @@ def ts_generated_files(project_name: str, project_slug: str, preset: str) -> dic
                     "start": "npm run build && node dist/src/main.js",
                     "test": "npm run build && node --test dist/tests/*.test.js",
                 },
-                "engines": {"node": ">=20"},
+                "engines": {"node": RUNTIMES["node"]["version"]},
                 "devDependencies": {
-                    "@types/node": "^20.0.0",
-                    "typescript": "^5.0.0",
+                    "@types/node": "24.10.1",
+                    "typescript": "5.9.3",
                 },
             },
             indent=2,
@@ -2704,7 +1285,7 @@ def swift_generated_files(project_name: str, project_slug: str, preset: str) -> 
     return {
         "Package.swift": textwrap.dedent(
             f"""
-            // swift-tools-version: 5.9
+            // swift-tools-version: 6.4
             import PackageDescription
 
             let package = Package(
@@ -2717,7 +1298,8 @@ def swift_generated_files(project_name: str, project_slug: str, preset: str) -> 
                 ],
                 targets: [
                     .target(name: "{core_name}"),
-                    .executableTarget(name: "{module_name}", dependencies: ["{core_name}"])
+                    .executableTarget(name: "{module_name}", dependencies: ["{core_name}"]),
+                    .testTarget(name: "{module_name}Tests", dependencies: ["{core_name}"])
                 ]
             )
             """
@@ -2764,7 +1346,9 @@ def swift_generated_files(project_name: str, project_slug: str, preset: str) -> 
             f"""
             import {core_name}
 
-            _ = App.run()
+            import Foundation
+
+            exit(App.run())
             """
         ),
     }
@@ -2812,7 +1396,7 @@ def csharp_generated_files(project_name: str, project_slug: str, preset: str) ->
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <OutputType>Exe</OutputType>
-                <TargetFramework>net8.0</TargetFramework>
+                <TargetFramework>net10.0</TargetFramework>
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
               </PropertyGroup>
@@ -2834,7 +1418,7 @@ def csharp_generated_files(project_name: str, project_slug: str, preset: str) ->
 
                 public static int Run(TextWriter output)
                 {{
-                    output.WriteLine(JsonSerializer.Serialize(StartupEvent()));
+                    output.WriteLine(JsonSerializer.Serialize(StartupEvent(), new JsonSerializerOptions {{ PropertyNamingPolicy = JsonNamingPolicy.CamelCase }}));
                     return 0;
                 }}
             }}
@@ -2849,7 +1433,7 @@ def csharp_generated_files(project_name: str, project_slug: str, preset: str) ->
             f"""
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
-                <TargetFramework>net8.0</TargetFramework>
+                <TargetFramework>net10.0</TargetFramework>
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
                 <IsPackable>false</IsPackable>
@@ -2875,6 +1459,17 @@ def csharp_generated_files(project_name: str, project_slug: str, preset: str) ->
             public class AppTests
             {{
                 [Fact]
+                public void RunWritesCanonicalJsonFields()
+                {{
+                    using var output = new StringWriter();
+                    Assert.Equal(0, App.Run(output));
+                    using var json = System.Text.Json.JsonDocument.Parse(output.ToString());
+                    Assert.Equal("startup", json.RootElement.GetProperty("evt").GetString());
+                    Assert.Equal("INFO", json.RootElement.GetProperty("lvl").GetString());
+                    Assert.True(DateTimeOffset.TryParse(json.RootElement.GetProperty("ts").GetString(), out _));
+                }}
+
+                [Fact]
                 public void StartupEventIsStructured()
                 {{
                     var evt = App.StartupEvent();
@@ -2888,13 +1483,29 @@ def csharp_generated_files(project_name: str, project_slug: str, preset: str) ->
 
 
 def generic_generated_files(project_slug: str) -> dict[str, str]:
-    base_dir = project_slug
     return {
-        f"{base_dir}/domain/.gitkeep": "",
-        f"{base_dir}/application/.gitkeep": "",
-        f"{base_dir}/infrastructure/.gitkeep": "",
-        f"{base_dir}/interfaces/.gitkeep": "",
-        "tests/.gitkeep": "",
+        "src/.gitkeep": "",
+    }
+
+
+def runtime_template_files(runtime: str, project_name: str, project_slug: str, directory: str = "files") -> dict[str, str]:
+    source = TEMPLATE_DIR / "runtimes" / runtime / directory
+    values = {
+        "PROJECT_NAME": project_name,
+        "PROJECT_NAME_LITERAL": json.dumps(project_name, ensure_ascii=False),
+        "PROJECT_SLUG": project_slug,
+        "DIST_NAME": project_slug.replace("_", "-"),
+        "MODULE": pascalize(project_slug),
+        "MODULE_LOWER": pascalize(project_slug).lower(),
+        "ENV_PREFIX": project_slug.upper(),
+        "JAVA_PACKAGE": "local.project_" + project_slug,
+        "JAVA_PACKAGE_PATH": "local/project_" + project_slug,
+        "RUST_CRATE": "project_" + project_slug,
+        "RUST_VERSION": RUNTIMES["rust"]["version"],
+    }
+    return {
+        render_template(str(path.relative_to(source)), values, runtime): render_template(path.read_text(encoding="utf-8"), values, runtime)
+        for path in sorted(source.rglob("*")) if path.is_file()
     }
 
 
@@ -2906,10 +1517,7 @@ def generate_files(
     gate_enforced: bool,
 ) -> dict[str, str]:
     files = common_generated_files(runtime, project_name, project_slug, preset, gate_enforced)
-    if runtime == "python":
-        files.update(python_generated_files(project_name, project_slug, preset, gate_enforced))
-        files.update(preset_python_files(project_name, project_slug, preset))
-    elif runtime == "node":
+    if runtime == "node":
         files.update(node_generated_files(project_name, project_slug, preset))
     elif runtime == "go":
         files.update(go_generated_files(project_name, project_slug, preset))
@@ -2919,8 +1527,20 @@ def generate_files(
         files.update(swift_generated_files(project_name, project_slug, preset))
     elif runtime == "csharp":
         files.update(csharp_generated_files(project_name, project_slug, preset))
-    else:
+    elif runtime == "generic":
         files.update(generic_generated_files(project_slug))
+    files.update(runtime_template_files(runtime, project_name, project_slug))
+    if runtime == "python":
+        files.update(runtime_template_files(runtime, project_name, project_slug, "presets/" + preset))
+        if not gate_enforced:
+            files.pop("tests/test_project_gate.py", None)
+        if preset == "base":
+            for package in ("domain", "application", "interfaces"):
+                files.pop(f"{project_slug}/{package}/__init__.py", None)
+        dependency_profile = RUNTIMES["python"]["dependency_profiles"][preset]
+        for filename in ("requirements.in", "requirements.txt"):
+            lock = TEMPLATE_DIR / "runtimes" / "python" / "requirements" / dependency_profile / filename
+            files[filename] = lock.read_text(encoding="utf-8")
     return files
 
 
@@ -3003,9 +1623,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--runtime",
-        choices=("python", "node", "ts", "go", "swift", "csharp", "generic"),
-        default="python",
-        help="runtime escolhido pelas restricoes do projeto (default sem fator decisivo: python)",
+        choices=tuple(RUNTIMES),
+        help="runtime explícito, escolhido pelas restrições do projeto; sem default",
     )
     parser.add_argument(
         "--preset",
@@ -3054,14 +1673,21 @@ def main() -> int:
     if not args.target:
         raise SystemExit("informe o diretorio de destino ou use --list-presets")
 
+    if args.runtime is None:
+        raise SystemExit("geração exige --runtime explícito; consulte --list-presets e docs/runtimes.md")
+
     preset = canonicalize_preset(args.preset)
     destination = Path(args.target).expanduser().resolve()
     project_name = args.name or destination.name
     project_slug = args.slug or slugify(project_name)
+    if not re.fullmatch(r"[a-z][a-z0-9_]*", project_slug):
+        raise SystemExit("--slug deve começar com letra minúscula e conter somente letras, números e underscore")
+    if any(ord(char) < 32 for char in project_name):
+        raise SystemExit("--name não pode conter caracteres de controle")
     repo_url = args.repo_url or f"git@github.com:SEU_USUARIO/{kebabify(project_name)}.git"
 
-    if preset != "base" and args.runtime != "python":
-        raise SystemExit("presets estruturais atualmente exigem --runtime python")
+    if preset not in RUNTIMES[args.runtime]["presets"]:
+        raise SystemExit(f"runtime {args.runtime} suporta apenas: {', '.join(RUNTIMES[args.runtime]["presets"])}; o protocolo admite adaptação por agente")
 
     ensure_destination(destination, args.force)
     render_and_write_templates(
