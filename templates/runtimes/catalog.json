@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "reviewed_on": "2026-09-26",
+  "validation_python": "3.14.6",
+  "actions": {
+    "checkout": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+    "python": "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
+    "node": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+    "go": "actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e",
+    "dotnet": "actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68",
+    "java": "actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6"
+  },
+  "runtimes": {
+    "python": {
+      "name": "Python",
+      "version": "3.14.6",
+      "language": "Python",
+      "dependency_file": "requirements.in / requirements.txt",
+      "presets": [
+        "base",
+        "fastapi",
+        "cli",
+        "textual_cli",
+        "worker",
+        "playwright_worker",
+        "pipeline",
+        "dicom_pipeline"
+      ],
+      "setup": "python3 -m venv .venv --prompt $(basename \"$PWD\")\nsource .venv/bin/activate\npython -m pip install --require-hashes -r requirements.txt",
+      "run": "python -m {slug}",
+      "test": "python -m ruff check {sources} tests && python -m mypy {sources} && python -m pytest -q",
+      "build": "python -m compileall -q {sources} scripts tests",
+      "smoke": "python -m {slug} --help",
+      "dependency_profiles": {
+        "base": "base",
+        "fastapi": "fastapi",
+        "cli": "base",
+        "textual_cli": "textual_cli",
+        "worker": "base",
+        "playwright_worker": "playwright_worker",
+        "pipeline": "base",
+        "dicom_pipeline": "dicom_pipeline"
+      }
+    },
+    "node": {
+      "name": "Node",
+      "version": "24.21.0",
+      "language": "JavaScript",
+      "dependency_file": "package.json / package-lock.json",
+      "presets": [
+        "base"
+      ],
+      "setup": "npm ci",
+      "run": "npm start",
+      "test": "npm test",
+      "build": "node --check {slug}/main.mjs",
+      "smoke": "npm start"
+    },
+    "ts": {
+      "name": "TypeScript",
+      "version": "24.21.0",
+      "language": "TypeScript",
+      "dependency_file": "package.json / package-lock.json / tsconfig.json",
+      "presets": [
+        "base"
+      ],
+      "setup": "npm ci",
+      "run": "npm start",
+      "test": "npm test",
+      "build": "npm run build",
+      "smoke": "npm start"
+    },
+    "go": {
+      "name": "Go",
+      "version": "1.27.1",
+      "language": "Go",
+      "dependency_file": "go.mod",
+      "presets": [
+        "base"
+      ],
+      "setup": "go mod download",
+      "run": "go run ./cmd/{slug}",
+      "test": "go vet ./... && go test -race ./...",
+      "build": "go build -o bin/{slug} ./cmd/{slug}",
+      "smoke": "go run ./cmd/{slug}"
+    },
+    "swift": {
+      "name": "Swift",
+      "version": "6.4.0",
+      "language": "Swift",
+      "dependency_file": "Package.swift",
+      "presets": [
+        "base"
+      ],
+      "setup": "swift package resolve",
+      "run": "swift run {module}",
+      "test": "swift test",
+      "build": "swift build",
+      "smoke": "swift run {module}",
+      "container": "swift:6.4.0@sha256:bb6e5d5f2a97bc07cf8022c1a3e062f8164b8fd078698327ce2ab097e02a91dc"
+    },
+    "csharp": {
+      "name": ".NET",
+      "version": "10.0.401",
+      "language": "C#",
+      "dependency_file": "global.json / {module}.sln / *.csproj",
+      "presets": [
+        "base"
+      ],
+      "setup": "dotnet restore {module}.sln --locked-mode",
+      "run": "dotnet run --no-restore --project src/{module}/{module}.csproj",
+      "test": "dotnet test {module}.sln --no-restore",
+      "build": "dotnet build {module}.sln --no-restore",
+      "smoke": "dotnet run --no-restore --project src/{module}/{module}.csproj"
+    },
+    "java": {
+      "name": "Java",
+      "version": "25.0.4.1+1",
+      "language": "Java",
+      "distribution": "temurin",
+      "maven_version": "3.9.16",
+      "dependency_file": "pom.xml / .mvn/wrapper/maven-wrapper.properties",
+      "presets": [
+        "base"
+      ],
+      "setup": "./mvnw -B verify",
+      "run": "java -jar target/{dist}-0.1.0.jar",
+      "test": "./mvnw -B verify",
+      "build": "./mvnw -B package",
+      "smoke": "java -jar target/{dist}-0.1.0.jar"
+    },
+    "rust": {
+      "name": "Rust",
+      "version": "1.98.1",
+      "language": "Rust",
+      "edition": "2024",
+      "dependency_file": "Cargo.toml / Cargo.lock / rust-toolchain.toml",
+      "presets": [
+        "base"
+      ],
+      "setup": "cargo build --locked",
+      "run": "cargo run --locked",
+      "test": "cargo fmt --all -- --check && cargo clippy --locked --all-targets -- -D warnings && cargo test --locked",
+      "build": "cargo build --locked --release",
+      "smoke": "cargo run --locked"
+    },
+    "generic": {
+      "name": "Genérico",
+      "version": "not-applicable",
+      "language": "sem runtime dominante",
+      "dependency_file": "definido pelo projeto",
+      "presets": [
+        "base"
+      ],
+      "setup": "definido pelo projeto",
+      "run": "definido pelo projeto",
+      "test": "definido pelo projeto",
+      "build": "definido pelo projeto",
+      "smoke": "definido pelo projeto"
+    }
+  }
+}
