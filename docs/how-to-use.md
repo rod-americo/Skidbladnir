@@ -1,260 +1,54 @@
-# How To Use
+# Como usar
 
-Arquivos complementares do kit:
+O uso principal é um agente lendo o clone do kit no caminho informado pelo usuário. Use os fluxos de [novo projeto](new-project.md) ou [projeto existente](existing-project.md) e a [política de runtime](runtimes.md). `newproj` é opcional e auxilia o bootstrap; não existe linguagem default.
 
-- `new-project.md`: fluxo oficial para agentes criarem projetos novos
-- `existing-project.md`: fluxo oficial para agentes alinharem repositórios existentes
-- `runtimes.md`: matriz multilinguagem do protocolo
-- `deploy-manifest.md`: contrato obrigatório de operação e deploy
-- `validation.md`: validação comum e por runtime
-- `../INSTALL.md`: instalação e update do comando `newproj`
-- `manual-passo-a-passo.md`: fluxo operacional completo do zero ao primeiro commit
-- `prompt-repo-existente.md`: prompt genérico para recuperar repositórios já em funcionamento
-- `../VERSION`: versão atual do kit
-- `../run_regression_suite.py`: regressão automatizada do scaffolder
-
-## Fluxo recomendado
-
-O fluxo principal é por agente lendo o protocolo em `~/Skidbladnir`, não por execução manual de uma CLI pelo usuário.
-
-1. Para projeto novo, use `docs/new-project.md` e `prompts/novo-projeto.md`.
-2. Para projeto existente, use `docs/existing-project.md` e `prompts/projeto-existente.md`.
-3. Deixe o agente escolher runtime e preset pelas restrições descritas em `docs/runtimes.md`; sem fator decisivo, use Python.
-4. Crie ou revise `deploy/manifest.json` usando `docs/deploy-manifest.md`.
-5. Rode a validação comum descrita em `docs/validation.md`.
-
-`newproj` e `scaffold_project.py` continuam disponíveis como bootstrap auxiliar para Python, Node, TypeScript, Go, Swift e C#, mas não são a interface principal do kit.
-
-Para repositórios antigos que já existem e não nasceram com o scaffolder, use `prompt-repo-existente.md` em vez de gerar um projeto novo.
-
-## Layout recomendado
-
-Padrão principal para projetos Python e Node gerados pelo scaffolder auxiliar:
-
-- raiz limpa para `README`, `docs`, `config`, `tests`, `scripts` e `runtime`
-- pacote ou app principal direto em `/<slug>/`
-- entrypoint do domínio Python por `python -m <slug>`; TUI e GUI dedicadas usam preferencialmente launchers top-level finos, `python -m tui` e `python -m gui`, que delegam para `<slug>/interfaces/`
-- entrypoint Node por `node <slug>/main.mjs` ou `npm start`
-
-Exemplo:
-
-```text
-MeuProjeto/
-├── README.md
-├── docs/
-├── config/
-├── tests/
-├── runtime/
-└── meuprojeto/
-```
-
-Use `src/<slug>` só quando o repositório tiver uma necessidade explícita de isolamento de packaging e isso estiver documentado.
-
-Para Go, Swift, C# e TypeScript, siga a matriz de `docs/runtimes.md`; esses runtimes já têm scaffold auxiliar, mas ainda exigem adaptação contextual pelo agente.
-
-Exemplos:
+## CLI
 
 ```bash
+newproj --help
 newproj --version
-newproj ~/NovoProjeto --include-checklist
-newproj ~/ApiNova --preset fastapi-service --include-checklist
-newproj ~/PainelLocal --preset textual-cli --include-checklist
-newproj ~/BrowserWorker --preset playwright-worker --include-checklist
-newproj ~/DicomStage --preset dicom-pipeline --include-checklist
-newproj ~/ProjetoCritico --preset fastapi-service --include-checklist --enforce-gate
 newproj --list-presets
+newproj ./Servico --runtime java --preset base --enforce-gate
+newproj ./Utilitario --runtime rust --preset base --enforce-gate
+newproj ./Api --runtime python --preset fastapi-service --include-checklist
+newproj ./Pesquisa --runtime go --include-papers
 ```
 
-## Presets Python
+Toda geração exige `--runtime`, mesmo quando o preset é exclusivo de Python. Runtimes, versões concretas e comandos ficam no [catálogo](runtime-catalog.md). `--force` permite sobrescrever arquivos no destino: não use para atualizar um projeto existente sem revisão do diff. O kit não faz migrações automáticas de consumidores.
 
-Os presets não-base exigem `--runtime python` implicitamente. O scaffold já preenche `README.md`, `AGENTS.md` e `docs/OPERATIONS.md` com um comando principal coerente por preset.
+## Presets especializados
 
-Linha recomendada hoje:
+Os seguintes presets exigem `--runtime python` explícito: `fastapi` (alias `fastapi-service`), `cli`, `textual-cli`, `worker`, `playwright-worker`, `pipeline` e `dicom-pipeline`. Todos os runtimes da CLI oferecem `base`; Java e Rust inicialmente só oferecem esse preset. Presets não representam maturidade de produção.
 
-- `fastapi-service`: serviços HTTP pequenos e repo-owned
-- `textual-cli`: cockpit local e TUI operacional
-- `playwright-worker`: browser automation, login e sessão persistida
-- `dicom-pipeline`: staging DICOM, manifesto de estudo e materialização
+O entrypoint Python é `python -m <slug>`; o preset Textual expõe `python -m tui`, um launcher fino para a implementação no pacote. Playwright inicia em dry-run; instalação do browser (`python -m playwright install chromium`), login e prova de sessão válida são adaptações explícitas posteriores. DICOM inclui somente uma amostra sintética; processamento de dados reais exige decisão e controles apropriados ao projeto.
 
-Presets genéricos ainda existem e continuam úteis:
+## Ambiente e dependências
 
-- `fastapi`
-- `cli`
-- `worker`
-- `pipeline`
+Siga os comandos exatos do README gerado e do catálogo. Python usa `.venv` na raiz, requisitos com hashes, Ruff, mypy e pytest. Node/TypeScript usam `npm ci`. Java usa `./mvnw -B verify`; Rust usa `--locked`; .NET usa restauração com lockfile. Geração é offline, bootstrap pode usar rede.
 
-Comandos iniciais esperados:
+Exemplos de configuração são públicos; segredos, sessões, bancos, caches e outros estados locais não entram no Git. Swift e C# fornecem um exemplo de configuração para adaptação; seus baselines ainda não carregam esse arquivo. Registre somente entradas consumidas pelo código.
 
-- `fastapi` / `fastapi-service`
-  - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug>`
-  - alternativa: `uvicorn <slug>.interfaces.http.app:create_app --factory --reload`
-  - smoke test: `python -m pytest -q`
-- `cli`
-  - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug> doctor`
-  - smoke test: `python -m <slug> doctor`
-- `textual-cli`
-  - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m tui`
-  - smoke test: `python -m <slug> doctor`
-- `worker`
-  - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug> --interval 30`
-  - smoke test: `python -m <slug> --once`
-- `playwright-worker`
-  - setup: `python -m pip install -r requirements.txt`
-  - bootstrap browser: `python -m playwright install chromium`
-  - run: `python -m <slug> --interval 30 --dry-run`
-  - run inicial: `python -m <slug> --once --dry-run`
-  - refresh real: `python -m <slug> --refresh-session`
-  - smoke test: `python -m <slug> --once --dry-run`
-- `pipeline`
-  - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug> --item-id demo-001`
-  - smoke test: `python -m <slug> --item-id demo-001`
-- `dicom-pipeline`
-  - setup: `python -m pip install -r requirements.txt`
-  - run: `python -m <slug> --inbox runtime/inbox --outbox runtime/outbox`
-  - run inicial: `python -m <slug> --sample`
-  - smoke test: `python -m <slug> --sample`
+## Gate, operação e doctor
 
-Fragilidade conhecida:
-
-- `fastapi` não é validado por import puro sem instalar dependências; isso é intencional. O baseline assume bootstrap do ambiente antes do primeiro run.
-- `playwright-worker` sai com bootstrap de sessão e artefato placeholder, não com login real. O primeiro trabalho útil é substituir esse dry-run.
-- `dicom-pipeline` sai com manifesto mínimo e sample DICOM sintético. Isso resolve baseline técnico, não contrato clínico final.
-- `newproj` depende de `~/Scripts/bin` estar no `PATH`; se não estiver, use o caminho absoluto do binário ou rode `scaffold_project.py` diretamente.
-
-## Versão e regressão do kit
-
-Comandos úteis:
+Preencha o gate com o problema real, fronteiras, escolha de runtime, alternativas, riscos, evidências e critérios mensuráveis de escala. O marcador do gate 2 amplia os campos exigidos; documentos antigos continuam reconhecidos com ou sem acentos. O gate verifica estrutura, não a qualidade da decisão.
 
 ```bash
-python3 scaffold_project.py --version
-newproj --version
-python3 run_regression_suite.py
-```
-
-Use a regressão sempre que mudar:
-
-- `scaffold_project.py`
-- `newproj`
-- `install_newproj.sh`
-- templates base de docs
-
-Projetos Python, Node, TypeScript, Go, Swift e C# gerados pelo kit agora também saem com um baseline de CI em `.github/workflows/ci.yml`.
-
-O objetivo desse workflow é simples:
-
-- instalar dependências
-- rodar checagem sintática quando fizer sentido
-- executar a suíte de testes do projeto
-- validar `PROJECT_GATE.md` quando o projeto nascer com `--enforce-gate`
-- validar `deploy/manifest.json`
-
-## Gate Enforced
-
-Se você usar `--enforce-gate`, o projeto sai com:
-
-- `scripts/check_project_gate.py`
-- `scripts/check_deploy_manifest.py`
-- `.githooks/pre-commit`
-- `scripts/install_git_hooks.sh`
-- `tests/test_project_gate.py` para runtimes Python
-
-Fluxo esperado:
-
-1. gere o projeto com `--enforce-gate`
-2. preencha `PROJECT_GATE.md`
-3. rode `git init`
-4. rode `bash scripts/install_git_hooks.sh`
-5. confirme que `python3 scripts/check_project_gate.py` passa
-6. confirme que `python3 scripts/check_deploy_manifest.py` passa
-
-O gate agora falha em 3 casos:
-
-- campos obrigatórios vazios ou com `TODO/preencher`
-- respostas vagas como `a definir`, `não sei`, `talvez`, `N/A`
-- respostas curtas demais para justificar existência, fronteira e custo
-
-## Project Doctor
-
-Depois que `README.md`, `docs/ARCHITECTURE.md`, `docs/CONTRACTS.md` e `docs/OPERATIONS.md` estiverem realmente preenchidos, rode:
-
-```bash
+python3 scripts/check_project_gate.py
+python3 scripts/check_deploy_manifest.py
 python3 scripts/project_doctor.py
+python3 scripts/project_doctor.py --strict
 python3 scripts/project_doctor.py --deploy-strict
-newproj doctor .
-newproj doctor --strict .
-newproj doctor --audit-config .
+python3 scripts/project_doctor.py --audit-config
 ```
 
-O doctor valida:
+O doctor compara declarações em gate, README, arquitetura, contratos e operação. `--strict` transforma warnings de coerência textual em falhas; `--deploy-strict` também confronta processo e saúde declarados; `--audit-config` revisa exceções e aliases. O wrapper preserva `newproj doctor [opções] <diretório>`.
 
-- arquivos obrigatórios presentes
-- placeholders e `TODO` remanescentes nos docs principais
-- coerência entre `README.md` e `docs/OPERATIONS.md` no comando principal
-- coerência entre `AGENTS.md` e `docs/OPERATIONS.md` na validação mínima
-- coerência entre `deploy/manifest.json` e `docs/OPERATIONS.md` quando usado com `--deploy-strict`
-- preenchimento do `PROJECT_GATE.md`
-- validade estrutural do `deploy/manifest.json`
-- warnings com código estável para desalinhamento entre gate, README e arquitetura
+Para vocabulário equivalente, use `token_alias_groups` em `config/doctor.json`. Para uma divergência consciente, use `ignored_warnings` com código estável e motivo explícito. Não esconda desalinhamento real; audite exceções antigas com `--audit-config`.
 
-Use `--strict` quando quiser tratar esses warnings como erro bloqueante. Use `--audit-config` para auditar `config/doctor.json`, listar warnings suprimidos, aliases em uso e exceções sem efeito atual.
+Com `--enforce-gate`, são gerados hook local, step de CI e teste Python quando aplicável. Após `git init`, instale o hook com `bash scripts/install_git_hooks.sh`. O hook é um controle local complementar; revisão independente e CI continuam necessárias.
 
-Se aparecer falso positivo semântico, ajuste `config/doctor.json` em vez de afrouxar o texto dos docs. O arquivo é versionado e aceita:
+## Colaboração e evolução
 
-- `ignored_warnings`: exceções conscientes com `code` e `reason`
-- `token_alias_groups`: grupos de termos equivalentes para o repositório
+Use `docs/TASK_TEMPLATE.md` e o [protocolo de colaboração](agent-collaboration.md). Isole tarefas concorrentes, delimite responsabilidades e designe integrador. O resultado combinado precisa de checks e revisão independente. Mudanças em fronteiras sensíveis ou risco não esclarecido dependem de decisão humana, respeitando decisões já concedidas no mesmo escopo.
 
-Regra prática:
-
-- prefira `token_alias_groups` quando o problema for linguagem equivalente
-- use `ignored_warnings` só quando a divergência for consciente e desejada
-- rode `--audit-config` periodicamente para remover ignores velhos
-
-Exemplo:
-
-```json
-{
-  "version": 1,
-  "ignored_warnings": [
-    {
-      "code": "scope_architecture_mismatch",
-      "reason": "README descreve a capacidade de negócio e ARCHITECTURE descreve módulos técnicos."
-    }
-  ],
-  "token_alias_groups": [
-    ["worker", "daemon"],
-    ["api", "serviço"]
-  ]
-}
-```
-
-## O que manter sempre
-
-- escopo explícito
-- limites do que NÃO pertence ao repositório
-- branch policy
-- commit policy
-- localização de runtime state
-- regra de restart
-- validação mínima
-
-## O que adaptar por repositório
-
-- domínio crítico
-- linguagem pública do projeto, se não for `pt-BR`
-- dependência externa principal
-- política de persistência
-- comandos reais de setup, run e test
-- o conteúdo de `PROJECT_GATE.md`
-
-## O que não fazer
-
-- apagar `AGENTS.md` e tentar compensar com contexto implícito
-- deixar `README.md` genérico depois que o projeto ganhar forma
-- criar novo repositório sem responder se isso deveria ser um módulo
-- introduzir integração externa sem registrar contrato e operação
-- editar manualmente dezenas de placeholders quando o scaffolder já consegue preencher o baseline por você
+Atualize documentação, manifesto e contratos junto do comportamento. Distinga testes, smoke e probe operacional. O estado inicial sem implantação é `deploy.target: none`; o preset HTTP configura um exemplo local, não uma publicação automática. Use o [guia de migração 2.0](migration-2.0.md) antes de adaptar comandos ou incorporar novos templates a projetos existentes.

@@ -1,6 +1,6 @@
 # Projeto Existente
 
-Use este fluxo quando um agente receber um pedido como: "Alinhe o projeto atual à estrutura proposta pelo projeto em `~/Skidbladnir`."
+Use este fluxo quando um agente receber um pedido como: "Alinhe o projeto atual à estrutura proposta pelo projeto em `<SKIDBLADNIR_PATH>`."
 
 ## Objetivo
 
@@ -36,6 +36,7 @@ Crie ou revise:
 - `docs/CONTRACTS.md`
 - `docs/OPERATIONS.md`
 - `docs/DECISIONS.md`
+- `docs/TASK_TEMPLATE.md` ou registro equivalente de tarefas e passagens de contexto
 - `deploy/manifest.json`
 - `schema/deploy-manifest.schema.json`
 - `config/doctor.json` ou localização equivalente justificada
@@ -53,7 +54,7 @@ O manifesto deve refletir a operação atual, mesmo que ela seja parcial. Se o d
 - não esconder hotspots em linguagem genérica
 - não remover docs úteis já existentes sem absorver o conteúdo
 - não empurrar toda a governança para `AGENTS.md`
-- não trocar linguagem apenas porque outra seria a escolha default em um projeto novo
+- não trocar linguagem por preferência; nenhuma linguagem é default e uma migração exige benefício concreto, custo de transição e estratégia de retorno
 
 ## Validação
 
@@ -72,3 +73,9 @@ Depois rode os testes existentes do repositório. Se uma validação não for vi
 ## Critério de pronto
 
 A rodada está pronta quando o repositório passa a ter fronteira, operação, contratos e manifesto explícitos, sem contrariar o comportamento real. Dívidas remanescentes devem aparecer como dívidas, não como se já estivessem resolvidas.
+
+## Colaboração e riscos
+
+Siga `docs/agent-collaboration.md`: tarefa independente por branch/worktree ou checkout isolado, responsabilidade por arquivos/módulos e integrador para mudanças concorrentes. Integração rotineira requer checks aprovados, revisão independente e permissões existentes, com nova validação do resultado combinado. Fronteiras sensíveis e risco não esclarecido exigem decisão humana; decisões já concedidas continuam válidas dentro do escopo aprovado.
+
+Siga convenções do runtime e dimensione a arquitetura ao problema. Quatro camadas não são obrigatórias. Registre critérios de contratos, falhas, compatibilidade e escala conforme risco. Validação documental é estrutural; ferramenta ausente ou ambiente indisponível não pode ser contado como teste aprovado. Projetos consumidores não são regenerados automaticamente; consulte o guia de migração 2.0.

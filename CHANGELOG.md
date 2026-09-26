@@ -1,6 +1,32 @@
 # CHANGELOG
 
-## [Unreleased]
+## [2.0.0] — 2026-09-26
+
+### Breaking
+
+- geração exige `--runtime` explícito, inclusive presets Python; ausência falha antes de criar arquivos. Ajuda, versão, listagem e doctor são preservados.
+- nenhuma linguagem é default; escolha exige restrições, alternativas, riscos e evidências. Consumidores não são regenerados automaticamente; consulte `docs/migration-2.0.md`.
+
+### Added
+
+- scaffolds Java com Temurin 25, Maven Wrapper, JUnit e JAR executável; Rust com edição 2024, toolchain fixa, lockfile, Clippy e núcleo testável sem `unsafe` próprio.
+- protocolo de tarefas isoladas, integrador, revisão independente, validação combinada e decisão humana em fronteiras sensíveis; template de tarefa e passagem de contexto.
+- catálogo central de versões, presets e comandos, documentação/CI derivadas e matriz real por runtime.
+- Ruff e mypy nos projetos Python, testes Swift, instalações congeladas, permissões mínimas e actions por SHA.
+
+### Fixed
+
+- campos acentuados do gate, normalização de espaços, extração do comando no doctor e coerência de runtime declarado.
+- HTTP exige URL válida; validadores não executam comandos operacionais. Manifestos versão 1 e IDs anteriores continuam aceitos.
+- baselines sem implantação usam `deploy.target: none`; testes, smoke e probes ficam separados; estado/logs refletem o código.
+- código dos presets Python passa a viver em templates, com tipos e lint verificados; arquitetura em quatro camadas deixa de ser obrigatória.
+
+### Validation
+
+- matriz local: Python 3.14.6 (oito presets), Node/TypeScript 24.21.0, Go 1.27.1, Swift 6.4.0, .NET SDK 10.0.401, Temurin 25.0.4.1+1/Maven 3.9.16 e Rust 1.98.1.
+- regressão estrutural, checks sintáticos, builds, testes, smoke, probe HTTP real e rejeição de divergências de lockfile/hashes. A execução remota da CI exige publicação separada; não é inferida desses resultados locais.
+
+## [1.0.0] — histórico anterior
 
 ### Changed
 - promoção do projeto para `Skidbladnir`

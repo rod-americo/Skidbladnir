@@ -28,8 +28,13 @@ Restrições:
 - Não faça refactor massivo de diretórios só para parecer limpo.
 - Preserve raiz limpa; se houver espaço para organizar melhor a estrutura, prefira o módulo ou app principal em `/<slug>/` em vez de `src/<slug>`, salvo quando `src/` já for requisito consciente do repositório.
 - Preserve entrypoints existentes; quando criar uma TUI ou GUI Python dedicada, prefira um launcher top-level fino executado com `python -m tui` ou `python -m gui` a um novo comando público como `python -m <slug>.tui` ou `python -m <slug>.gui`.
+- Nenhuma linguagem é default; considere manutenção, regressões, suporte, operação e escala medida. Migração exige benefício concreto e custo de transição explícito.
 - Preserve o runtime existente, salvo incompatibilidade concreta com plataforma, SDK, operação ou requisito mensurável; não migre linguagem por preferência do agente ou do usuário.
 - Não crie contratos, testes ou docs que contradigam o comportamento real do código.
+- Quatro camadas são opcionais; preserve o layout convencional do ecossistema.
+- Siga docs/agent-collaboration.md: tarefa isolada, responsabilidade explícita, integrador, revisão independente e validação do resultado combinado. Registre contexto e bloqueios em docs/TASK_TEMPLATE.md.
+- Integrações rotineiras exigem checks aprovados e permissões existentes; integridade de dados, migrações, dados sensíveis, autenticação/permissões, produção, contratos incompatíveis, enfraquecimento dos controles e risco não esclarecido exigem decisão humana.
+- Separe testes, smoke e saúde; toolchain ausente é bloqueio, não aprovação. Sem implantação, use deploy.target: none. Não habilite automerge remoto.
 - Documentação humana em pt-BR.
 - Identificadores técnicos em en-US.
 - Parágrafos Markdown em linha única, sem hard-wrap manual em 80 colunas.

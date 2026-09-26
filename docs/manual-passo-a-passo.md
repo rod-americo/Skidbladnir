@@ -1,297 +1,63 @@
-# Manual Passo A Passo
+# Manual passo a passo
 
-## 0. Quando usar este kit
+## 1. Ler o kit
 
-Use este kit quando um projeto novo:
+Informe ao agente o caminho real do clone e o objetivo. Comece pelo README, fluxo de projeto novo ou existente, política de runtimes, colaboração e validação. O kit não exige uma localização fixa no computador nem execução manual da CLI pelo usuário.
 
-- realmente merece repositório próprio
-- precisa nascer com fronteira, contratos e operação explícitos
-- não deve crescer por script solto
+## 2. Decidir antes de gerar
 
-Se a resposta correta for "isso é um módulo de outro sistema", não gere repo novo.
+Registre escopo, manutenção, contratos, bibliotecas, distribuição, operação e critérios mensuráveis de escala. Compare linguagens viáveis e documente restrições, riscos, mitigação e evidências. Nenhuma linguagem é default e nenhum scaffold tem preferência. Preserve um runtime existente adequado; avalie migrações separadamente.
 
-## 1. Escolher o modo de uso
+## 3. Preparar tarefa e bootstrap
 
-O uso principal do Skidbladnir é por agente lendo o protocolo em `~/Skidbladnir`.
+Designe responsabilidade por arquivos/módulos e crie uma branch com worktree ou checkout isolado para cada tarefa independente. Para trabalho concorrente, registre integrador e dependências. Use `docs/TASK_TEMPLATE.md` como modelo de contexto durável.
 
-Use:
-
-- `docs/new-project.md` para projeto novo
-- `docs/existing-project.md` para projeto existente
-- `docs/runtimes.md` para escolher runtime
-- `docs/deploy-manifest.md` para preencher `deploy/manifest.json`
-- `docs/validation.md` para validar a rodada
-
-O comando `newproj` continua existindo como bootstrap auxiliar para Python, Node, TypeScript, Go, Swift e C#.
-
-## 2. Preparar o comando global auxiliar
-
-Instale ou atualize o wrapper:
+Após a [instalação](../INSTALL.md), uma geração pode ser:
 
 ```bash
-bash ~/Skidbladnir/install_newproj.sh ~/bin
-source ~/.zshrc
-newproj --version
+newproj --list-presets
+newproj ./Servico --runtime java --preset base --enforce-gate
 ```
 
-Se o binário já estiver em `~/Scripts/bin` e esse diretório já estiver no `PATH`, a instalação pode ser mantida como está.
+Substitua runtime e preset pela decisão registrada. Rust e Java inicialmente têm `base`; os presets especializados existentes exigem `--runtime python` explícito. Ajuda, versão e doctor não exigem a opção. Nenhum download ocorre na geração.
 
-## 3. Escolher o preset certo
+## 4. Preencher os documentos reais
 
-Antes do preset, deixe o agente escolher o runtime pelas restrições reais de plataforma, SDK, deploy, distribuição, interoperabilidade e desempenho mensurável. Não pergunte por preferência de linguagem; sem fator decisivo, use Python. Registre a justificativa no `PROJECT_GATE.md`.
+Preencha `PROJECT_GATE.md`, README, arquitetura, contratos, operação e decisões. Remova exemplos e seções sem função. Quatro camadas são opcionais e precisam de justificativa; siga convenções do ecossistema.
 
-Regra prática:
+Os exemplos do kit não demonstram prontidão de produção. Registre comandos que existem e campos que o código consome. Não use dados reais ou sensíveis como fixtures. Projetos de pesquisa podem incluir `papers/` com hipótese, método, métricas e avaliação.
 
-- `fastapi-service`: API HTTP pequena, repo-owned
-- `textual-cli`: cockpit local com TUI
-- `playwright-worker`: browser automation com sessão
-- `dicom-pipeline`: ingestão e materialização DICOM
-- `worker`: loop residente simples
-- `cli`: comando local com interface de shell
-- `pipeline`: fluxo em etapas orientado a item
+## 5. Declarar operação
 
-Se estiver em dúvida entre dois presets, escolha o mais simples e endureça depois.
+Preencha `deploy/manifest.json` versão 1. Sem implantação configurada, use `deploy.target: none` e motivo explícito. O preset HTTP declara porta 8000 e `/health`; reveja ambos se mudar host/porta. Workers precisam de probe seguro e supervisão antes da implantação.
 
-## 4. Gerar o projeto com o scaffolder auxiliar
+Separe teste, smoke e saúde operacional. Declare apenas estado e destinos de logs realmente usados. Logs do baseline vão para stdout; um diretório ignorado não significa persistência ou arquivo de log existente.
 
-Exemplo:
+## 6. Instalar e validar
 
-```bash
-newproj ~/Projetos/MeuWorker --preset worker --include-checklist --enforce-gate
-```
-
-O que isso cria:
-
-- docs básicos do repositório
-- camadas `domain / application / infrastructure / interfaces`
-- pacote ou app principal em `/<slug>/`, preservando a raiz limpa
-- `PROJECT_GATE.md`
-- `deploy/manifest.json`
-- `config/doctor.json`
-- `scripts/check_project_gate.py`
-- `scripts/check_deploy_manifest.py`
-- `scripts/project_doctor.py`
-- hook local se o gate estiver enforced
-
-## 5. Ler antes de codar
-
-Entre no projeto gerado e leia, nesta ordem:
-
-1. `README.md`
-2. `AGENTS.md`
-3. `PROJECT_GATE.md`
-4. `docs/ARCHITECTURE.md`
-5. `docs/CONTRACTS.md`
-6. `docs/OPERATIONS.md`
-7. `deploy/manifest.json`
-
-Não escreva código de produção antes disso.
-
-## 6. Preencher o gate
-
-Primeiro responda o `PROJECT_GATE.md`.
-
-Objetivo do gate:
-
-- justificar por que o repo existe
-- provar por que não deveria ser só um módulo
-- delimitar o que não pertence aqui
-- explicitar custo operacional
-- justificar o runtime pelas restrições do sistema, pela alternativa principal considerada e pelo custo operacional
-
-Valide:
+Siga os comandos do README gerado e do [catálogo](runtime-catalog.md). Toolchains e dependências estão fixadas; downloads ocorrem no bootstrap. Python usa `.venv`, hashes, Ruff e mypy; Node usa `npm ci`; Cargo e .NET usam lockfiles; Java usa Maven Wrapper.
 
 ```bash
 python3 scripts/check_project_gate.py
-```
-
-Se falhar:
-
-- remova respostas vagas
-- troque frases curtas por justificativas defensáveis
-- elimine `TODO`, `preencher`, `talvez`, `não sei`
-
-## 7. Preencher o manifesto de deploy
-
-Revise `deploy/manifest.json` antes do primeiro push relevante.
-
-O manifesto deve declarar:
-
-- comando principal
-- healthcheck
-- runtime e versão
-- portas expostas
-- env vars e secrets esperados
-- runtime state e logs
-- restart, backup e rollback
-
-Valide:
-
-```bash
 python3 scripts/check_deploy_manifest.py
-```
-
-Se o projeto não tiver deploy, use `deploy.target` como `none` e explique em `deploy.reason`.
-
-## 8. Inicializar git e hooks
-
-Se gerou com `--enforce-gate`:
-
-```bash
-git init
-bash scripts/install_git_hooks.sh
-```
-
-Isso faz o pre-commit barrar commits com gate ruim.
-
-## 9. Ajustar os docs estruturais
-
-Preencha o mínimo viável destes arquivos:
-
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/CONTRACTS.md`
-- `docs/OPERATIONS.md`
-- `AGENTS.md`
-- `deploy/manifest.json`
-
-Regras:
-
-- `README.md`: o que o repo é, o que não é, como roda
-- `ARCHITECTURE.md`: escopo, fluxo e módulos
-- `CONTRACTS.md`: entradas, saídas, identificadores e quebras
-- `OPERATIONS.md`: boot, validação, restart, logs e backup
-- `AGENTS.md`: política local de colaboração e validação mínima
-- `deploy/manifest.json`: processo, healthcheck, runtime state, logs, restart, backup e rollback
-
-## 10. Rodar o doctor
-
-Quando os docs já estiverem reais:
-
-```bash
 python3 scripts/project_doctor.py
-python3 scripts/project_doctor.py --strict
 python3 scripts/project_doctor.py --deploy-strict
-python3 scripts/project_doctor.py --audit-config
 ```
 
-Interpretação:
+Execute também os checks de desenvolvimento e smoke do runtime. Prove a saúde do processo quando houver implantação. Ausência de ferramenta deve ser registrada como bloqueio; não declare sucesso de uma verificação não executada.
 
-- `doctor`: valida baseline e mostra warnings semânticos
-- `strict`: trata warnings semânticos como erro
-- `deploy-strict`: valida coerência entre `docs/OPERATIONS.md` e `deploy/manifest.json`
-- `audit-config`: audita `config/doctor.json`
+## 7. Resolver divergências documentais
 
-## 11. Corrigir warnings semânticos do jeito certo
+O doctor faz comparações estruturais e textuais. Corrija divergências reais no código ou documentação. Para termos equivalentes, registre `token_alias_groups`; para exceções conscientes, use `ignored_warnings` com código e motivo. Execute `python3 scripts/project_doctor.py --audit-config` para identificar overrides sem efeito.
 
-Se o doctor disser que os documentos usam vocábulos diferentes:
+`--strict` transforma warnings textuais em falhas. Nenhum modo prova qualidade semântica da arquitetura ou substitui revisão humana/técnica.
 
-- prefira `token_alias_groups` em `config/doctor.json`
-- use `ignored_warnings` só para divergência realmente consciente
+## 8. Revisar e integrar
 
-Exemplo:
+Revise diff e arquivos gerados, execute os checks exigidos e obtenha revisão independente. O integrador valida novamente o resultado combinado. Integração rotineira pode ser autônoma com permissões existentes e checks aprovados; decisões humanas são obrigatórias nas fronteiras sensíveis descritas no [protocolo de colaboração](agent-collaboration.md).
 
-```json
-{
-  "version": 1,
-  "ignored_warnings": [],
-  "token_alias_groups": [
-    ["worker", "daemon"],
-    ["api", "serviço"]
-  ]
-}
-```
+Registre commits, resultados, riscos, bloqueios e próximo passo na passagem de contexto. Não habilite automerge remoto nem altere proteções para contornar uma dependência.
 
-Depois rode:
+## 9. Evoluir consumidores
 
-```bash
-python3 scripts/project_doctor.py --audit-config
-```
-
-Se o audit acusar `ignored_warnings` sem efeito atual, remova o lixo.
-
-## 12. Fazer o bootstrap da stack
-
-Exemplos comuns:
-
-```bash
-python3 -m venv .venv --prompt $(basename "$PWD")
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-```
-
-Para `playwright-worker`:
-
-```bash
-python -m playwright install chromium
-```
-
-Para `node`:
-
-```bash
-npm install
-```
-
-## 13. Rodar a validação mínima do projeto
-
-Use o comando registrado no `AGENTS.md` e no `docs/OPERATIONS.md`.
-
-Exemplos:
-
-- worker: `python -m <slug> --once`
-- cli: `python -m <slug> doctor`
-- TUI dedicada: `python -m tui`
-- GUI dedicada: `python -m gui`
-- fastapi-service: `python -m pytest -q`
-- dicom-pipeline: `python -m <slug> --sample`
-
-## 14. Fazer o primeiro commit relevante
-
-Antes de commitar:
-
-1. `python3 scripts/check_project_gate.py`
-2. `python3 scripts/check_deploy_manifest.py`
-3. `python3 scripts/project_doctor.py`
-4. `python3 scripts/project_doctor.py --deploy-strict`
-5. validação mínima da stack
-6. revisar `git diff`
-
-Se o projeto nasceu com runtime suportado pelo kit, revise também o baseline de CI em `.github/workflows/ci.yml` antes do primeiro push.
-
-Se a mudança afeta operação:
-
-- declare restart
-- atualize `docs/OPERATIONS.md`
-- atualize `deploy/manifest.json`
-
-## 15. Rotina de crescimento
-
-A cada mudança estrutural:
-
-- atualize `README.md` se o comportamento visível mudou
-- atualize `ARCHITECTURE.md` se a fronteira mudou
-- atualize `CONTRACTS.md` se entrada ou saída mudou
-- atualize `OPERATIONS.md` se boot, restart, logs ou backup mudou
-- atualize `deploy/manifest.json` se comando, healthcheck, env, secret, porta, runtime, logs, backup ou rollback mudou
-- rode `project_doctor.py --audit-config` quando mexer em `config/doctor.json`
-
-## 16. Atualizar o próprio kit
-
-Quando mexer no scaffolder:
-
-```bash
-python3 ~/Skidbladnir/run_regression_suite.py
-newproj --version
-```
-
-Só considere a alteração pronta se a regressão passar.
-
-## 17. Erros Clássicos A Evitar
-
-- criar repo novo quando era módulo
-- deixar `README.md` genérico por semanas
-- esconder regra de negócio em script solto
-- usar `ignored_warnings` para silenciar desalinhamento real
-- esquecer restart policy
-- omitir manifesto de deploy porque o deploy ainda é manual
-- crescer sem `CONTRACTS.md` minimamente confiável
+Atualizar o kit não regenera consumidores. Leia o [guia 2.0](migration-2.0.md) e incorpore mudanças por diffs revisados. Preserve runtime e comportamento existentes quando adequados; adapte contratos, docs, CI e manifesto na mesma mudança lógica.

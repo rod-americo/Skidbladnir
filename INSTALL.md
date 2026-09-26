@@ -1,108 +1,53 @@
-# Install
+# Instalação
 
-## Objetivo
+O protocolo pode ser usado diretamente por um agente com acesso ao clone. Este guia instala o wrapper auxiliar `newproj`; não instala toolchains de aplicações nem altera configurações remotas.
 
-Este documento instala ou atualiza o comando `newproj` para uso diário.
+## Clone e validação
 
-## 1. Confirmar a localização do kit
-
-O instalador funciona a partir do clone local do repositório.
-
-Exemplo desta máquina:
-
-- `~/Skidbladnir`
-
-Se o repositório estiver em outro lugar, ajuste apenas o caminho do comando.
-
-## 2. Escolher o diretório de binários
-
-Opções comuns:
-
-- `~/bin`
-- `~/Scripts/bin`
-
-Se você já usa `~/Scripts/bin` no `PATH`, pode manter esse diretório. Se quiser um binário curto e isolado no shell, prefira `~/bin`.
-
-## 3. Rodar o instalador
-
-Exemplo usando `~/bin`:
+Clone o repositório em um diretório de sua escolha e execute os comandos a partir da raiz do clone. O kit e os validadores usam Python 3.10 ou superior; a release é verificada com a versão concreta publicada no [catálogo](docs/runtime-catalog.md). Essa ferramenta não determina a linguagem dos projetos gerados.
 
 ```bash
-bash ~/Skidbladnir/install_newproj.sh ~/bin
+python3 scaffold_project.py --version
+python3 run_regression_suite.py
+python3 -m py_compile scaffold_project.py run_regression_suite.py bin/newproj
 ```
 
-Exemplo mantendo `~/Scripts/bin`:
+A regressão acima é estrutural e não equivale à matriz completa de runtimes. Consulte [validação](docs/validation.md).
+
+## Wrapper
 
 ```bash
-bash ~/Skidbladnir/install_newproj.sh ~/Scripts/bin
-```
-
-O instalador:
-
-- garante permissão de execução no wrapper
-- cria ou atualiza o link `newproj`
-- informa a versão do kit
-- avisa se o diretório de binários não está no `PATH`
-
-## 4. Garantir o PATH
-
-Se o instalador avisar que o binário não está no `PATH`, adicione no `~/.zshrc`:
-
-```bash
+bash install_newproj.sh "$HOME/bin"
 export PATH="$HOME/bin:$PATH"
-```
-
-Ou, se preferir `~/Scripts/bin`:
-
-```bash
-export PATH="$HOME/Scripts/bin:$PATH"
-```
-
-Depois recarregue o shell:
-
-```bash
-source ~/.zshrc
-```
-
-## 5. Verificar a instalação
-
-```bash
 newproj --version
 newproj --list-presets
 ```
 
-Resultado esperado:
+O instalador cria ou atualiza o link para `bin/newproj` dentro deste clone. O destino pode ser outro diretório já presente no PATH. Para persistir o PATH, ajuste a configuração do seu shell conforme sua preferência; o script não exige localização fixa do kit.
 
-- a versão do kit aparece sem erro
-- a lista de presets é exibida
-
-## 6. Rodar a regressão do kit
-
-Antes de confiar no setup, rode:
+## Geração
 
 ```bash
-python3 ~/Skidbladnir/run_regression_suite.py
+newproj ./Servico --runtime java --preset base --enforce-gate
+newproj ./Ferramenta --runtime rust --preset base --enforce-gate
+newproj ./Api --runtime python --preset fastapi-service
 ```
 
-Isso valida:
+Escolha o runtime pelo [protocolo](docs/runtimes.md). `--runtime` é obrigatório e não tem default; presets Python também exigem a opção. A geração não baixa dependências. Siga o README gerado para bootstrap, checks e smoke com versões fixadas.
 
-- versionamento do kit
-- instalação do wrapper
-- geração de projeto com gate
-- `doctor`, `strict` e `audit-config`
-- forwarding de `newproj doctor`
+## Atualização do kit
 
-## 7. Atualizar o kit no futuro
+Atualize seu clone pelo fluxo de Git adotado, leia o [guia de migração](docs/migration-2.0.md) e o [changelog](CHANGELOG.md), execute a regressão e reinstale o link caso o clone tenha mudado de lugar. Consumidores existentes não são regenerados; incorpore mudanças por revisão incremental de arquivos e contratos.
 
-Sempre que mudar o scaffolder ou o wrapper:
+Para verificar runtimes, provisione cada toolchain do catálogo e execute `python3 run_runtime_checks.py --runtime <id>`. Ferramenta ausente ou versão divergente é falha. A CI do kit faz isso em jobs separados, incluindo todos os presets Python.
 
-1. rode a regressão
-2. confirme `newproj --version`
-3. reinstale o wrapper se mudar a localização do binário
-
-Comandos:
+## Doctor
 
 ```bash
-python3 ~/Skidbladnir/run_regression_suite.py
-bash ~/Skidbladnir/install_newproj.sh ~/bin
+newproj doctor ./Projeto
+newproj doctor --strict ./Projeto
+newproj doctor --deploy-strict ./Projeto
+newproj doctor --audit-config ./Projeto
 ```
+
+Esses comandos usam os scripts presentes no projeto consumidor. Atualizar o kit não atualiza automaticamente o doctor de consumidores antigos.

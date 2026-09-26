@@ -1,65 +1,53 @@
 # Runtimes
 
-Este documento define a matriz multilinguagem do Skidbladnir para agentes. A CLI atual materializa Python, Node, TypeScript, Go, Swift e C#; agentes devem usar esta matriz como referência e adaptar os templates ao contexto real.
+Nenhuma linguagem é default. A disponibilidade de scaffold, a linguagem usada pelo kit e a familiaridade presumida do agente não favorecem uma alternativa. Python executa os validadores documentais; isso não determina a linguagem das aplicações.
 
-## Política de escolha
+## Como decidir
 
-A linguagem é uma decisão técnica e operacional do agente, não uma preferência que o usuário precise fornecer. Antes de escolher, determine plataforma, SDKs obrigatórios, ambiente de deploy, formato de distribuição, integrações existentes e requisitos mensuráveis de desempenho, memória ou concorrência.
+1. Registre as restrições: plataforma, bibliotecas e SDKs obrigatórios, suporte, distribuição, ambiente operacional, equipe responsável pela manutenção e contratos existentes.
+2. Compare alternativas viáveis por facilidade de manutenção, verificabilidade, prevenção de regressões, dependências, operação e custo de transição. Tipagem, testes de contratos e ferramentas de diagnóstico contam; quantidade de código ou velocidade de geração por agente, isoladamente, não decidem.
+3. Registre no gate a alternativa escolhida, as alternativas consideradas, justificativa, riscos, mitigação e evidências. Declare hipóteses ainda não verificadas e como serão testadas.
+4. Defina escala com carga representativa e critérios: latência p95/p99, throughput, concorrência, memória, CPU, tempo de recuperação e custo, conforme o projeto. Informe volume, ambiente, método e limite aceitável. Não invente benchmarks ou metas para justificar preferência.
+5. Preserve runtimes existentes adequados. Migração exige benefício concreto, comparação com a melhoria incremental, custo de transição, compatibilidade e estratégia de retorno.
 
-Ordem de decisão:
+Quando faltarem informações materiais, pergunte sobre manutenção, operação ou requisitos. Não substitua a análise por uma pergunta sobre linguagem favorita. Se as alternativas estiverem empatadas, explicite o empate e obtenha evidência com um experimento pequeno ou uma decisão registrada.
 
-1. Em repositório existente, preserve o runtime atual, salvo incompatibilidade concreta.
-2. Em projeto novo, use o runtime imposto por plataforma, SDK, integração ou ambiente operacional.
-3. Entre opções equivalentes, prefira a que reduza dependências, build, distribuição e custo operacional.
-4. Sem fator decisivo, use Python.
-5. Registre a decisão no `PROJECT_GATE.md`; use `docs/DECISIONS.md` quando houver tradeoff relevante ou desvio do default.
+## Alternativas a considerar
 
-Não pergunte “qual linguagem você prefere?” quando as restrições já permitirem decidir. Se faltar contexto material, pergunte sobre o sistema: onde roda, qual SDK precisa usar, qual artefato deve entregar, com que ecossistema precisa interoperar e quais limites mensuráveis deve cumprir.
-
-## Heurística por contexto
-
-| Contexto dominante | Escolha inicial | Motivo |
+| Ecossistema | Fatores que podem justificar a escolha | Custos e verificações |
 | --- | --- | --- |
-| Automação, dados, IA, integrações ou ausência de restrição dominante | Python | menor atrito para bootstrap e ecossistema amplo |
-| Browser, frontend ou ecossistema Node com contrato tipado | TypeScript | integração direta com a plataforma e tipos no build |
-| Base JavaScript existente sem benefício material de migração | JavaScript | preservação do sistema real e menor churn |
-| Binário autônomo, serviço concorrente ou operação enxuta | Go | distribuição simples e runtime operacional pequeno |
-| Aplicação ou integração nativa Apple | Swift | acesso direto à plataforma e toolchain nativa |
-| Ecossistema .NET, Windows ou SDK corporativo dominante | C# | compatibilidade direta com plataforma e bibliotecas |
-| Repositório sem runtime dominante | Genérico | evita inventar uma linguagem central inexistente |
+| Java/JVM | bibliotecas maduras, contratos tipados, suporte prolongado, serviços e integrações corporativas | medir inicialização, memória, GC e distribuição; evitar frameworks sem necessidade |
+| Rust | controle de recursos, segurança de memória no código seguro, distribuição nativa | considerar custo de manutenção, compilação, interoperabilidade, dependências e experiência efetiva; medir antes de prometer ganhos |
+| Go | binário distribuível, concorrência e operação simples | validar contratos, falhas, limites de recursos e bibliotecas do domínio |
+| C#/.NET | bibliotecas, plataforma e integrações .NET | avaliar suporte, distribuição e comportamento na plataforma de destino |
+| Swift | integração com plataformas Apple ou bibliotecas Swift existentes | verificar plataforma, CI e requisitos de distribuição |
+| TypeScript/Node | browser, serviços e bibliotecas do ecossistema, contratos no build | manter modo estrito e validar dados externos em runtime |
+| JavaScript/Node | sistema existente adequado ou integração que justifique JavaScript | compensar ausência de tipos estáticos com contratos e testes proporcionais ao risco |
+| Python | bibliotecas de dados, automação, ciência e integrações apropriadas ao domínio | executar lint e tipos; medir limites de CPU, memória, concorrência e distribuição |
 
-Esta tabela orienta, mas não substitui evidência. Não use desempenho, escalabilidade ou portabilidade como justificativa abstrata sem requisito observável.
+Esses fatores são possibilidades, não uma classificação de linguagens. Frameworks HTTP, runtimes assíncronos, filas e microsserviços só entram quando o projeto concreto precisar deles. Quatro camadas são uma opção justificada; siga o layout convencional de cada ecossistema e mantenha um núcleo testável.
 
-## Runtimes suportados pelo protocolo
+## Suporte materializado
 
-| Runtime | Identificador | Layout recomendado | Setup | Run | Test |
-| --- | --- | --- | --- | --- | --- |
-| Python | `python` | pacote em `/<slug>/` | `python3 -m venv .venv --prompt $(basename "$PWD")` e `python -m pip install -r requirements.txt` | `python -m <slug>` | `python -m pytest -q` |
-| JavaScript | `node` | app em `/<slug>/` com `.mjs` | `npm install` | `npm start` | `npm test` |
-| TypeScript | `ts` | app em `src/` quando build/transpile exigir | `npm install` | `npm start` | `npm test` |
-| Go | `go` | `cmd/<slug>/` para binário e pacote interno quando necessário | `go mod download` | `go run ./cmd/<slug>` | `go test ./...` |
-| Swift | `swift` | `Sources/<Module>/` e `Sources/<Module>Core/` | `swift package resolve` | `swift run <Module>` | `swift build && swift run <Module>` |
-| C# | `csharp` | `src/<Project>/` e `tests/<Project>.Tests/` | `dotnet restore <Project>.sln` | `dotnet run --project src/<Project>/<Project>.csproj` | `dotnet test <Project>.sln` |
-| Genérico | `generic` | documentação, scripts e manifesto sem runtime dominante | definido pelo projeto | definido pelo projeto | definido pelo projeto |
+O [catálogo gerado](runtime-catalog.md) publica versões concretas, presets e comandos a partir de `templates/runtimes/catalog.json`. A CLI gera `python`, `node`, `ts`, `go`, `swift`, `csharp`, `java`, `rust` e `generic`. Java e Rust têm inicialmente apenas `base`. Os presets especializados existentes são Python e exigem `--runtime python` explícito, inclusive `fastapi-service`.
 
-## Presets comuns
+O protocolo admite outros runtimes: declare um identificador estável e a versão concreta no manifesto, adapte templates e provisione seus checks. `generic` é reservado a repositórios sem runtime dominante. `node` e `js` continuam aceitos em manifestos versão 1; a CLI mantém `node` como identificador de geração JavaScript.
 
-- `base`: documentação, manifesto, configuração e smoke mínimo
-- `cli`: comando local com interface explícita
-- `worker`: processo residente, loop, retry, restart e runtime state
-- `http-service`: serviço HTTP pequeno com healthcheck
-- `pipeline`: fluxo em etapas com entrada, saída e materialização
+## Reprodutibilidade
 
-## Regras por runtime
+- Geração não usa rede. Bootstrap e checks de runtime podem baixar toolchains e dependências previamente fixadas.
+- Python instala `requirements.txt` com versões transitivas e hashes; `requirements.in` registra dependências diretas. Execute Ruff, mypy e pytest. Use `.venv` na raiz e `python -m <slug>` como entrypoint público; launchers TUI/GUI dedicados podem ser finos em `tui/` e `gui/`.
+- Node e TypeScript versionam `package-lock.json` e usam `npm ci`; TypeScript permanece estrito.
+- Go fixa versão/toolchain e executa `go vet` e testes com detector de corrida. Sem dependências externas, não há `go.sum`; ao adicioná-las, versione-o.
+- Swift segue Swift Package Manager e executa `swift test`. A CI provisiona imagem oficial com versão e digest fixos. Ao adicionar dependências, versione `Package.resolved` e exija resolução congelada.
+- .NET fixa SDK em `global.json` e usa `packages.lock.json` com `dotnet restore --locked-mode`.
+- Java usa Temurin 25 LTS, Maven Wrapper 3.9.16 com checksum, plugins/dependências fixos e JUnit Jupiter. `./mvnw -B verify` testa e empacota; o JAR executável inclui dependências. Maven não oferece aqui um lockfile transitivo equivalente ao Cargo: revisões de dependências continuam necessárias.
+- Rust usa edição 2024, toolchain 1.98.1 e `Cargo.lock` versionado. Execute formatação, Clippy sem warnings, testes e build de release com `--locked`. Código próprio proíbe `unsafe`; isso não garante ausência de `unsafe` em dependências.
 
-- Python usa `python -m <slug>` como entrypoint público primário do domínio.
-- TUI e GUI Python dedicadas preferem launchers top-level `python -m tui` e `python -m gui`; os pacotes `tui/` e `gui/` devem ser adapters finos que delegam ao código em `<slug>/interfaces/`, não novos lugares para regra de negócio. Evite expor `python -m <slug>.tui` e `python -m <slug>.gui` como comandos públicos novos.
-- JavaScript e TypeScript usam `npm start` e `npm test` como comandos públicos.
-- Go deve preferir `cmd/<slug>` quando houver binário e evitar esconder domínio em scripts soltos.
-- Swift segue convenção de Swift Package Manager.
-- C# segue convenção de solução/projetos com `src/` e `tests/`, porque essa é a convenção forte do ecossistema.
-- `src/` não é proibido; ele só precisa ser consciente e documentado. Para Python novo, o padrão do kit continua sendo pacote direto na raiz.
+Fontes de versões e distribuição: [Python](https://www.python.org/downloads/), [Node](https://nodejs.org/en/about/previous-releases), [Go](https://go.dev/dl/), [Swift](https://www.swift.org/install/), [.NET](https://dotnet.microsoft.com/download/dotnet/10.0), [Temurin](https://adoptium.net/temurin/releases/), [Maven](https://maven.apache.org/download.cgi), [Rust](https://blog.rust-lang.org/).
 
-## Toolchains ausentes
+## Atualização e validação
 
-Agentes não devem falhar uma rodada estrutural apenas porque `go`, `swift` ou `dotnet` não estão instalados localmente. Nesse caso, devem gerar a baseline correta, não rodar a validação de runtime e registrar a limitação na resposta final.
+Uma atualização de toolchain exige revisão de suporte, atualização explícita do catálogo e dos lockfiles afetados, regeneração com `python3 sync_runtime_catalog.py`, execução da matriz e registro na release. Projetos gerados nunca resolvem silenciosamente a versão mais recente da toolchain.
+
+A regressão estrutural funciona sem todas as toolchains. Cada job de runtime provisiona sua ferramenta e executa `python3 run_runtime_checks.py --runtime <id>`. Ferramenta ausente ou versão divergente é falha, nunca aprovação ou skip silencioso. Reporte bloqueios locais separadamente; só declare a matriz aprovada depois de executar todos os jobs exigidos.

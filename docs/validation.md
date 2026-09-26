@@ -1,8 +1,6 @@
 # Validação
 
-Este documento define a validação mínima esperada para projetos alinhados ao Skidbladnir.
-
-## Validação comum
+## Controles documentais e operacionais estáticos
 
 ```bash
 python3 scripts/check_project_gate.py
@@ -13,30 +11,47 @@ python3 scripts/project_doctor.py --deploy-strict
 python3 scripts/project_doctor.py --audit-config
 ```
 
-Use `--strict` quando os docs principais já estiverem preenchidos. Use `--deploy-strict` quando `docs/OPERATIONS.md` e `deploy/manifest.json` precisarem estar coerentes. Use `--audit-config` quando houver aliases ou warnings ignorados em `config/doctor.json`.
+O gate reconhece rótulos com ou sem acentos, normaliza espaços e rejeita respostas vazias, pendentes ou excessivamente curtas. O marcador `<!-- skidbladnir:gate:2 -->` exige também riscos/mitigações, evidências e critérios de escala. Documentos antigos sem esse marcador continuam aceitos pelas regras anteriores, incluindo seus rótulos sem acentos.
 
-O gate reconhece rótulos com ou sem acentos e normaliza espaços; o doctor preserva o texto dos comandos e confere o runtime escolhido contra o manifesto. Esses checks verificam estrutura e consistência declarada, não comprovam correção do software nem qualidade semântica das justificativas.
+O doctor preserva comandos ao extrair o campo de validação do AGENTS e compara o runtime com o manifesto; `js` e `node` são equivalentes nessa comparação. `--deploy-strict` compara o comando principal e a declaração de saúde operacional. Documentos antigos que colocavam o probe na validação mínima têm compatibilidade de leitura; a migração deve separar as funções.
 
-## Validação por runtime
+Esses são controles estruturais e de coerência declarada. Contagem de palavras, similaridade textual e presença de campos não comprovam qualidade da decisão, segurança, correção, cobertura ou escalabilidade. Overrides do doctor devem ser justificados e auditados; não use exceções para esconder divergências reais.
 
-| Runtime | Sintaxe/build | Teste |
-| --- | --- | --- |
-| Python | `python -m compileall -q <slug> scripts tests` | `python -m pytest -q` |
-| JavaScript | `node --check <arquivo>` quando aplicável | `npm test` |
-| TypeScript | `npm run build` | `npm test` |
-| Go | `go test ./...` | `go test ./...` |
-| Swift | `swift build` | `swift build && swift run <Module>` |
-| C# | `dotnet build <Project>.sln` | `dotnet test <Project>.sln` |
+A validação do manifesto não executa comandos, não acessa URLs e não comprova saúde. Um HTTP vazio ou sem URL válida falha. `deploy.target: none` é válido para projetos sem implantação configurada.
 
-## Regra de honestidade
+## Testes, smoke e probe
 
-Se a toolchain não existir localmente, não invente validação. Registre o comando esperado e informe que ele não foi executado por ausência de ambiente.
+Testes de desenvolvimento exercitam comportamento, contratos, falhas e compatibilidade conforme o risco. Smoke local exercita uma execução curta e conhecida. Saúde operacional observa o serviço ou processo em execução sem produzir efeitos de negócio. `pytest`, `npm test`, `cargo test` e comandos de processamento como `--once` não são probes por si só.
 
-## Critério mínimo antes de concluir uma rodada
+Requisitos de escala precisam de métricas, carga, ambiente, método e limites verificáveis. Não conclua capacidade produtiva a partir de scaffold, microbenchmark isolado ou nome da linguagem. Testes de carga e resiliência serão adaptados ao projeto concreto.
 
-- `git diff` revisado
-- scripts comuns executados ou bloqueio explicado
-- teste do runtime executado ou bloqueio explicado
-- manifesto de deploy coerente com operação real
-- `PROJECT_GATE.md` registra restrições, runtime escolhido, alternativa considerada e justificativa operacional
-- docs atualizados junto com qualquer mudança de comando, contrato, restart, runtime state, log, backup ou rollback
+Os comandos por runtime são publicados no [catálogo gerado](runtime-catalog.md). Python executa Ruff, mypy e pytest; TypeScript compila em modo estrito; Swift tem testes reais; Java executa JUnit e JAR; Rust executa formatação, Clippy sem warnings, testes com lockfile e release. Instalações congeladas usam hashes Python, `npm ci`, Cargo `--locked` e .NET `--locked-mode`.
+
+## Matriz do kit
+
+Na raiz do kit, a regressão estrutural não exige toolchains das aplicações nem rede:
+
+```bash
+python3 run_regression_suite.py
+python3 -m py_compile scaffold_project.py run_regression_suite.py bin/newproj
+python3 sync_runtime_catalog.py --check
+```
+
+Depois de provisionar cada versão concreta do catálogo:
+
+```bash
+python3 run_runtime_checks.py --runtime python
+python3 run_runtime_checks.py --runtime node
+python3 run_runtime_checks.py --runtime ts
+python3 run_runtime_checks.py --runtime go
+python3 run_runtime_checks.py --runtime swift
+python3 run_runtime_checks.py --runtime csharp
+python3 run_runtime_checks.py --runtime java
+python3 run_runtime_checks.py --runtime rust
+```
+
+O runner gera projetos temporários e executa seus checks reais. Python percorre todos os presets; `--preset <nome>` restringe somente uma investigação local. O gate é preenchido com texto sintético exclusivamente na fixture temporária para exercitar a integração dos checks, sem simular aprovação arquitetural de um projeto real. A matriz verifica instalações, testes, builds, smoke, probe HTTP real e rejeição de divergências em npm/Cargo e de hashes inválidos em Python.
+
+Cada job de CI provisiona explicitamente a toolchain; Swift usa imagem oficial fixada por versão e digest. Actions são fixadas por SHA, com `contents: read` e sem persistir credenciais do checkout. `generic` tem apenas verificações estruturais, pois não declara runtime dominante.
+
+Ferramenta ausente ou versão divergente é falha no runner, não aprovação ou skip. Registre resultados estruturais, matriz de runtime, limitações locais e execução da CI separadamente. Só declare a matriz aprovada quando todos os checks exigidos tiverem passado. A integração exige revisão independente e validação do commit combinado conforme o [protocolo](agent-collaboration.md).

@@ -1,110 +1,48 @@
-# Contrato Operacional (`deploy/manifest.json`)
+# Manifesto operacional
 
-O `deploy/manifest.json` é o contrato obrigatório de operação do Skidbladnir. Ele não executa deploy; ele declara como o projeto deve ser operado, validado, reiniciado, observado, recuperado e revertido.
+Todo projeto alinhado ao kit possui `deploy/manifest.json`, mesmo quando ainda não tem implantação. O formato JSON versão 1 é validado com Python stdlib e preserva a estrutura e os identificadores anteriores, incluindo `node` e `js`. A versão 2.0 do kit não altera a versão do manifesto.
 
-## Por que JSON
+## Campos e significado
 
-O formato canônico inicial é JSON para permitir validação com Python stdlib, sem dependência de YAML. Projetos podem manter exemplos YAML adicionais, mas o arquivo obrigatório validado é `deploy/manifest.json`.
+- `project.name` e `project.slug`: identidade do projeto.
+- `runtime.id` e `runtime.version`: identificador estável e versão concreta. Outros runtimes são permitidos; `generic` só significa ausência de runtime dominante.
+- `deploy.target` e `deploy.reason`: destino real ou `none`, com justificativa.
+- `process`: comando principal, diretório e usuário quando aplicáveis. Sem processo, pode ser vazio.
+- `healthcheck.command` ou `healthcheck.http.url`: probe operacional quando houver implantação. HTTP precisa de URL HTTP(S) válida, com host e sem credenciais; objeto HTTP vazio é inválido.
+- `ports`, `environment`, `secrets`: portas e nomes de entradas realmente usadas; nunca valores secretos.
+- `runtime_state.paths` e `logs.paths`: destinos efetivamente usados. Stdout não é um arquivo; nesse caso `logs.paths` é vazio e OPERATIONS descreve o coletor quando existir.
+- `restart.policy`, `backup.policy` e `rollback.strategy`: procedimentos reais ou explicação da ausência de serviço/estado.
 
-O schema formal vive em `schema/deploy-manifest.schema.json` no kit e também deve ser copiado para projetos alinhados. O script `scripts/check_deploy_manifest.py` interpreta esse schema sem dependências externas e aplica as regras operacionais específicas do Skidbladnir.
+## Baseline sem implantação
 
-## Campos obrigatórios
-
-- `version`: versão do schema, atualmente `1`
-- `project.name`: nome humano do projeto
-- `project.slug`: identificador técnico
-- `runtime.id`: runtime principal
-- `runtime.version`: versão esperada do runtime
-- `deploy.target`: `none`, `manual`, `local`, `systemd`, `container`, `compose`, `kubernetes` ou outro alvo justificado
-- `deploy.reason`: justificativa do alvo escolhido
-- `process.command`: comando principal quando `deploy.target` não for `none`
-- `healthcheck.command` ou `healthcheck.http`: validação mínima operacional quando `deploy.target` não for `none`
-- `ports`: lista de portas expostas, vazia quando não houver
-- `environment.required`: variáveis obrigatórias
-- `secrets.required`: segredos obrigatórios, sem valores reais
-- `runtime_state.paths`: caminhos de estado mutável
-- `logs.paths`: caminhos de logs
-- `restart.policy`: regra de restart
-- `backup.policy`: regra de backup ou declaração explícita de ausência de persistência relevante
-- `rollback.strategy`: estratégia de rollback
-
-## Exemplo mínimo
+O baseline abaixo declara um comando local finito; não inventa serviço, healthcheck, estado persistente ou destino de log:
 
 ```json
 {
   "version": 1,
   "project": {
-    "name": "MeuWorker",
-    "slug": "meu_worker"
+    "name": "Ferramenta",
+    "slug": "ferramenta"
   },
   "runtime": {
-    "id": "python",
-    "version": "3.9+"
-  },
-  "deploy": {
-    "target": "local",
-    "reason": "worker local operado em host dedicado"
-  },
-  "process": {
-    "command": "python -m meu_worker --interval 30",
-    "working_directory": ".",
-    "user": "worker-user"
-  },
-  "healthcheck": {
-    "command": "python -m meu_worker --once",
-    "timeout_seconds": 30
-  },
-  "ports": [],
-  "environment": {
-    "required": ["MEU_WORKER_CONFIG_FILE"],
-    "optional": ["APP_ENV"]
-  },
-  "secrets": {
-    "required": []
-  },
-  "runtime_state": {
-    "paths": ["runtime/"]
-  },
-  "logs": {
-    "paths": ["runtime/logs/"]
-  },
-  "restart": {
-    "policy": "restart total do processo residente quando codigo ou config mudar"
-  },
-  "backup": {
-    "policy": "copiar runtime/outbox e logs relevantes antes de limpeza"
-  },
-  "rollback": {
-    "strategy": "voltar ao ultimo commit validado e preservar config local"
-  }
-}
-```
-
-## Projetos sem deploy
-
-Projetos sem processo ou deploy ainda devem declarar o manifesto:
-
-```json
-{
-  "version": 1,
-  "project": {
-    "name": "MinhaBiblioteca",
-    "slug": "minha_biblioteca"
-  },
-  "runtime": {
-    "id": "go",
-    "version": "1.22+"
+    "id": "rust",
+    "version": "1.98.1"
   },
   "deploy": {
     "target": "none",
-    "reason": "biblioteca sem processo residente ou artefato implantável neste repositório"
+    "reason": "baseline sem implantação configurada; comando local documentado"
   },
-  "process": {},
+  "process": {
+    "command": "cargo run --locked",
+    "working_directory": "."
+  },
   "healthcheck": {},
   "ports": [],
   "environment": {
     "required": [],
-    "optional": []
+    "optional": [
+      "FERRAMENTA_CONFIG_FILE"
+    ]
   },
   "secrets": {
     "required": []
@@ -116,26 +54,91 @@ Projetos sem processo ou deploy ainda devem declarar o manifesto:
     "paths": []
   },
   "restart": {
-    "policy": "não aplicável"
+    "policy": "não há serviço supervisionado no baseline"
   },
   "backup": {
-    "policy": "não há estado persistente operacional"
+    "policy": "não há estado persistente criado pelo baseline"
   },
   "rollback": {
-    "strategy": "reverter commit ou tag consumida pelo downstream"
+    "strategy": "restaurar artefato validado anterior e preservar configuração e dados locais"
   }
 }
 ```
 
-## Validação
+## Serviço HTTP local
 
-Use:
+O preset FastAPI configura um exemplo local com porta 8000 e probe real. Host e porta podem ser alterados por CLI/ambiente; atualize manifesto e OPERATIONS juntos. Antes de qualquer produção, revise a implantação, permissões, dados e estratégia de retorno.
+
+```json
+{
+  "version": 1,
+  "project": {
+    "name": "Api",
+    "slug": "api"
+  },
+  "runtime": {
+    "id": "python",
+    "version": "3.14.6"
+  },
+  "deploy": {
+    "target": "local",
+    "reason": "serviço HTTP local de exemplo; reveja o contrato antes de implantar"
+  },
+  "process": {
+    "command": "python -m api",
+    "working_directory": "."
+  },
+  "healthcheck": {
+    "http": {
+      "url": "http://127.0.0.1:8000/health"
+    },
+    "timeout_seconds": 5
+  },
+  "ports": [
+    8000
+  ],
+  "environment": {
+    "required": [],
+    "optional": [
+      "API_CONFIG_FILE",
+      "SERVER_HOST",
+      "SERVER_PORT"
+    ]
+  },
+  "secrets": {
+    "required": []
+  },
+  "runtime_state": {
+    "paths": []
+  },
+  "logs": {
+    "paths": []
+  },
+  "restart": {
+    "policy": "reiniciar processo após alteração de código ou configuração"
+  },
+  "backup": {
+    "policy": "não há estado persistente criado pelo baseline"
+  },
+  "rollback": {
+    "strategy": "restaurar artefato validado anterior e preservar configuração e dados locais"
+  }
+}
+```
+
+## Workers e projetos existentes
+
+Workers gerados não possuem probe seguro nem supervisão configurada e usam `deploy.target: none`, com adaptação pendente. `--once` pode processar dados e não comprova saúde de outro processo; testes de desenvolvimento também não são probes. Defina readiness/liveness ou uma verificação sem efeito de negócio apropriada ao worker real.
+
+Em projeto existente, descreva operação observada. Use `manual` apenas se há implantação manual real, com processo e probe adequados. Não declare systemd, container, Kubernetes, portas, backup ou arquivos de logs que o código não utiliza. Ausência de implantação é `none`; não omita o manifesto.
+
+## Validação e limites
 
 ```bash
 python3 scripts/check_deploy_manifest.py
 python3 scripts/project_doctor.py --deploy-strict
 ```
 
-O primeiro comando valida o schema mínimo. O segundo valida coerência entre manifesto e documentação operacional quando o projeto já possui doctor.
+O primeiro comando valida schema e regras operacionais de preenchimento. O doctor compara declarações com a documentação. Nenhum deles executa comandos do manifesto, acessa URLs ou comprova saúde. Testes, smoke e verificação operacional devem ser executados separadamente em contexto autorizado.
 
-Quando usar `healthcheck.http`, declare uma URL em `healthcheck.http.url`, com esquema `http` ou `https`, host e sem credenciais embutidas. Um objeto HTTP vazio é inválido. O validador é estático: ele não acessa a URL nem executa comandos do manifesto.
+A especificação formal fica em `schema/deploy-manifest.schema.json`. O template inicial sem implantação fica em `templates/deploy/manifest.json` e é usado pelo scaffolder; presets acrescentam somente as capacidades que materializam.

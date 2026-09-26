@@ -1,155 +1,72 @@
 # Skidbladnir
 
-[![CI](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml/badge.svg)](https://github.com/rod-americo/Skidbladnir/actions/workflows/ci.yml) ![Protocol](https://img.shields.io/badge/protocol-agent--first-2f6f4e) ![Runtimes](https://img.shields.io/badge/runtimes-6-blue) ![Ops Contract](https://img.shields.io/badge/ops%20contract-required-orange)
+Protocolo e kit de templates para agentes iniciarem ou evoluírem repositórios com escopo explícito, escolha fundamentada de runtime, contratos verificáveis e operação documentada. O kit mantém o protocolo, os templates públicos, o scaffolder auxiliar, `newproj` e suas validações.
 
-Protocolo documental e operacional para agentes iniciarem ou alinharem repositórios com fronteira explícita, runtime declarado, contratos auditáveis, operação real e contrato operacional obrigatório em `deploy/manifest.json`.
+Skidbladnir era o navio capaz de se desdobrar sem perder a portabilidade. O projeto segue essa ideia: uma base pequena que se adapta ao problema, sem se tornar framework de aplicação ou plataforma de orquestração de agentes.
 
-## Por que Skidbladnir
+## Escolha técnica sem linguagem default
 
-`Skidbladnir` era o navio forjado para ser compacto, transportável e capaz de se desdobrar em contexto real. Essa é a proposta do kit: carregar uma baseline pequena de estrutura, documentação e validação que pode ser aplicada por um agente em projetos novos ou existentes sem transformar o repositório em framework.
+A escolha considera manutenção, prevenção de regressões, verificabilidade, bibliotecas, suporte, distribuição, operação e requisitos medidos de recursos e concorrência. Java, Rust, Go, C#, Swift, TypeScript, JavaScript e Python são alternativas, sem preferência pela linguagem usada para implementar o kit. A disponibilidade de scaffold não determina a decisão.
 
-## O que este projeto é
+Registre no gate restrições, alternativas viáveis, justificativa, riscos e evidências. Preserve runtimes existentes adequados; migrações exigem benefício concreto e consideração do custo de transição. Quatro camadas são uma opção justificada; os layouts seguem as convenções de cada ecossistema.
 
-- um protocolo para agentes e humanos estruturarem repositórios
-- uma coleção de templates, prompts, regras e scripts prontos
-- uma baseline multiruntime para Python, JavaScript, TypeScript, Go, Swift e C#
-- uma forma de exigir contratos e operação auditável sem automatizar deploy
-- um caminho de retrofit para repositórios vivos sem reescrita cosmética
+Consulte a [política de escolha](docs/runtimes.md) e o [catálogo de versões, presets e comandos](docs/runtime-catalog.md). Outros runtimes podem ser adaptados pelo protocolo e declarados no manifesto. `generic` é reservado a projetos sem runtime dominante.
 
-## O que este projeto não é
+## Uso principal por agente
 
-- uma ferramenta de deploy
-- um framework universal de aplicação
-- um gerador que substitui leitura do repositório real
-- uma garantia de maturidade sem código, operação e validação correspondentes
-- uma obrigação de usar CLI para gerar projetos
+Informe o caminho real do clone e o objetivo. Use [novo projeto](prompts/novo-projeto.md) ou [projeto existente](prompts/projeto-existente.md). O agente lê o protocolo, adapta os templates ao sistema real, registra decisões e executa os checks exigidos.
 
-## Uso principal
+- [Novo projeto](docs/new-project.md): descoberta, gate, templates e primeira validação.
+- [Projeto existente](docs/existing-project.md): adoção incremental preservando comportamento e contratos.
+- [Colaboração entre agentes](docs/agent-collaboration.md): tarefas isoladas, responsabilidade, revisão e integração.
+- [Validação](docs/validation.md): controles estruturais, testes e matriz por runtime.
+- [Manifesto operacional](docs/deploy-manifest.md): contrato versão 1, implantação, probes e estado real.
 
-O uso principal é por prompt para um agente que tenha acesso ao repositório `~/Skidbladnir`.
+## Bootstrap auxiliar
 
-Iniciar projeto:
-
-```text
-Vou iniciar um projeto com o escopo: <escopo>.
-Use ~/Skidbladnir como protocolo base.
-Crie a estrutura, contrato operacional e validações aplicáveis.
-```
-
-Ajustar projeto:
-
-```text
-Quero alinhar este repositório ao protocolo em ~/Skidbladnir.
-Leia o projeto atual antes de alterar arquivos.
-Adapte estrutura, contrato operacional e validações sem reescrita cosmética.
-```
-
-O agente deve ler os documentos do kit, escolher autonomamente o runtime a partir das restrições técnicas e operacionais, copiar e adaptar os templates, criar ou revisar `deploy/manifest.json` e rodar as validações possíveis. Preferência pessoal por linguagem não é critério; quando nenhuma restrição determinar outra escolha, o default do kit é Python.
-
-## Fluxos oficiais
-
-- [Novo Projeto](docs/new-project.md)
-- [Projeto Existente](docs/existing-project.md)
-- [Runtimes](docs/runtimes.md)
-- [Contrato Operacional](docs/deploy-manifest.md)
-- [Validação](docs/validation.md)
-- [Prompt Novo Projeto](prompts/novo-projeto.md)
-- [Prompt Projeto Existente](prompts/projeto-existente.md)
-
-## Componentes principais
-
-- `templates/common/`: fonte de verdade dos documentos comuns
-- `templates/runtimes/`: orientação por runtime
-- `templates/scripts/`: scripts de validação copiados para projetos alinhados
-- `templates/deploy/`: manifesto operacional copiável
-- `schema/`: schema versionado do contrato operacional
-- `docs/`: protocolo de uso, runtimes, validação e operação
-- `prompts/`: prompts prontos para agentes
-- `scaffold_project.py`: scaffolder auxiliar para bootstrap rápido e regressão
-- `bin/newproj`: wrapper de compatibilidade para o scaffolder
-- `run_regression_suite.py`: regressão do kit
-- `tests/test_starter_regression.py`: suíte principal de regressão
-
-## Contrato Operacional
-
-Projetos alinhados ao Skidbladnir devem possuir `deploy/manifest.json`. Esse arquivo é um contrato operacional legível por humanos e agentes: declara comando principal, healthcheck, runtime, portas, environment, secrets esperados, runtime state, logs, restart, backup e rollback.
-
-Se o projeto não tiver deploy, o contrato continua obrigatório com `deploy.target` igual a `none` e justificativa explícita.
-
-## Runtimes
-
-O protocolo cobre:
-
-- Python
-- JavaScript
-- TypeScript
-- Go
-- Swift
-- C#
-- Genérico, quando não houver runtime dominante
-
-A CLI atual materializa Python, Node, TypeScript, Go, Swift e C#. Os templates e o protocolo continuam sendo o caminho preferencial para adaptação contextual por agentes.
-
-Em projetos Python, o domínio continua usando `python -m <slug>` como entrypoint público principal. Quando TUI ou GUI forem aplicações dedicadas, prefira launchers top-level explícitos como `python -m tui` e `python -m gui`, mantendo esses pacotes finos e delegando a implementação ao pacote do projeto.
-
-## Validação comum
-
-Projetos alinhados devem, quando os scripts existirem, suportar:
+Após a [instalação](INSTALL.md), consulte as combinações e escolha explicitamente o runtime:
 
 ```bash
-python3 scripts/check_project_gate.py
-python3 scripts/check_deploy_manifest.py
-python3 scripts/project_doctor.py
-python3 scripts/project_doctor.py --deploy-strict
+newproj --list-presets
+newproj ./Servico --runtime java --preset base --enforce-gate
+newproj ./Ferramenta --runtime rust --preset base --enforce-gate
+newproj ./Api --runtime python --preset fastapi-service --enforce-gate
 ```
 
-Além disso, cada runtime mantém sua validação própria: `python -m pytest -q`, `npm test`, `go test ./...`, `swift build && swift run <Module>` ou `dotnet test <Project>.sln`.
+Esses são exemplos após decisão técnica, não recomendações universais. Toda geração exige `--runtime`, inclusive presets específicos de Python. A ausência falha antes de criar arquivos. Ajuda, versão, listagem de presets e `newproj doctor` continuam disponíveis. A geração não requer rede; bootstrap e checks baixam dependências fixadas quando necessário.
 
-## CLI auxiliar
+A versão 2.0.0 altera a CLI de forma incompatível. Leia o [guia de migração](docs/migration-2.0.md). Projetos consumidores não são regenerados automaticamente.
 
-O wrapper continua disponível para bootstrap rápido:
+## Colaboração e autonomia
+
+Uma tarefa independente usa branch com worktree ou checkout isolado e responsabilidade explícita por arquivos ou módulos. `docs/TASK_TEMPLATE.md` acompanha projetos gerados para objetivo, critérios de aceite, referência de base, alterações, validações, bloqueios e passagem de contexto.
+
+Um integrador coordena mudanças concorrentes e valida o resultado combinado. Integrações rotineiras podem ser autônomas com checks aprovados, revisão por agente ou pessoa diferente do autor e permissões existentes. Integridade de dados, migrações, dados sensíveis, autenticação/permissões, produção, contratos incompatíveis, enfraquecimento de controles e risco não esclarecido exigem decisão humana. O kit não cria orquestrador nem habilita automerge remoto.
+
+## Operação e qualidade
+
+Todo projeto tem `deploy/manifest.json`. Baselines sem implantação usam `deploy.target: none`. O preset HTTP declara porta e probe real; workers dependem de adaptação antes de implantar. Testes de desenvolvimento, smoke local e saúde operacional são verificações distintas. O validador estático não executa comandos declarados no manifesto.
+
+Os validadores documentais são escritos com a biblioteca padrão de Python e verificam preenchimento, estrutura e coerência declarada. Eles não provam correção, segurança, escalabilidade ou qualidade da decisão arquitetural.
+
+No kit:
 
 ```bash
-bash ~/Skidbladnir/install_newproj.sh ~/bin
-newproj ~/MeuWorker --preset worker --include-checklist --enforce-gate
+python3 run_regression_suite.py
+python3 -m py_compile scaffold_project.py run_regression_suite.py bin/newproj
+python3 sync_runtime_catalog.py --check
+python3 run_runtime_checks.py --runtime java
 ```
 
-Esse caminho é auxiliar. Para uso real por agentes, especialmente em projetos existentes, prefira os prompts e o protocolo documental.
+A CI separa regressão estrutural de jobs para cada runtime. Cada job provisiona a toolchain fixada e testa projetos temporários; Python inclui todos os presets. Ausência de ferramenta ou versão divergente falha a validação de runtime. O catálogo alimenta geração, documentação e CI, com instalações congeladas onde suportadas, permissões mínimas e actions fixadas por SHA.
 
-## Estrutura deste repositório
+## Estrutura do kit
 
-```text
-Skidbladnir/
-├── README.md
-├── AGENTS.md
-├── INSTALL.md
-├── ROADMAP.md
-├── docs/
-├── prompts/
-├── schema/
-├── templates/
-├── bin/
-├── tests/
-├── scaffold_project.py
-└── run_regression_suite.py
-```
+- `templates/`: fonte de verdade dos arquivos gerados, incluindo código, validadores e workflows.
+- `templates/runtimes/catalog.json`: versões, comandos, suporte e presets.
+- `scaffold_project.py` e `bin/newproj`: bootstrap auxiliar.
+- `docs/` e `prompts/`: protocolo público e artefatos operacionais.
+- `tests/`, `run_regression_suite.py` e `run_runtime_checks.py`: prevenção de regressões.
+- `sync_runtime_catalog.py`: gera a tabela de suporte e a CI do kit.
 
-## Quando usar
-
-Use quando um projeto precisa nascer ou ser recuperado com fronteira clara, operação explícita, contratos documentados, runtime declarado e contrato operacional auditável.
-
-## Quando não usar
-
-Não use quando o projeto é descartável, quando o problema correto é não criar um repositório novo, ou quando a equipe precisa de uma plataforma completa de deploy em vez de um protocolo de governança leve.
-
-## Instalação
-
-Consulte [INSTALL.md](INSTALL.md).
-
-## Roadmap
-
-Consulte [ROADMAP.md](ROADMAP.md).
-
-## Licença
-
-MIT. Consulte [LICENSE](LICENSE).
+O README da raiz descreve o produto; o README dos projetos gerados está em `templates/common/README.md`. Consulte também [uso detalhado](docs/how-to-use.md), [manual](docs/manual-passo-a-passo.md), [changelog](CHANGELOG.md) e [licença](LICENSE).
